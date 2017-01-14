@@ -22,7 +22,10 @@ function tsModule(targets) {
             use: [
                 {
                     loader: "babel-loader",
-                    options: { presets: [["env", { targets }]] }
+                    options: {
+                        presets: [["env", { targets }]],
+                        plugins: isProduction ? null : "babel-plugin-espower"
+                    }
                 },
                 {
                     loader: "ts-loader",
