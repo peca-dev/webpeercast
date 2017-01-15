@@ -1,4 +1,5 @@
 import * as assert from "power-assert";
+import YPPeer from "../yppeer";
 const url = "ws://localhost:8080/";
 
 describe("It", () => {
@@ -17,4 +18,23 @@ describe("It", () => {
             });
         });
     }));
+});
+
+describe("Layer connection", () => {
+    describe("given a signaling server running and any peer standbying", () => {
+        describe("when start module on level 1 layer", () => {
+            describe("YPServer", () => {
+                it("connect to a root server", () => {
+                    let peer = new YPPeer(url);
+                    peer.on
+                });
+                it("connect to any level 1 layer's peer", () => {
+
+                });
+                it("standby for connection from any level layer's peer", () => {
+
+                });
+            });
+        });
+    });
 });

@@ -6,10 +6,12 @@
   "bugs": "https://github.com/progre/template-typescript/issues",
   "dependencies": {
     "babel-polyfill": "^6.20.0",
+    "log4javascript": "^1.4.15",
     "log4js": "^1.1.0",
     "websocket": "^1.0.24"
   },
   "devDependencies": {
+    "@types/log4javascript": "^1.4.31",
     "@types/log4js": "0.0.32",
     "@types/node": "^6.0.57",
     "@types/websocket": "0.0.32",

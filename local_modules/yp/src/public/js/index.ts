@@ -1,7 +1,7 @@
-import module from "./module";
+import YPPeer from "./yppeer";
 
 async function main() {
-    module();
+    new YPPeer("ws://localhost:8080"); // tslint:disable-line:no-unused-new
 }
 
 main();
