@@ -1,40 +1,57 @@
 import * as assert from "power-assert";
+import fetch from "node-fetch";
 import YPPeer from "../yppeer";
-const url = "ws://localhost:8080/";
-
-describe("It", () => {
-    it("is so good!", () => new Promise((resolve, reject) => {
-        assert(WebSocket != null);
-        let socket = new WebSocket(url);
-        socket.addEventListener("error", e => {
-            reject(e);
-        });
-        socket.addEventListener("open", e => {
-            socket.send("ping");
-            socket.addEventListener("message", f => {
-                assert(f.type === "message");
-                assert(f.data === "pong");
-                resolve();
-            });
-        });
-    }));
-});
+const server = "localhost:8080";
 
 describe("Layer connection", () => {
-    describe("given a signaling server running and any peer standbying", () => {
-        describe("when start module on level 1 layer", () => {
-            describe("YPServer", () => {
-                it("connect to a root server", () => {
-                    let peer = new YPPeer(url);
-                    peer.on
-                });
-                it("connect to any level 1 layer's peer", () => {
+    describe("When given a signaling server running and any peer standbying,", () => {
+        describe("peer on level 1 layer", () => {
+            let peer: YPPeer;
+            let otherPeers: YPPeer[];
+            before(async () => {
+                otherPeers = initPeers();
+                await new Promise(
+                    (resolve, reject) => setTimeout(resolve, 1 * 1000),
+                );
+                let serverStatus = await fetchServerStatus();
+                assert(serverStatus.clients.length === 10);
 
-                });
-                it("standby for connection from any level layer's peer", () => {
+                peer = new YPPeer(`ws://${server}`);
+            });
+            it("connect to a root server", async () => {
+                let serverStatus = await fetchServerStatus();
+                assert(
+                    serverStatus.clients
+                        .map((x: any) => x.id)
+                        .some((x: string) => x === peer.id),
+                );
+            });
+            it("connect to any level 1 layer's peer", () => {
+                assert(otherPeers.some(x => x.debug.hasPeer(peer.id)));
+            });
+            it("standby for connection from any level layer's peer", () => {
 
-                });
             });
         });
     });
 });
+
+function initPeers() {
+    let peers: YPPeer[] = [];
+    for (let i = 0; i < 10; i++) {
+        peers.push(new YPPeer(`ws://${server}`));
+    }
+    // for (let i = 0; i < 10; i++) {
+    //     layer2Peers.push(new YPPeer(`ws://${server}`));
+    // }
+    // for (let i = 0; i < 10; i++) {
+    //     layer3Peers.push(new YPPeer(`ws://${server}`));
+    // }
+    return peers;
+}
+
+async function fetchServerStatus() {
+    let json = await (await fetch(`http://${server}`)).text();
+    console.log(json);
+    return JSON.parse(json);
+}

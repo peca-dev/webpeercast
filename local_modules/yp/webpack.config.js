@@ -24,7 +24,12 @@ function tsModule(targets) {
                     loader: "babel-loader",
                     options: {
                         presets: [["env", { targets }]],
-                        plugins: isProduction ? null : "babel-plugin-espower"
+                        plugins: isProduction
+                            ? null
+                            : [[
+                                "babel-plugin-espower",
+                                { "embedAst": true }
+                            ]]
                     }
                 },
                 {
