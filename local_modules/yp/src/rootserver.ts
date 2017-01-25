@@ -1,17 +1,19 @@
 import * as http from "http";
 import {
     server as WebSocketServer,
-    connection as WebSocketConnection
+    connection as WebSocketConnection,
 } from "websocket";
 import { getLogger } from "log4js";
-import YPClient from "./ypclient";
+import RTCConnectionProvider from "./rtcconnectionprovider";
+import YPPeer from "./yppeer";
 const logger = getLogger();
 const debug = process.env.NODE_ENV === "development";
 
 export default class RootServer {
     private httpServer: http.Server;
     private wsServer: WebSocketServer;
-    private clients = new WeakMap<WebSocketConnection, YPClient>();
+    private clients = new WeakMap<WebSocketConnection, YPPeer>();
+    private rtcConnectionProviders = new Set<RTCConnectionProvider>();
 
     constructor() {
         this.httpServer = http.createServer((request, response) => {
@@ -43,9 +45,9 @@ export default class RootServer {
                     return;
                 }
 
-                let connection = request.accept(undefined, request.origin);
-                this.clients.set(connection, new YPClient(connection));
-                logger.info((new Date()) + " Connection accepted.");
+                this.acceptNewConnection(
+                    request.accept(undefined, request.origin),
+                );
             } catch (e) {
                 logger.error(e.stack || e);
             }
@@ -53,6 +55,23 @@ export default class RootServer {
         this.httpServer.listen(8080, () => {
             logger.info((new Date()) + " Server is listening on port 8080");
         });
+    }
+
+    private acceptNewConnection(connection: WebSocketConnection) {
+        logger.debug("Connection count:", this.wsServer.connections.length);
+        let client = new YPPeer(connection);
+        if (this.wsServer.connections.length > 1) {
+            let provider = new RTCConnectionProvider(
+                this.clients.get(randomOne(this.wsServer.connections, connection)) !,
+                client,
+            );
+            provider.on("timeout", () => {
+                this.rtcConnectionProviders.delete(provider);
+            });
+            this.rtcConnectionProviders.add(provider);
+        }
+        this.clients.set(connection, new YPPeer(connection));
+        logger.info((new Date()) + " Connection accepted.");
     }
 
     private createDebugJSON() {
@@ -67,4 +86,12 @@ export default class RootServer {
 function originIsAllowed(origin: string) {
     // put logic here to detect whether the specified origin is allowed.
     return true;
+}
+
+function randomOne<T>(array: T[], without: T): T {
+    let one = array[Math.floor(Math.random() * array.length)];
+    if (one !== without) {
+        return one;
+    }
+    return randomOne(array, without);
 }

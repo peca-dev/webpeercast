@@ -46,8 +46,8 @@ module.exports = [
         common,
         {
             entry: {
-                index: ["babel-polyfill", "./src/public/js/index.ts"],
-                "test/test": ["babel-polyfill", "./src/public/js/test/test.ts"]
+                index: ["babel-polyfill", "webrtc-adapter", "./src/public/js/index.ts"],
+                "test/test": ["babel-polyfill", "webrtc-adapter", "./src/public/js/test/test.ts"]
             },
             module: tsModule({ browsers: ["last 2 versions"] }),
             output: {
