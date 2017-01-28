@@ -23,10 +23,12 @@ export function printError(logger: Logger, e: any) {
 function color(x: string) {
     if (
         [
+            "__emitToSubscription",
+            "callFn",
             "defineIteratorMethods/</prototype[method]",
             "invoke",
-            "Promise",
             "step",
+            "timeslice",
             "tryCatch",
         ]
             .map(y => `    at ${y} `)
@@ -35,6 +37,8 @@ function color(x: string) {
         [
             "_asyncToGenerator(/<)*",
             "_callee.*\\$",
+            "fetch(/<)*",
+            "next(/<)*",
         ]
             .map(y => `^    at ${y} `)
             .some(y => new RegExp(y).test(x))
