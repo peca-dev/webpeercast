@@ -1,6 +1,7 @@
 import { EventEmitter } from "fbemitter";
-import RTCConnector from "./rtcconnector";
 import { getLogger } from "log4javascript";
+import RemoteRootServer from "./remoterootserver";
+import RTCConnector from "./rtcconnector";
 const logger = getLogger();
 
 interface Connection {
@@ -9,8 +10,13 @@ interface Connection {
     readonly dataChannel: RTCDataChannel;
 }
 
+/**
+ * P2P ネットワークのローカルのピア
+ * 同じコネクションを維持する必要がないので、接続が切れても再接続しない
+ */
 export default class YPPeer extends EventEmitter {
     id: string | null;
+    private upstreams = new Set<RemoteRootServer>();
     private socket: WebSocket;
     private connectors = new Map<string, RTCConnector>();
     private connections = new Set<Connection>();
@@ -30,7 +36,22 @@ export default class YPPeer extends EventEmitter {
     constructor(url: string) {
         super();
 
-        this.connect(url);
+        RemoteRootServer.fetch(url)
+            .then(x => {
+                this.upstreams.add(x);
+                this.socket = x.socket;
+                x.socket.addEventListener("message", async f => {
+                    try {
+                        await this.receiveMessage(f);
+                    } catch (e) {
+                        logger.error((e.toString != null ? e.toString() : "") + "\n" + e.stack || e.name || e);
+                    }
+                });
+            })
+            .catch(e => {
+                logger.error((e.toString != null ? e.toString() : "") + "\n" + e.stack || e.name || e);
+            });
+        // this.connect(url);
     }
 
     private connect(url: string) {

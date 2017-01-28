@@ -11,9 +11,13 @@ export default class RTCConnector extends EventEmitter {
         super();
 
         this.conn.addEventListener("negotiationneeded", async e => {
-            let offer = await this.conn.createOffer();
-            await this.conn.setLocalDescription(offer);
-            this.emit("offer", this.conn.localDescription);
+            try {
+                let offer = await this.conn.createOffer();
+                await this.conn.setLocalDescription(offer);
+                this.emit("offer", this.conn.localDescription);
+            } catch (e) {
+                logger.error((e.toString != null ? e.toString() : "") + "\n" + e.stack || e.name || e);
+            }
         });
         this.conn.onicecandidate = e => {
             if (e.candidate == null) {
@@ -40,8 +44,12 @@ export default class RTCConnector extends EventEmitter {
         this.id = id;
         this.dataChannel = this.conn.createDataChannel("");
         this.dataChannel.addEventListener("open", e => {
-            logger.debug("channelopen on server");
-            this.emit("channelopen", this.dataChannel);
+            try {
+                logger.debug("channelopen on server");
+                this.emit("channelopen", this.dataChannel);
+            } catch (e) {
+                logger.error(e);
+            }
         });
     }
 
