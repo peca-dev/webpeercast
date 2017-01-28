@@ -15,6 +15,31 @@ export function printError(logger: Logger, e: any) {
         + (<string>e.stack)
             .split("\n")
             .map(x => x.replace(/(.*?)@(.*)/, "    at $1 ($2)"))
+            .map(color)
             .join("\n"),
     );
+}
+
+function color(x: string) {
+    if (
+        [
+            "defineIteratorMethods/</prototype[method]",
+            "invoke",
+            "Promise",
+            "step",
+            "tryCatch",
+        ]
+            .map(y => `    at ${y} `)
+            .some(y => x.startsWith(y))
+        ||
+        [
+            "_asyncToGenerator(/<)*",
+            "_callee.*\\$",
+        ]
+            .map(y => `^    at ${y} `)
+            .some(y => new RegExp(y).test(x))
+    ) {
+        return `\u001b[90m${x}\u001b[39m`;
+    }
+    return x;
 }
