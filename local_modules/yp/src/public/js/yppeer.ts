@@ -2,6 +2,7 @@ import { EventEmitter } from "fbemitter";
 import { getLogger } from "log4javascript";
 import RemoteRootServer from "./remoterootserver";
 import RTCConnector from "./rtcconnector";
+import { printError, safe } from "./printerror";
 const logger = getLogger();
 
 interface Connection {
@@ -40,51 +41,13 @@ export default class YPPeer extends EventEmitter {
             .then(x => {
                 this.upstreams.add(x);
                 this.socket = x.socket;
-                x.socket.addEventListener("message", async f => {
-                    try {
-                        await this.receiveMessage(f);
-                    } catch (e) {
-                        logger.error((e.toString != null ? e.toString() : "") + "\n" + e.stack || e.name || e);
-                    }
-                });
+                x.socket.addEventListener("message", safe(async (f: MessageEvent) => {
+                    await this.receiveMessage(f);
+                }));
             })
             .catch(e => {
-                logger.error((e.toString != null ? e.toString() : "") + "\n" + e.stack || e.name || e);
+                printError(logger, e);
             });
-        // this.connect(url);
-    }
-
-    private connect(url: string) {
-        logger.info(`Connecting to: ${url}`);
-        this.socket = new WebSocket(url);
-        this.socket.addEventListener("error", e => {
-            try {
-                logger.error(e.error);
-            } catch (e) {
-                logger.error(e.stack || e);
-            }
-        });
-        this.socket.addEventListener("open", e => {
-            try {
-                logger.info("Connected.");
-                this.socket.addEventListener("message", async f => {
-                    try {
-                        await this.receiveMessage(f);
-                    } catch (e) {
-                        logger.error((e.toString != null ? e.toString() : "") + "\n" + e.stack || e.name || e);
-                    }
-                });
-            } catch (e) {
-                logger.error(e.stack || e);
-            }
-        });
-        this.socket.addEventListener("close", e => {
-            try {
-                this.connect(url);
-            } catch (e) {
-                logger.error(e.stack || e);
-            }
-        });
     }
 
     private async receiveMessage(e: MessageEvent) {

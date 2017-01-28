@@ -1,5 +1,6 @@
 import { EventEmitter } from "fbemitter";
 import { getLogger } from "log4javascript";
+import { safe } from "./printerror";
 const logger = getLogger();
 
 export default class RTCConnector extends EventEmitter {
@@ -10,15 +11,11 @@ export default class RTCConnector extends EventEmitter {
     constructor() {
         super();
 
-        this.conn.addEventListener("negotiationneeded", async e => {
-            try {
-                let offer = await this.conn.createOffer();
-                await this.conn.setLocalDescription(offer);
-                this.emit("offer", this.conn.localDescription);
-            } catch (e) {
-                logger.error((e.toString != null ? e.toString() : "") + "\n" + e.stack || e.name || e);
-            }
-        });
+        this.conn.addEventListener("negotiationneeded", safe(async (e: Event) => {
+            let offer = await this.conn.createOffer();
+            await this.conn.setLocalDescription(offer);
+            this.emit("offer", this.conn.localDescription);
+        }));
         this.conn.onicecandidate = e => {
             if (e.candidate == null) {
                 return;
@@ -43,14 +40,10 @@ export default class RTCConnector extends EventEmitter {
     makeOffer(id: string) {
         this.id = id;
         this.dataChannel = this.conn.createDataChannel("");
-        this.dataChannel.addEventListener("open", e => {
-            try {
-                logger.debug("channelopen on server");
-                this.emit("channelopen", this.dataChannel);
-            } catch (e) {
-                logger.error(e);
-            }
-        });
+        this.dataChannel.addEventListener("open", safe(async (e: Event) => {
+            logger.debug("channelopen on server");
+            this.emit("channelopen", this.dataChannel);
+        }));
     }
 
     async receiveOffer(id: string, sd: RTCSessionDescriptionInit) {

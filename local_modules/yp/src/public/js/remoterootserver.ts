@@ -1,9 +1,10 @@
 import { EventEmitter } from "fbemitter";
 import { getLogger } from "log4javascript";
+import { printError } from "./printerror";
 const logger = getLogger();
 
 export default class RemoteRootServer extends EventEmitter {
-    static async fetch(url: string) {
+    static fetch(url: string) {
         return new Promise<RemoteRootServer>((resolve, reject) => {
             let socket = new WebSocket(url);
             let timer = setTimeout(
@@ -31,13 +32,7 @@ export default class RemoteRootServer extends EventEmitter {
         //         logger.error((e.toString != null ? e.toString() : "") + "\n" + e.stack || e.name || e);
         //     }
         // });
-        this.socket.addEventListener("error", e => {
-            try {
-                logger.error(e.error);
-            } catch (e) {
-                logger.error(e.stack || e);
-            }
-        });
+        this.socket.addEventListener("error", e => printError(logger, e));
         this.socket.addEventListener("close", e => {
             this.emit("close");
         });
