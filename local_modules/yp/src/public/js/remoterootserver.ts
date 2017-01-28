@@ -1,10 +1,15 @@
-import { EventEmitter } from "fbemitter";
+import { EventEmitter, EventSubscription } from "fbemitter";
 import * as log4js from "log4js";
 const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { printError, safe } from "./printerror";
-const logger = getLogger(__filename);
+const logger = getLogger();
 
-export default class RemoteRootServer extends EventEmitter {
+interface Upstream {
+    send(obj: { type: string, payload: Object }): void;
+    addListener(eventType: "message", listener: Function, context?: any): EventSubscription;
+}
+
+export default class RemoteRootServer extends EventEmitter implements Upstream {
     static fetch(url: string) {
         return new Promise<{ id: string, upstream: RemoteRootServer }>((resolve, reject) => {
             let socket = new WebSocket(url);
@@ -35,6 +40,7 @@ export default class RemoteRootServer extends EventEmitter {
 
         this.socket.addEventListener("message", safe(logger, async (e: MessageEvent) => {
             let data = JSON.parse(e.data);
+            this.emit("message", data);
             switch (data.type) {
                 case "makeRTCOffer":
                     if (data.payload == null) {
@@ -50,5 +56,9 @@ export default class RemoteRootServer extends EventEmitter {
         this.socket.addEventListener("close", e => {
             this.emit("close");
         });
+    }
+
+    send(obj: { type: string, payload: Object }) {
+        this.socket.send(JSON.stringify(obj));
     }
 }

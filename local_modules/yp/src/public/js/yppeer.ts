@@ -19,7 +19,6 @@ interface Connection {
 export default class YPPeer extends EventEmitter {
     id: string | null;
     private upstreams = new Set<RemoteRootServer>();
-    private socket: WebSocket;
     private connectors = new Map<string, RTCConnector>();
     private connections = new Set<Connection>();
 
@@ -45,9 +44,8 @@ export default class YPPeer extends EventEmitter {
                 x.upstream.addListener("makeRTCOffer", safe(logger, async (to: string) => {
                     await this.makeRTCOffer(to);
                 }));
-                this.socket = x.upstream.socket;
-                x.upstream.socket.addEventListener("message", safe(logger, async (f: MessageEvent) => {
-                    await this.receiveMessage(f);
+                x.upstream.addListener("message", safe(logger, async (data: any) => {
+                    await this.receiveMessage(data);
                 }));
             })
             .catch(e => {
@@ -55,8 +53,7 @@ export default class YPPeer extends EventEmitter {
             });
     }
 
-    private async receiveMessage(e: MessageEvent) {
-        let data = JSON.parse(e.data);
+    private async receiveMessage(data: any) {
         switch (data.type) {
             case "receiveRTCOffer":
                 let answer = await this.receiveRTCOffer(
@@ -64,13 +61,13 @@ export default class YPPeer extends EventEmitter {
                     data.payload.offer,
                 );
                 logger.debug("send receiveAnswer");
-                this.socket.send(JSON.stringify({
+                Array.from(this.upstreams)[0].send({
                     type: "receiveRTCAnswer",
                     payload: {
                         to: data.payload.from,
                         answer,
                     },
-                }));
+                });
                 break;
             case "receiveRTCAnswer":
                 logger.debug("receiveRTCAnswer");
@@ -97,19 +94,19 @@ export default class YPPeer extends EventEmitter {
             this.connectors.delete(to);
         });
         connector.addListener("offer", (offer: RTCSessionDescription) => {
-            this.socket.send(JSON.stringify({
+            Array.from(this.upstreams)[0].send({
                 type: "receiveRTCOffer",
                 payload: { to, offer },
-            }));
+            });
         });
         connector.addListener("icecandidate", (iceCandidate: RTCIceCandidate) => {
             if (iceCandidate == null) {
                 throw new Error();
             }
-            this.socket.send(JSON.stringify({
+            Array.from(this.upstreams)[0].send({
                 type: "receiveIceCandidate",
                 payload: { to, iceCandidate },
-            }));
+            });
         });
         connector.addListener("channelopen", (dataChannel: RTCDataChannel) => {
             this.addConnection({ id: connector.id!, peerConnection: connector.conn, dataChannel });
@@ -127,10 +124,10 @@ export default class YPPeer extends EventEmitter {
             if (iceCandidate == null) {
                 throw new Error();
             }
-            this.socket.send(JSON.stringify({
+            Array.from(this.upstreams)[0].send({
                 type: "receiveIceCandidate",
                 payload: { to: from, iceCandidate },
-            }));
+            });
         });
         connector.addListener("channelopen", (dataChannel: RTCDataChannel) => {
             this.addConnection({ id: connector.id!, peerConnection: connector.conn, dataChannel });

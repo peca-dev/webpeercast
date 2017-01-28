@@ -2,6 +2,8 @@ import * as assert from "power-assert";
 import fetch from "node-fetch";
 import YPPeer from "../yppeer";
 const server = "localhost:8080";
+const log4js2 = require("log4js2");
+log4js2.configure({ loggers: [{ logLevel: log4js2.LogLevel.DEBUG }] });
 
 describe("P2P", () => {
     it("connect between two peers", async () => {
