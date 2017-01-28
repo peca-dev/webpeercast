@@ -10,6 +10,7 @@ export default class YPPeer extends EventEmitter {
     constructor(private connection: WebSocketConnection) {
         super();
 
+        logger.debug("new peer", this.id);
         connection.send(JSON.stringify({
             type: "id",
             payload: this.id,

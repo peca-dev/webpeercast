@@ -4,22 +4,28 @@ import { getLogger } from "log4javascript";
 const logger = getLogger();
 
 interface Connection {
-    peerConnection: RTCPeerConnection;
-    dataChannel: RTCDataChannel;
+    readonly id: string;
+    readonly peerConnection: RTCPeerConnection;
+    readonly dataChannel: RTCDataChannel;
 }
 
 export default class YPPeer extends EventEmitter {
     id: string | null;
     private socket: WebSocket;
-    private peers: YPPeer[] = []
     private connectors = new Map<string, RTCConnector>();
     private connections = new Set<Connection>();
 
-    debug = ((self: YPPeer) => ({
-        hasPeer(id: string) {
-            return self.peers.some(x => x.id === id);
+    debug = {
+        hasPeer: (id: string | null) => {
+            logger.debug(Array.from(this.connections));
+            for (let conn of this.connections) {
+                if (conn.id === id) {
+                    return true;
+                }
+            }
+            return false;
         },
-    }))(this);
+    };
 
     constructor(url: string) {
         super();
@@ -64,6 +70,7 @@ export default class YPPeer extends EventEmitter {
         let data = JSON.parse(e.data);
         switch (data.type) {
             case "id":
+                logger.debug("id", data.payload);
                 this.id = data.payload;
                 break;
             case "makeRTCOffer":
@@ -126,8 +133,11 @@ export default class YPPeer extends EventEmitter {
                 payload: { to, iceCandidate },
             }));
         });
+        connector.addListener("channelopen", (dataChannel: RTCDataChannel) => {
+            this.addConnection({ id: connector.id!, peerConnection: connector.conn, dataChannel });
+        });
         this.connectors.set(to, connector);
-        connector.makeOffer();
+        connector.makeOffer(to);
     }
 
     private async receiveRTCOffer(from: string, sdInit: RTCSessionDescriptionInit) {
@@ -144,8 +154,11 @@ export default class YPPeer extends EventEmitter {
                 payload: { to: from, iceCandidate },
             }));
         });
+        connector.addListener("channelopen", (dataChannel: RTCDataChannel) => {
+            this.addConnection({ id: connector.id!, peerConnection: connector.conn, dataChannel });
+        });
         this.connectors.set(from, connector);
-        return await connector.receiveOffer(sdInit);
+        return await connector.receiveOffer(from, sdInit);
     }
 
     private async receiveRTCAnswer(id: string, sdInit: RTCSessionDescriptionInit) {
@@ -165,5 +178,25 @@ export default class YPPeer extends EventEmitter {
         logger.debug("receiveIceCandidate", connector.receiveIceCandidate);
         await connector.receiveIceCandidate(candidate);
         logger.debug("receiveIceCandidate", "done");
+    }
+
+    private addConnection(connection: Connection) {
+        // RTCPeerConnection#connectionState は未実装
+        if (/* connection.peerConnection.connectionState !== "connected" || */ connection.dataChannel.readyState !== "open") {
+            logger.debug("addConnection failed.", connection.dataChannel.readyState);
+            return false;
+        }
+        connection.peerConnection.addEventListener("connectionstatechange", () => {
+            // if (connection.peerConnection.connectionState === "connected") {
+            //     return;
+            // }
+            this.connections.delete(connection);
+        });
+        connection.dataChannel.addEventListener("close", () => {
+            this.connections.delete(connection);
+        });
+        logger.debug("addConnection", connection.id);
+        this.connections.add(connection);
+        return true;
     }
 }

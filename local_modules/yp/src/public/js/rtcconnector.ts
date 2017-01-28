@@ -3,6 +3,7 @@ import { getLogger } from "log4javascript";
 const logger = getLogger();
 
 export default class RTCConnector extends EventEmitter {
+    id: string | null;
     conn = new RTCPeerConnection();
     dataChannel: RTCDataChannel | null;
 
@@ -20,18 +21,13 @@ export default class RTCConnector extends EventEmitter {
             }
             this.emit("icecandidate", e.candidate);
         };
-        this.conn.onicecandidateerror = e => {
-            logger.debug(e);
-        };
-        this.conn.oniceconnectionstatechange = e => {
-            logger.debug(e);
-        };
-        this.conn.onconnectionstatechange = e => {
-            logger.debug(e);
-        };
         this.conn.ondatachannel = e => {
             e.channel.onopen = e1 => {
-                logger.debug("remote open");
+                logger.debug("channelopen on client: ", this.id);
+                if (this.id == null) {
+                    throw new Error("Invaild state.");
+                }
+                this.emit("channelopen", e.channel);
             };
         };
         setTimeout(
@@ -40,14 +36,17 @@ export default class RTCConnector extends EventEmitter {
         );
     }
 
-    makeOffer() {
+    makeOffer(id: string) {
+        this.id = id;
         this.dataChannel = this.conn.createDataChannel("");
         this.dataChannel.addEventListener("open", e => {
-            logger.debug("open");
+            logger.debug("channelopen on server");
+            this.emit("channelopen", this.dataChannel);
         });
     }
 
-    async receiveOffer(sd: RTCSessionDescriptionInit) {
+    async receiveOffer(id: string, sd: RTCSessionDescriptionInit) {
+        this.id = id;
         await this.conn.setRemoteDescription(sd);
         let answer = await this.conn.createAnswer();
         await this.conn.setLocalDescription(answer);
@@ -60,7 +59,7 @@ export default class RTCConnector extends EventEmitter {
     }
 
     async receiveIceCandidate(candidate: RTCIceCandidateInit) {
-        logger.debug("addIceCandidate", candidate);
+        logger.debug(this.id, "addIceCandidate", candidate);
         await this.conn.addIceCandidate(candidate);
     }
 

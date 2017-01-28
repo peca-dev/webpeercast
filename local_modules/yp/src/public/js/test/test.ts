@@ -11,10 +11,12 @@ describe("P2P", () => {
         let a = new YPPeer(`ws://${server}`);
         let b = new YPPeer(`ws://${server}`);
         await new Promise(
-            (resolve, reject) => setTimeout(resolve, 5 * 1000),
+            (resolve, reject) => setTimeout(resolve, 1 * 1000),
         );
         let serverStatus = await fetchServerStatus();
         assert(serverStatus.clients.length === 2);
+        assert(a.debug.hasPeer(b.id));
+        assert(b.debug.hasPeer(a.id));
     });
 });
 

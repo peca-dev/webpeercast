@@ -70,7 +70,7 @@ export default class RootServer {
             });
             this.rtcConnectionProviders.add(provider);
         }
-        this.clients.set(connection, new YPPeer(connection));
+        this.clients.set(connection, client);
         logger.info((new Date()) + " Connection accepted.");
     }
 
