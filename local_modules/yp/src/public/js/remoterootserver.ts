@@ -1,7 +1,8 @@
 import { EventEmitter } from "fbemitter";
-import { getLogger } from "log4javascript";
+import * as log4js from "log4js";
+const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { printError } from "./printerror";
-const logger = getLogger();
+const logger = getLogger(__filename);
 
 export default class RemoteRootServer extends EventEmitter {
     static fetch(url: string) {

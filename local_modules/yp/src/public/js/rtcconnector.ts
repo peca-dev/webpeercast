@@ -1,7 +1,8 @@
 import { EventEmitter } from "fbemitter";
-import { getLogger } from "log4javascript";
+import * as log4js from "log4js";
+const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { safe } from "./printerror";
-const logger = getLogger();
+const logger = getLogger(__filename);
 
 export default class RTCConnector extends EventEmitter {
     id: string | null;
@@ -11,7 +12,7 @@ export default class RTCConnector extends EventEmitter {
     constructor() {
         super();
 
-        this.conn.addEventListener("negotiationneeded", safe(async (e: Event) => {
+        this.conn.addEventListener("negotiationneeded", safe(logger, async (e: Event) => {
             let offer = await this.conn.createOffer();
             await this.conn.setLocalDescription(offer);
             this.emit("offer", this.conn.localDescription);
@@ -40,7 +41,7 @@ export default class RTCConnector extends EventEmitter {
     makeOffer(id: string) {
         this.id = id;
         this.dataChannel = this.conn.createDataChannel("");
-        this.dataChannel.addEventListener("open", safe(async (e: Event) => {
+        this.dataChannel.addEventListener("open", safe(logger, async (e: Event) => {
             logger.debug("channelopen on server");
             this.emit("channelopen", this.dataChannel);
         }));
@@ -60,7 +61,7 @@ export default class RTCConnector extends EventEmitter {
     }
 
     async receiveIceCandidate(candidate: RTCIceCandidateInit) {
-        logger.debug(this.id, "addIceCandidate", candidate);
+        logger.debug(this.id!, "addIceCandidate", candidate);
         await this.conn.addIceCandidate(candidate);
     }
 

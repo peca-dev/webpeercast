@@ -7,8 +7,8 @@
   "dependencies": {
     "babel-polyfill": "^6.20.0",
     "fbemitter": "^2.1.1",
-    "log4javascript": "^1.4.15",
     "log4js": "^1.1.0",
+    "log4js2": "^1.0.0",
     "node-fetch": "^1.6.3",
     "uuid": "^3.0.1",
     "webrtc-adapter": "^3.1.0",

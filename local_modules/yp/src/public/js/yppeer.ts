@@ -1,9 +1,10 @@
 import { EventEmitter } from "fbemitter";
-import { getLogger } from "log4javascript";
+import * as log4js from "log4js";
+const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import RemoteRootServer from "./remoterootserver";
 import RTCConnector from "./rtcconnector";
 import { printError, safe } from "./printerror";
-const logger = getLogger();
+const logger = getLogger(__filename);
 
 interface Connection {
     readonly id: string;
@@ -24,7 +25,7 @@ export default class YPPeer extends EventEmitter {
 
     debug = {
         hasPeer: (id: string | null) => {
-            logger.debug(Array.from(this.connections));
+            logger.debug(Array.from(this.connections).toString());
             for (let conn of this.connections) {
                 if (conn.id === id) {
                     return true;
@@ -41,7 +42,7 @@ export default class YPPeer extends EventEmitter {
             .then(x => {
                 this.upstreams.add(x);
                 this.socket = x.socket;
-                x.socket.addEventListener("message", safe(async (f: MessageEvent) => {
+                x.socket.addEventListener("message", safe(logger, async (f: MessageEvent) => {
                     await this.receiveMessage(f);
                 }));
             })

@@ -50,6 +50,10 @@ module.exports = [
                 "test/test": ["babel-polyfill", "webrtc-adapter", "./src/public/js/test/test.ts"]
             },
             module: tsModule({ browsers: ["last 2 versions"] }),
+            node: {
+                __filename: true,
+                __dirname: true
+            },
             output: {
                 filename: "lib/public/js/[name].js"
             },
@@ -83,6 +87,10 @@ module.exports = [
             },
             externals: /^(?!\.)/,
             module: tsModule({ node: 6 }),
+            node: {
+                __filename: true,
+                __dirname: true
+            },
             output: {
                 filename: "lib/[name].js",
                 libraryTarget: "commonjs2"

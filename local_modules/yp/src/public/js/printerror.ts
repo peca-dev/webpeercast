@@ -1,7 +1,6 @@
-import { Logger, getLogger } from "log4javascript";
-const logger = getLogger();
+import { Logger } from "log4js";
 
-export function safe<T>(func: (e: T) => Promise<void>) {
+export function safe<T>(logger: Logger, func: (e: T) => Promise<void>) {
     return (event: T) => func(event).catch((e: any) => printError(logger, e));
 }
 

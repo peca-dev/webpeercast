@@ -1,9 +1,6 @@
 import * as assert from "power-assert";
 import fetch from "node-fetch";
-import { getLogger, BrowserConsoleAppender } from "log4javascript";
 import YPPeer from "../yppeer";
-const logger = getLogger();
-logger.addAppender(new BrowserConsoleAppender());
 const server = "localhost:8080";
 
 describe("P2P", () => {
