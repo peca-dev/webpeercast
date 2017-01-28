@@ -40,9 +40,13 @@ export default class YPPeer extends EventEmitter {
 
         RemoteRootServer.fetch(url)
             .then(x => {
-                this.upstreams.add(x);
-                this.socket = x.socket;
-                x.socket.addEventListener("message", safe(logger, async (f: MessageEvent) => {
+                this.id = x.id;
+                this.upstreams.add(x.upstream);
+                x.upstream.addListener("makeRTCOffer", safe(logger, async (to: string) => {
+                    await this.makeRTCOffer(to);
+                }));
+                this.socket = x.upstream.socket;
+                x.upstream.socket.addEventListener("message", safe(logger, async (f: MessageEvent) => {
                     await this.receiveMessage(f);
                 }));
             })
@@ -54,17 +58,6 @@ export default class YPPeer extends EventEmitter {
     private async receiveMessage(e: MessageEvent) {
         let data = JSON.parse(e.data);
         switch (data.type) {
-            case "id":
-                logger.debug("id", data.payload);
-                this.id = data.payload;
-                break;
-            case "makeRTCOffer":
-                let to = data.payload;
-                if (to == null) {
-                    throw new Error("Payload is null.");
-                }
-                this.makeRTCOffer(to);
-                break;
             case "receiveRTCOffer":
                 let answer = await this.receiveRTCOffer(
                     data.payload.from,
