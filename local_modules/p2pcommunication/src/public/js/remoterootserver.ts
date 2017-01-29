@@ -1,7 +1,7 @@
 import { EventEmitter } from "fbemitter";
 import * as log4js from "log4js";
 const getLogger = (<typeof log4js>require("log4js2")).getLogger;
-import { RemotePeer } from "./upstream";
+import { RemotePeer } from "./remotepeer";
 import { printError, safe } from "./printerror";
 const logger = getLogger();
 
