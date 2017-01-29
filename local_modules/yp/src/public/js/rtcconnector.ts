@@ -1,99 +1,18 @@
-import { EventEmitter, EventSubscription } from "fbemitter";
+import { EventSubscription } from "fbemitter";
 import * as log4js from "log4js";
 const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { safe } from "./printerror";
 import { Upstream } from "./upstream";
 const logger = getLogger(__filename);
 
-export default class RTCConnector extends EventEmitter {
-    id: string | null;
-    conn = new RTCPeerConnection();
-    dataChannel: RTCDataChannel | null;
-
-    constructor() {
-        super();
-
-        this.conn.addEventListener("negotiationneeded", safe(logger, async (e: Event) => {
-            let offer = await this.conn.createOffer();
-            await this.conn.setLocalDescription(offer);
-            this.emit("offer", this.conn.localDescription);
-        }));
-        this.conn.onicecandidate = e => {
-            if (e.candidate == null) {
-                return;
-            }
-            this.emit("icecandidate", e.candidate);
-        };
-        this.conn.ondatachannel = e => {
-            e.channel.onopen = e1 => {
-                logger.debug("channelopen on client: ", this.id);
-                if (this.id == null) {
-                    throw new Error("Invaild state.");
-                }
-                this.emit("channelopen", e.channel);
-            };
-        };
-        setTimeout(
-            () => this.emit("timeout"),
-            3000,
-        );
-    }
-
-    makeOffer(id: string) {
-        this.id = id;
-        this.dataChannel = this.conn.createDataChannel("");
-        this.dataChannel.addEventListener("open", safe(logger, async (e: Event) => {
-            logger.debug("channelopen on server");
-            this.emit("channelopen", this.dataChannel);
-        }));
-    }
-
-    async receiveOffer(id: string, sd: RTCSessionDescriptionInit) {
-        this.id = id;
-        await this.conn.setRemoteDescription(sd);
-        let answer = await this.conn.createAnswer();
-        await this.conn.setLocalDescription(answer);
-        return this.conn.localDescription!;
-    }
-
-    async receiveAnswer(sd: RTCSessionDescriptionInit) {
-        await this.conn.setRemoteDescription(sd);
-        this.printState();
-    }
-
-    async receiveIceCandidate(candidate: RTCIceCandidateInit) {
-        logger.debug(this.id!, "addIceCandidate", candidate);
-        await this.conn.addIceCandidate(candidate);
-    }
-
-    printState() {
-        logger.debug(
-            "printState",
-            this.conn.connectionState,
-            this.conn.iceConnectionState,
-            this.conn.iceGatheringState,
-            this.conn.signalingState,
-        );
-        this.conn.getStats()
-            .then(r => {
-                logger.debug(
-                    "printState",
-                    r,
-                );
-            });
-    }
-}
-
-export async function createDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream) {
-    exchangeIceCandidate(pc, to, upstream, async () => {
+export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream) {
+    return exchangeIceCandidate(pc, to, upstream, async () => {
         let dataChannel: RTCDataChannel | null = null;
         await waitEvent(pc, "negotiationneeded", () => {
             dataChannel = pc.createDataChannel("");
         });
         await exchangeOfferWithAnswer(pc, to, upstream);
-        logger.debug("wait open");
         await waitEvent(dataChannel!, "open");
-        logger.debug("opened");
         return dataChannel!;
     });
 }
@@ -105,26 +24,36 @@ async function exchangeOfferWithAnswer(pc: RTCPeerConnection, to: string, upstre
         type: "receiveRTCOffer",
         payload: { to, offer },
     });
-    logger.debug("waiting receiveRTCAnswer");
     let payload = await waitMessage(upstream, "receiveRTCAnswer", to);
     await pc.setRemoteDescription(payload.answer);
-    logger.debug("complete exchangeOfferWithAnswer");
 }
 
-export async function fetchDataChannel(
+export function fetchDataChannel(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
     upstream: Upstream,
 ) {
-    exchangeIceCandidate(pc, from, upstream, async () => {
+    return exchangeIceCandidate(pc, from, upstream, async () => {
         await exchangeAnswerWithOffer(pc, from, offer, upstream);
-        logger.debug("wait datachannel");
         let event: RTCDataChannelEvent = <any>await waitEvent(pc, "datachannel");
-        logger.debug("wait open2");
         await waitEvent(event.channel, "open");
-        logger.debug("opened2");
         return event.channel;
+    });
+}
+
+async function exchangeAnswerWithOffer(
+    pc: RTCPeerConnection,
+    from: string,
+    offer: RTCSessionDescriptionInit,
+    upstream: Upstream,
+) {
+    await pc.setRemoteDescription(offer);
+    let answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    upstream.send({
+        type: "receiveRTCAnswer",
+        payload: { to: from, answer: pc.localDescription! },
     });
 }
 
@@ -157,22 +86,6 @@ async function exchangeIceCandidate<T>(
         pc.removeEventListener("icecandidate", iceCandidateListener);
         receiveIceCandidateSubscribe.remove();
     }
-}
-
-async function exchangeAnswerWithOffer(
-    pc: RTCPeerConnection,
-    from: string,
-    offer: RTCSessionDescriptionInit,
-    upstream: Upstream,
-) {
-    await pc.setRemoteDescription(offer);
-    let answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    upstream.send({
-        type: "receiveRTCAnswer",
-        payload: { to: from, answer: pc.localDescription! },
-    });
-    logger.debug("complete exchangeAnswerWithOffer");
 }
 
 function waitMessage(upstream: Upstream, type: string, from: string) {
