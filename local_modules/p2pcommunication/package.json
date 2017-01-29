@@ -1,9 +1,9 @@
 {
-  "name": "template-typescript",
-  "description": "Project template.",
-  "version": "1.0.0",
+  "name": "p2p communication",
+  "description": "P2P communication module.",
+  "version": "0.0.0",
   "author": "progre",
-  "bugs": "https://github.com/progre/template-typescript/issues",
+  "bugs": "https://github.com/progre/webpeercast/issues",
   "dependencies": {
     "babel-polyfill": "^6.20.0",
     "fbemitter": "^2.1.1",
@@ -49,13 +49,13 @@
   "files": [
     "lib"
   ],
-  "homepage": "https://github.com/progre/template-typescript/",
+  "homepage": "https://github.com/progre/webpeercast/",
   "keywords": [
     "template"
   ],
   "main": "lib/index.js",
   "private": true,
-  "repository": "https://github.com/progre/template-typescript.git",
+  "repository": "https://github.com/progre/webpeercast.git",
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --progress",
     "debug-build": "cross-env NODE_ENV=development webpack --progress",
