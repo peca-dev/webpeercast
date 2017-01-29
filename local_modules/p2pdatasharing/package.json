@@ -1,6 +1,6 @@
 {
-  "name": "p2pcommunication",
-  "description": "P2P communication module.",
+  "name": "p2pdatasharing",
+  "description": "P2P data sharing module.",
   "version": "0.0.0",
   "author": "progre",
   "bugs": "https://github.com/progre/webpeercast/issues",
@@ -10,9 +10,7 @@
     "log4js": "^1.1.0",
     "log4js2": "^1.0.0",
     "node-fetch": "^1.6.3",
-    "uuid": "^3.0.1",
-    "webrtc-adapter": "^3.1.0",
-    "websocket": "^1.0.24"
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "@types/fbemitter": "^2.0.32",
@@ -21,8 +19,6 @@
     "@types/node": "^6.0.57",
     "@types/node-fetch": "^1.6.7",
     "@types/uuid": "^2.0.29",
-    "@types/webrtc": "0.0.21",
-    "@types/websocket": "0.0.32",
     "babel-core": "^6.21.0",
     "babel-loader": "^6.2.10",
     "babel-plugin-espower": "^2.3.2",
@@ -59,7 +55,9 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --progress",
     "debug-build": "cross-env NODE_ENV=development webpack --progress",
-    "postinstall": "typings install || echo Skipped.",
+    "postinstall": "npm run postinstall:link & npm run postinstall:typings",
+    "postinstall:link": "npm link ../p2pcommunication",
+    "postinstall:typings": "typings install || echo Skipped.",
     "test": "karma start",
     "test-server": "cross-env NODE_ENV=development node .",
     "watch": "cross-env NODE_ENV=development webpack --progress --watch"
