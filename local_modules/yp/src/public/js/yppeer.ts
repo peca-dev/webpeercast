@@ -20,12 +20,12 @@ interface Connection {
 export default class YPPeer extends EventEmitter {
     /** ルートサーバーが決定するid */
     id: string | null;
-    private upstreams = new Set<RemoteRootServer>();
-    private connections = new Set<Connection>();
+    private upstreams = new Set<Upstream>();
+    private otherStreams = new Set<Connection>();
 
     debug = {
         hasPeer: (id: string | null) => {
-            for (let conn of this.connections) {
+            for (let conn of this.otherStreams) {
                 if (conn.id === id) {
                     return true;
                 }
@@ -81,7 +81,7 @@ export default class YPPeer extends EventEmitter {
             to,
             upstream,
         );
-        this.connections.add({
+        this.otherStreams.add({
             id: to,
             peerConnection,
             dataChannel,
@@ -100,7 +100,7 @@ export default class YPPeer extends EventEmitter {
             offer,
             upstream,
         );
-        this.connections.add({
+        this.otherStreams.add({
             id: from,
             peerConnection,
             dataChannel,
