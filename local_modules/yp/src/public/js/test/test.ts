@@ -1,14 +1,14 @@
 import * as assert from "power-assert";
 import fetch from "node-fetch";
-import YPPeer from "../yppeer";
+import LocalPeer from "../localpeer";
 const server = "localhost:8080";
 const log4js2 = require("log4js2");
 log4js2.configure({ loggers: [{ logLevel: log4js2.LogLevel.DEBUG }] });
 
 describe("P2P", () => {
     it("connect between two peers", async () => {
-        let a = new YPPeer(`ws://${server}`);
-        let b = new YPPeer(`ws://${server}`);
+        let a = new LocalPeer(`ws://${server}`);
+        let b = new LocalPeer(`ws://${server}`);
         await new Promise(
             (resolve, reject) => setTimeout(resolve, 1 * 1000),
         );
@@ -22,8 +22,8 @@ describe("P2P", () => {
 xdescribe("Layer connection", () => {
     describe("When given a signaling server running and any peer standbying,", () => {
         describe("peer on level 1 layer", () => {
-            let peer: YPPeer;
-            let otherPeers: YPPeer[];
+            let peer: LocalPeer;
+            let otherPeers: LocalPeer[];
             before(async () => {
                 otherPeers = initPeers();
                 await new Promise(
@@ -32,7 +32,7 @@ xdescribe("Layer connection", () => {
                 let serverStatus = await fetchServerStatus();
                 assert(serverStatus.clients.length === 10);
 
-                peer = new YPPeer(`ws://${server}`);
+                peer = new LocalPeer(`ws://${server}`);
             });
             it("connect to a root server", async () => {
                 let serverStatus = await fetchServerStatus();
@@ -53,9 +53,9 @@ xdescribe("Layer connection", () => {
 });
 
 function initPeers() {
-    let peers: YPPeer[] = [];
+    let peers: LocalPeer[] = [];
     for (let i = 0; i < 10; i++) {
-        peers.push(new YPPeer(`ws://${server}`));
+        peers.push(new LocalPeer(`ws://${server}`));
     }
     // for (let i = 0; i < 10; i++) {
     //     layer2Peers.push(new YPPeer(`ws://${server}`));

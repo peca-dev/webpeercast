@@ -4,7 +4,7 @@ const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
 import { createDataChannel, fetchDataChannel } from "./rtcconnector";
-import { Upstream } from "./upstream";
+import { RemotePeer } from "./remotepeer";
 const logger = getLogger(__filename);
 
 interface Connection {
@@ -17,10 +17,10 @@ interface Connection {
  * P2P ネットワークのローカルのピア
  * 同じコネクションを維持する必要がないので、接続が切れても再接続しない
  */
-export default class YPPeer extends EventEmitter {
+export default class LocalPeer extends EventEmitter {
     /** ルートサーバーが決定するid */
     id: string | null;
-    private upstreams = new Set<Upstream>();
+    private upstreams = new Set<RemotePeer>();
     private otherStreams = new Set<Connection>();
 
     debug = {
@@ -74,7 +74,7 @@ export default class YPPeer extends EventEmitter {
         })();
     }
 
-    private async makeRTCOffer(to: string, upstream: Upstream) {
+    private async makeRTCOffer(to: string, upstream: RemotePeer) {
         let peerConnection = new RTCPeerConnection();
         let dataChannel = await createDataChannel(
             peerConnection,
@@ -91,7 +91,7 @@ export default class YPPeer extends EventEmitter {
     private async receiveRTCOffer(
         from: string,
         offer: RTCSessionDescriptionInit,
-        upstream: Upstream,
+        upstream: RemotePeer,
     ) {
         let peerConnection = new RTCPeerConnection();
         let dataChannel = await fetchDataChannel(

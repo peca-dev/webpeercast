@@ -1,7 +1,7 @@
-import YPPeer from "./yppeer";
+import LocalPeer from "./localpeer";
 
 async function main() {
-    new YPPeer("ws://localhost:8080"); // tslint:disable-line:no-unused-new
+    new LocalPeer("ws://localhost:8080"); // tslint:disable-line:no-unused-new
 }
 
 main();

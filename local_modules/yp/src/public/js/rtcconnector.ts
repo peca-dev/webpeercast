@@ -2,10 +2,10 @@ import { EventSubscription } from "fbemitter";
 import * as log4js from "log4js";
 const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { safe } from "./printerror";
-import { Upstream } from "./upstream";
+import { RemotePeer } from "./remotepeer";
 const logger = getLogger(__filename);
 
-export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream) {
+export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: RemotePeer) {
     return exchangeIceCandidate(pc, to, upstream, async () => {
         let dataChannel: RTCDataChannel | null = null;
         await waitEvent(pc, "negotiationneeded", () => {
@@ -17,7 +17,7 @@ export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: U
     });
 }
 
-async function exchangeOfferWithAnswer(pc: RTCPeerConnection, to: string, upstream: Upstream) {
+async function exchangeOfferWithAnswer(pc: RTCPeerConnection, to: string, upstream: RemotePeer) {
     let offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     upstream.send({
@@ -32,7 +32,7 @@ export function fetchDataChannel(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
-    upstream: Upstream,
+    upstream: RemotePeer,
 ) {
     return exchangeIceCandidate(pc, from, upstream, async () => {
         await exchangeAnswerWithOffer(pc, from, offer, upstream);
@@ -46,7 +46,7 @@ async function exchangeAnswerWithOffer(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
-    upstream: Upstream,
+    upstream: RemotePeer,
 ) {
     await pc.setRemoteDescription(offer);
     let answer = await pc.createAnswer();
@@ -60,7 +60,7 @@ async function exchangeAnswerWithOffer(
 async function exchangeIceCandidate<T>(
     pc: RTCPeerConnection,
     to: string,
-    upstream: Upstream,
+    upstream: RemotePeer,
     func: () => Promise<T>,
 ) {
     let iceCandidateListener = (e: RTCPeerConnectionIceEvent) => {
@@ -88,7 +88,7 @@ async function exchangeIceCandidate<T>(
     }
 }
 
-function waitMessage(upstream: Upstream, type: string, from: string) {
+function waitMessage(upstream: RemotePeer, type: string, from: string) {
     return new Promise<any>((resolve, reject) => {
         let eventSubscription: EventSubscription;
         let timer = setTimeout(

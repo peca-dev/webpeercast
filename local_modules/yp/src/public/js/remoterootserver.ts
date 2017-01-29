@@ -1,11 +1,11 @@
 import { EventEmitter } from "fbemitter";
 import * as log4js from "log4js";
 const getLogger = (<typeof log4js>require("log4js2")).getLogger;
-import { Upstream } from "./upstream";
+import { RemotePeer } from "./upstream";
 import { printError, safe } from "./printerror";
 const logger = getLogger();
 
-export default class RemoteRootServer extends EventEmitter implements Upstream {
+export default class RemoteRootServer extends EventEmitter implements RemotePeer {
     static fetch(url: string) {
         return new Promise<{ id: string, upstream: RemoteRootServer }>((resolve, reject) => {
             let socket = new WebSocket(url);
