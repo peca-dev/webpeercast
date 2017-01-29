@@ -1,9 +1,9 @@
 import { EventEmitter } from "fbemitter";
 import * as log4js from "log4js";
 const getLogger = (<typeof log4js>require("log4js2")).getLogger;
-import RemoteRootServer from "./remoterootserver";
-import RTCConnector from "./rtcconnector";
 import { printError, safe } from "./printerror";
+import RemoteRootServer from "./remoterootserver";
+import RTCConnector, { createDataChannel, fetchDataChannel } from "./rtcconnector";
 const logger = getLogger(__filename);
 
 interface Connection {
@@ -42,10 +42,19 @@ export default class YPPeer extends EventEmitter {
                 this.id = x.id;
                 this.upstreams.add(x.upstream);
                 x.upstream.addListener("makeRTCOffer", safe(logger, async (to: string) => {
-                    await this.makeRTCOffer(to);
+                    logger.debug("makeRTCOffer", to);
+                    let peerConnection = new RTCPeerConnection();
+                    let dataChannel = await createDataChannel(peerConnection, to, x.upstream);
+                    this.connections.add({ id: to, peerConnection, dataChannel });
+                }));
+                x.upstream.addListener("receiveRTCOffer", safe(logger, async (data: { from: string, offer: RTCSessionDescriptionInit }) => {
+                    logger.debug("receiveRTCOffer", data);
+                    let peerConnection = new RTCPeerConnection();
+                    let dataChannel = await fetchDataChannel(peerConnection, data.from, data.offer, x.upstream);
+                    this.connections.add({ id: data.from, peerConnection, dataChannel });
                 }));
                 x.upstream.addListener("message", safe(logger, async (data: any) => {
-                    await this.receiveMessage(data);
+                    // await this.receiveMessage(data);
                 }));
             })
             .catch(e => {
@@ -88,31 +97,31 @@ export default class YPPeer extends EventEmitter {
         }
     }
 
-    private makeRTCOffer(to: string) {
-        let connector = new RTCConnector();
-        connector.addListener("timeout", () => {
-            this.connectors.delete(to);
-        });
-        connector.addListener("offer", (offer: RTCSessionDescription) => {
-            Array.from(this.upstreams)[0].send({
-                type: "receiveRTCOffer",
-                payload: { to, offer },
-            });
-        });
-        connector.addListener("icecandidate", (iceCandidate: RTCIceCandidate) => {
-            if (iceCandidate == null) {
-                throw new Error();
-            }
-            Array.from(this.upstreams)[0].send({
-                type: "receiveIceCandidate",
-                payload: { to, iceCandidate },
-            });
-        });
-        connector.addListener("channelopen", (dataChannel: RTCDataChannel) => {
-            this.addConnection({ id: connector.id!, peerConnection: connector.conn, dataChannel });
-        });
-        this.connectors.set(to, connector);
-        connector.makeOffer(to);
+    private async makeRTCOffer(to: string) {
+        // let connector = new RTCConnector();
+        // connector.addListener("timeout", () => {
+        //     this.connectors.delete(to);
+        // });
+        // connector.addListener("offer", (offer: RTCSessionDescription) => {
+        //     Array.from(this.upstreams)[0].send({
+        //         type: "receiveRTCOffer",
+        //         payload: { to, offer },
+        //     });
+        // });
+        // connector.addListener("icecandidate", (iceCandidate: RTCIceCandidate) => {
+        //     if (iceCandidate == null) {
+        //         throw new Error();
+        //     }
+        //     Array.from(this.upstreams)[0].send({
+        //         type: "receiveIceCandidate",
+        //         payload: { to, iceCandidate },
+        //     });
+        // });
+        // connector.addListener("channelopen", (dataChannel: RTCDataChannel) => {
+        //     this.addConnection({ id: connector.id!, peerConnection: connector.conn, dataChannel });
+        // });
+        // this.connectors.set(to, connector);
+        // connector.makeOffer(to);
     }
 
     private async receiveRTCOffer(from: string, sdInit: RTCSessionDescriptionInit) {
