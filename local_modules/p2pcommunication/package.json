@@ -61,7 +61,7 @@
     "debug-build": "cross-env NODE_ENV=development webpack --progress",
     "postinstall": "typings install || echo Skipped.",
     "test": "karma start",
-    "test-server": "cross-env NODE_ENV=development node .",
+    "test-server": "cross-env NODE_ENV=development node lib/server.js",
     "watch": "cross-env NODE_ENV=development webpack --progress --watch"
   }
 }

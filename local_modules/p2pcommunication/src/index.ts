@@ -1,8 +1,7 @@
-try { require("source-map-support").install(); } catch (e) { /* empty */ }
 import RootServer from "./rootserver";
+import LocalPeer from "./public/js/localpeer";
 
-async function main() {
-    new RootServer(); // tslint:disable-line no-unused-new
+export {
+    RootServer,
+    LocalPeer
 }
-
-main().catch(e => console.error(e.stack || e));
