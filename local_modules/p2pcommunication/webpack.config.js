@@ -47,7 +47,6 @@ module.exports = [
         {
             entry: {
                 index: ["babel-polyfill", "webrtc-adapter", "./src/public/js/index.ts"],
-                server: ["babel-polyfill", "webrtc-adapter", "./src/public/js/server.ts"],
                 "test/test": ["babel-polyfill", "webrtc-adapter", "./src/public/js/test/test.ts"]
             },
             module: tsModule({ browsers: ["last 2 versions"] }),
@@ -84,6 +83,7 @@ module.exports = [
         {
             entry: {
                 index: ["babel-polyfill", "./src/index.ts"],
+                server: ["babel-polyfill", "./src/server.ts"],
                 "test/test": ["babel-polyfill", "./src/test/test.ts"]
             },
             externals: /^(?!\.)/,

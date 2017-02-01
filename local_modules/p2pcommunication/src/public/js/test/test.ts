@@ -5,8 +5,37 @@ const server = "localhost:8080";
 const log4js2 = require("log4js2");
 log4js2.configure({ loggers: [{ logLevel: log4js2.LogLevel.DEBUG }] });
 
-describe("P2P", () => {
-    it("connect between two peers", async () => {
+describe("Connection", () => {
+    context("between two peers", () => {
+        let a: LocalPeer;
+        let b: LocalPeer;
+
+        before(() => {
+            a = new LocalPeer(`ws://${server}`);
+            b = new LocalPeer(`ws://${server}`);
+        });
+
+        it("connects to server", async () => {
+            await new Promise(
+                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+            );
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === 2);
+            assert(a.debug.hasPeer(b.id));
+            assert(b.debug.hasPeer(a.id));
+        });
+
+        after(async () => {
+            a.disconnect();
+            b.disconnect();
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === 0);
+        });
+    });
+});
+
+describe("Sharing", () => {
+    it("between two peers is made", async () => {
         let a = new LocalPeer(`ws://${server}`);
         let b = new LocalPeer(`ws://${server}`);
         await new Promise(

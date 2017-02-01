@@ -59,7 +59,7 @@
     "postinstall:link": "npm link ../p2pcommunication",
     "postinstall:typings": "typings install || echo Skipped.",
     "test": "karma start",
-    "test-server": "cross-env NODE_ENV=development node .",
+    "test-server": "cross-env NODE_ENV=development node node_modules/p2pcommunication",
     "watch": "cross-env NODE_ENV=development webpack --progress --watch"
   }
 }

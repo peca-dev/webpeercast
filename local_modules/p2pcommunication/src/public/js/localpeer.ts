@@ -5,23 +5,19 @@ import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
 import { createDataChannel, fetchDataChannel } from "./rtcconnector";
 import { RemotePeer } from "./remotepeer";
+import RTCRemotePeer from "./rtcremotepeer";
 const logger = getLogger(__filename);
 
-interface Connection {
-    readonly id: string;
-    readonly peerConnection: RTCPeerConnection;
-    readonly dataChannel: RTCDataChannel;
-}
-
 /**
- * P2P ネットワークのローカルのピア
- * 同じコネクションを維持する必要がないので、接続が切れても再接続しない
+ * It does nothing when it's disconnected with a downstream.
+ * It connects to upstream when it's disconnected with a upstream.
  */
 export default class LocalPeer extends EventEmitter {
-    /** ルートサーバーが決定するid */
+    /** Decide by root server */
     id: string | null;
+    private url: string | null;
     private upstreams = new Set<RemotePeer>();
-    private otherStreams = new Set<Connection>();
+    private otherStreams = new Set<RemotePeer>();
 
     debug = {
         hasPeer: (id: string | null) => {
@@ -37,10 +33,25 @@ export default class LocalPeer extends EventEmitter {
     constructor(url: string) {
         super();
 
-        this.startConnectToServer(url);
+        this.url = url;
+        this.startConnectToServer();
     }
 
-    private startConnectToServer(url: string) {
+    disconnect() {
+        this.url = null;
+        for (let peer of this.upstreams) {
+            peer.disconnect();
+        }
+        for (let peer of this.otherStreams) {
+            peer.disconnect();
+        }
+    }
+
+    private startConnectToServer() {
+        if (this.url == null) {
+            return;
+        }
+        let url = this.url;
         (async () => {
             try {
                 this.id = null;
@@ -61,13 +72,13 @@ export default class LocalPeer extends EventEmitter {
                 );
                 upstream.addListener("close", safe(logger, async () => {
                     this.upstreams.delete(upstream);
-                    this.startConnectToServer(url);
+                    this.startConnectToServer();
                 }));
                 this.upstreams.add(upstream);
             } catch (e) {
                 printError(logger, e);
                 setTimeout(
-                    () => this.startConnectToServer(url),
+                    () => this.startConnectToServer(),
                     3 * 1000,
                 );
             }
@@ -81,11 +92,11 @@ export default class LocalPeer extends EventEmitter {
             to,
             upstream,
         );
-        this.otherStreams.add({
-            id: to,
+        this.otherStreams.add(new RTCRemotePeer(
+            to,
             peerConnection,
             dataChannel,
-        });
+        ));
     }
 
     private async receiveRTCOffer(
@@ -100,10 +111,10 @@ export default class LocalPeer extends EventEmitter {
             offer,
             upstream,
         );
-        this.otherStreams.add({
-            id: from,
+        this.otherStreams.add(new RTCRemotePeer(
+            from,
             peerConnection,
             dataChannel,
-        });
+        ));
     }
 }
