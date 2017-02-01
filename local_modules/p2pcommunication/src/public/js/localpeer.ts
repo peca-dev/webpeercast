@@ -18,6 +18,7 @@ export default class LocalPeer extends EventEmitter {
     private url: string | null;
     private upstreams = new Set<RemotePeer>();
     private otherStreams = new Set<RemotePeer>();
+    private downstreams = new Set<RemotePeer>();
 
     debug = {
         hasPeer: (id: string | null) => {
@@ -39,12 +40,14 @@ export default class LocalPeer extends EventEmitter {
 
     disconnect() {
         this.url = null;
-        for (let peer of this.upstreams) {
+        for (let peer of Array.from(this.upstreams).concat(Array.from(this.otherStreams))) {
             peer.disconnect();
         }
-        for (let peer of this.otherStreams) {
-            peer.disconnect();
-        }
+    }
+
+    broadcast(data: any) {
+        broadcastTo(data, this.upstreams);
+        broadcastTo(data, this.otherStreams);
     }
 
     private startConnectToServer() {
@@ -57,23 +60,7 @@ export default class LocalPeer extends EventEmitter {
                 this.id = null;
                 let { id, upstream } = await RemoteRootServer.fetch(url);
                 this.id = id;
-                upstream.addListener(
-                    "makeRTCOffer",
-                    safe(logger, async (to: string) => {
-                        await this.makeRTCOffer(to, upstream);
-                    }),
-                );
-                type Data = { from: string, offer: RTCSessionDescriptionInit };
-                upstream.addListener(
-                    "receiveRTCOffer",
-                    safe(logger, async (data: Data) => {
-                        await this.receiveRTCOffer(data.from, data.offer, upstream);
-                    }),
-                );
-                upstream.addListener("close", safe(logger, async () => {
-                    this.upstreams.delete(upstream);
-                    this.startConnectToServer();
-                }));
+                this.initUpstream(upstream);
                 this.upstreams.add(upstream);
             } catch (e) {
                 printError(logger, e);
@@ -85,6 +72,31 @@ export default class LocalPeer extends EventEmitter {
         })();
     }
 
+    private initUpstream(upstream: RemotePeer) {
+        upstream.addListener(
+            "makeRTCOffer",
+            safe(logger, async (to: string) => {
+                await this.makeRTCOffer(to, upstream);
+            }),
+        );
+        type Data = { from: string, offer: RTCSessionDescriptionInit };
+        upstream.addListener(
+            "receiveRTCOffer",
+            safe(logger, async (data: Data) => {
+                await this.receiveRTCOffer(data.from, data.offer, upstream);
+            }),
+        );
+        upstream.addListener("close", safe(logger, async () => {
+            this.upstreams.delete(upstream);
+            this.startConnectToServer();
+        }));
+        upstream.addListener("broadcast", (data: any) => {
+            this.emit("broadcast", data);
+            broadcastTo(data, this.otherStreams);
+            broadcastTo(data, this.downstreams);
+        });
+    }
+
     private async makeRTCOffer(to: string, upstream: RemotePeer) {
         let peerConnection = new RTCPeerConnection();
         let dataChannel = await createDataChannel(
@@ -92,11 +104,7 @@ export default class LocalPeer extends EventEmitter {
             to,
             upstream,
         );
-        this.otherStreams.add(new RTCRemotePeer(
-            to,
-            peerConnection,
-            dataChannel,
-        ));
+        this.addNewOtherStream(to, peerConnection, dataChannel);
     }
 
     private async receiveRTCOffer(
@@ -111,10 +119,29 @@ export default class LocalPeer extends EventEmitter {
             offer,
             upstream,
         );
-        this.otherStreams.add(new RTCRemotePeer(
-            from,
+        this.addNewOtherStream(from, peerConnection, dataChannel);
+    }
+
+    private addNewOtherStream(
+        id: string,
+        peerConnection: RTCPeerConnection,
+        dataChannel: RTCDataChannel,
+    ) {
+        let otherStream = new RTCRemotePeer(
+            id,
             peerConnection,
             dataChannel,
-        ));
+        );
+        otherStream.addListener("broadcast", (data: any) => {
+            this.emit("broadcast", data);
+            broadcastTo(data, this.downstreams);
+        });
+        this.otherStreams.add(otherStream);
+    }
+}
+
+function broadcastTo(data: any, streams: Set<RemotePeer>) {
+    for (let peer of streams) {
+        peer.send({ type: "broadcast", payload: data });
     }
 }

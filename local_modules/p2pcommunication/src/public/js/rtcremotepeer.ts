@@ -1,22 +1,28 @@
+import { EventEmitter } from "fbemitter";
 import { RemotePeer } from "./remotepeer";
 
-export default class RTCRemotePeer implements RemotePeer {
+export default class RTCRemotePeer extends EventEmitter implements RemotePeer {
     constructor(
-        public id: string,
-        public peerConnection: RTCPeerConnection,
-        public dataChannel: RTCDataChannel) {
+        public readonly id: string,
+        private peerConnection: RTCPeerConnection,
+        private dataChannel: RTCDataChannel
+    ) {
+        super();
+
+        dataChannel.addEventListener("message", (e: MessageEvent) => {
+            if (e.type !== "message") {
+                throw new Error(`Unsupported message type: ${e.type}`);
+            }
+            let data = JSON.parse(e.data);
+            if (data.type !== "broadcast") {
+                throw new Error(`Unsupported data type: ${e.type}`);
+            }
+            this.emit("broadcast", data.payload);
+        });
     }
 
     send(obj: { type: string, payload: Object }) {
-        throw new Error("Not implemented.");
-    }
-
-    addListener(
-        eventType: string,
-        listener: (payload: any) => void,
-        context?: any,
-    ): EventSubscription {
-        throw new Error("Not implemented.");
+        this.dataChannel.send(JSON.stringify(obj));
     }
 
     disconnect() {

@@ -10,15 +10,15 @@ describe("Connection", () => {
         let a: LocalPeer;
         let b: LocalPeer;
 
-        before(() => {
+        before(async () => {
             a = new LocalPeer(`ws://${server}`);
             b = new LocalPeer(`ws://${server}`);
-        });
-
-        it("connects to server", async () => {
             await new Promise(
                 (resolve, reject) => setTimeout(resolve, 1 * 1000),
             );
+        });
+
+        it("connects to server", async () => {
             let serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 2);
             assert(a.debug.hasPeer(b.id));
@@ -35,16 +35,38 @@ describe("Connection", () => {
 });
 
 describe("Sharing", () => {
-    it("between two peers is made", async () => {
-        let a = new LocalPeer(`ws://${server}`);
-        let b = new LocalPeer(`ws://${server}`);
-        await new Promise(
-            (resolve, reject) => setTimeout(resolve, 1 * 1000),
-        );
-        let serverStatus = await fetchServerStatus();
-        assert(serverStatus.clients.length === 2);
-        assert(a.debug.hasPeer(b.id));
-        assert(b.debug.hasPeer(a.id));
+    context("between two peers", () => {
+        let a: LocalPeer;
+        let b: LocalPeer;
+
+        before(async () => {
+            a = new LocalPeer(`ws://${server}`);
+            b = new LocalPeer(`ws://${server}`);
+            await new Promise(
+                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+            );
+        });
+
+        it("with one message does", async () => {
+            let messageDataA = "message-data-a";
+            let receiveA = await new Promise<string>(resolve => {
+                let subscribe = b.addListener("broadcast", (data: any) => {
+                    subscribe.remove();
+                    resolve(data);
+                });
+                a.broadcast(messageDataA);
+            });
+            assert(receiveA === messageDataA);
+            let messageDataB = "message-data-b";
+            let receiveB = await new Promise<string>(resolve => {
+                let subscribe = a.addListener("broadcast", (data: any) => {
+                    subscribe.remove();
+                    resolve(data);
+                });
+                b.broadcast(messageDataB);
+            });
+            assert(receiveB === messageDataB);
+        });
     });
 });
 
