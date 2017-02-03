@@ -14,7 +14,7 @@ const server = "localhost:8080";
 
 describe("Peer", () => {
     describe("when data spawn from server", () => {
-        let testData = [{ this: "this", is: "is", test: "test", data: 12345678 }];
+        let testData = [{ id: "1", this: "this", is: "is", test: "test", data: 12345678 }];
         before(() => {
             postTestData(testData);
         });
