@@ -29,7 +29,7 @@ function tsModule(targets) {
                     options: {
                         presets: [["env", { targets }]],
                         plugins: isProduction
-                            ? null
+                            ? undefined
                             : [[
                                 "babel-plugin-espower",
                                 { "embedAst": true }
