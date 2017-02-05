@@ -1,10 +1,10 @@
 import { EventEmitter } from "events";
-import YPPeer from "./yppeer";
+import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger("RTCConnectionProvider");
 
 export default class RTCConnectionProvider extends EventEmitter {
-    constructor(server: YPPeer, client: YPPeer) {
+    constructor(server: RemoteClient, client: RemoteClient) {
         super();
 
         let serverReceiveRTCOffer = (payload: { to: string, offer: RTCSessionDescriptionInit }) => {

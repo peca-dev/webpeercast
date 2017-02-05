@@ -4,7 +4,7 @@ import * as uuid from "uuid";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class YPPeer extends EventEmitter {
+export default class RemoteClient extends EventEmitter {
     readonly id = uuid.v4();
 
     constructor(private connection: WebSocketConnection) {
@@ -30,6 +30,9 @@ export default class YPPeer extends EventEmitter {
                                 break;
                             case "receiveIceCandidate":
                                 this.emit("receiveIceCandidate", obj.payload);
+                                break;
+                            case "broadcast":
+                                this.emit("broadcast", obj.payload);
                                 break;
                             default:
                                 throw new Error("Unsupported data type: " + obj.type);
@@ -84,6 +87,13 @@ export default class YPPeer extends EventEmitter {
                 from,
                 iceCandidate,
             },
+        }));
+    }
+
+    broadcast(payload: any) {
+        this.connection.send(JSON.stringify({
+            type: "broadcast",
+            payload,
         }));
     }
 }
