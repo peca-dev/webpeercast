@@ -5,10 +5,10 @@ before_install:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
 install:
-  - cd local_modules/p2pcommunication && npm install
-  - cd local_modules/p2pcommunication-client && npm install
+  - pushd local_modules/p2pcommunication && npm install && popd
+  - pushd local_modules/p2pcommunication-client && npm install && popd
 before_script:
-  - cd local_modules/p2pcommunication && npm run build
-  - cd local_modules/p2pcommunication-client && npm run build
+  - pushd local_modules/p2pcommunication && npm run build && popd
+  - pushd local_modules/p2pcommunication-client && npm run build && popd
 script:
-  - cd local_modules/p2pcommunication && npm run test-server& cd ../p2pcommunication-client && npm test
+  - cd local_modules/p2pcommunication && npm run test-server& cd ../p2pcommunication-client && npm test && kill $! && cd ../../
