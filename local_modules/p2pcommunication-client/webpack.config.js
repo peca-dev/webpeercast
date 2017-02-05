@@ -56,13 +56,6 @@ module.exports = [
             output: {
                 filename: "lib/[name].js"
             },
-            plugins: common.plugins.concat(isProduction
-                ? [
-                    new webpack.optimize.UglifyJsPlugin({
-                        output: { comments: uglifySaveLicense }
-                    })
-                ]
-                : []),
             target: "web"
         }
     ),
