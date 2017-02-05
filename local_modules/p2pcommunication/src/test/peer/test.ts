@@ -1,6 +1,7 @@
+/// <reference path="../../../typings/index.d.ts" />
 import * as assert from "power-assert";
 import fetch from "node-fetch";
-import LocalPeer from "../localpeer";
+import LocalPeer from "../../peer/localpeer";
 const server = "localhost:8080";
 const log4js2 = require("log4js2");
 log4js2.configure({ loggers: [{ logLevel: log4js2.LogLevel.DEBUG }] });

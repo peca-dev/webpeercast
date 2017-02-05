@@ -46,8 +46,7 @@ module.exports = [
         common,
         {
             entry: {
-                index: ["babel-polyfill", "webrtc-adapter", "./src/public/js/index.ts"],
-                "test/test": ["babel-polyfill", "webrtc-adapter", "./src/public/js/test/test.ts"]
+                "test/peer/test": ["babel-polyfill", "webrtc-adapter", "./src/test/peer/test.ts"]
             },
             module: tsModule({ browsers: ["last 2 versions"] }),
             node: {
@@ -55,7 +54,7 @@ module.exports = [
                 __dirname: true
             },
             output: {
-                filename: "lib/public/js/[name].js"
+                filename: "lib/[name].js"
             },
             plugins: common.plugins.concat([
                 new CopyWebpackPlugin(
@@ -84,7 +83,7 @@ module.exports = [
             entry: {
                 index: ["babel-polyfill", "./src/index.ts"],
                 server: ["babel-polyfill", "./src/server.ts"],
-                "test/test": ["babel-polyfill", "./src/test/test.ts"]
+                "test/server/test": ["babel-polyfill", "./src/test/server/test.ts"]
             },
             externals: /^(?!\.)/,
             module: tsModule({ node: 6 }),

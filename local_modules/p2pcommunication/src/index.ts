@@ -1,5 +1,5 @@
-import RootServer from "./rootserver";
-import LocalPeer from "./public/js/localpeer";
+import RootServer from "./server/rootserver";
+import LocalPeer from "./peer/localpeer";
 
 export {
     RootServer,
