@@ -1,7 +1,7 @@
-import RootServer from "./server/rootserver";
-import LocalPeer from "./peer/localpeer";
+import RemoteClient from "./remoteclient";
+import RootServer from "./rootserver";
 
 export {
+    RemoteClient,
     RootServer,
-    LocalPeer
 }

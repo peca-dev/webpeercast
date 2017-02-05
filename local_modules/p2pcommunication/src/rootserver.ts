@@ -4,12 +4,18 @@ import {
     server as WebSocketServer,
     connection as WebSocketConnection,
 } from "websocket";
-import { getLogger } from "log4js";
+import * as declare from "../index";
 import RTCConnectionProvider from "./rtcconnectionprovider";
 import RemoteClient from "./remoteclient";
+import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RootServer extends EventEmitter {
+/**
+ * Emitting events:
+ * - broadcast
+ * - connect
+ */
+export default class RootServer extends EventEmitter implements declare.RootServer {
     private wsServer: WebSocketServer;
     private clients = new WeakMap<WebSocketConnection, RemoteClient>();
     private rtcConnectionProviders = new Set<RTCConnectionProvider>();
@@ -58,14 +64,15 @@ export default class RootServer extends EventEmitter {
 
     private acceptNewConnection(connection: WebSocketConnection) {
         logger.debug("Connection count:", this.wsServer.connections.length);
-        let remotePeer = new RemoteClient(connection);
-        if (this.wsServer.connections.length > 1) {
-            this.startToConnectOtherPeer(connection, remotePeer);
-        }
-        remotePeer.addListener("broadcast", (payload: any) => {
-            this.emit("broadcast", { from: remotePeer.id, payload });
+        let remoteClient = new RemoteClient(connection);
+        remoteClient.addListener("broadcast", (payload: any) => {
+            this.emit("broadcast", { from: remoteClient.id, payload });
         });
-        this.clients.set(connection, remotePeer);
+        this.emit("connect", remoteClient);
+        if (this.wsServer.connections.length > 1) {
+            this.startToConnectOtherPeer(connection, remoteClient);
+        }
+        this.clients.set(connection, remoteClient);
         logger.info((new Date()) + " Connection accepted.");
     }
 

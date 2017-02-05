@@ -7,26 +7,26 @@ export default class RTCConnectionProvider extends EventEmitter {
     constructor(server: RemoteClient, client: RemoteClient) {
         super();
 
-        let serverReceiveRTCOffer = (payload: { to: string, offer: RTCSessionDescriptionInit }) => {
+        let serverReceiveRTCOffer = (payload: { to: string, offer: {} }) => {
             if (payload.to !== client.id) {
                 return;
             }
             client.receiveRTCOffer(server.id, payload.offer);
         };
-        let serverReceiveIceCandidate = (payload: { to: string, iceCandidate: RTCIceCandidateInit }) => {
+        let serverReceiveIceCandidate = (payload: { to: string, iceCandidate: {} }) => {
             if (payload.to !== client.id) {
                 return;
             }
             logger.debug("Send ice to client.");
             client.receiveIceCandidate(server.id, payload.iceCandidate);
         };
-        let clientReceiveRTCAnswer = (payload: { to: string, answer: RTCSessionDescriptionInit }) => {
+        let clientReceiveRTCAnswer = (payload: { to: string, answer: {} }) => {
             if (payload.to !== server.id) {
                 return;
             }
             server.receiveRTCAnswer(client.id, payload.answer);
         };
-        let clientReceiveIceCandidate = (payload: { to: string, iceCandidate: RTCIceCandidateInit }) => {
+        let clientReceiveIceCandidate = (payload: { to: string, iceCandidate: {} }) => {
             if (payload.to !== server.id) {
                 logger.debug("Invalid iceCandidate data from client to server.");
                 return;

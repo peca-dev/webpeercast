@@ -4,7 +4,7 @@ import {
     server as WebSocketServer,
     connection as WebSocketConnection,
 } from "websocket";
-import RootServer from "./server/rootserver";
+import RootServer from "./rootserver";
 import { getLogger } from "log4js";
 const logger = getLogger();
 const debug = process.env.NODE_ENV === "development";
@@ -22,7 +22,7 @@ async function main() {
         response.writeHead(404);
         response.end();
     });
-    server = new RootServer(httpServer); // tslint:disable-line no-unused-new
+    server = new RootServer(httpServer);
 }
 
 function createDebugJSON(wsServer: WebSocketServer, clients: WeakMap<WebSocketConnection, { id: string }>) {

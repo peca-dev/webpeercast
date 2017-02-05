@@ -1,10 +1,11 @@
 import { EventEmitter } from "events";
 import { connection as WebSocketConnection } from "websocket";
 import * as uuid from "uuid";
+import * as declare from "../index";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RemoteClient extends EventEmitter {
+export default class RemoteClient extends EventEmitter implements declare.RemoteClient {
     readonly id = uuid.v4();
 
     constructor(private connection: WebSocketConnection) {
@@ -60,7 +61,7 @@ export default class RemoteClient extends EventEmitter {
         }));
     }
 
-    receiveRTCOffer(from: string, offer: RTCSessionDescriptionInit) {
+    receiveRTCOffer(from: string, offer: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveRTCOffer",
             payload: {
@@ -70,7 +71,7 @@ export default class RemoteClient extends EventEmitter {
         }));
     }
 
-    receiveRTCAnswer(from: string, answer: RTCSessionDescriptionInit) {
+    receiveRTCAnswer(from: string, answer: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveRTCAnswer",
             payload: {
@@ -80,7 +81,7 @@ export default class RemoteClient extends EventEmitter {
         }));
     }
 
-    receiveIceCandidate(from: string, iceCandidate: RTCIceCandidateInit) {
+    receiveIceCandidate(from: string, iceCandidate: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveIceCandidate",
             payload: {
