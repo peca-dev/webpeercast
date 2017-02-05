@@ -7,26 +7,13 @@ import { getLogger } from "log4js";
 import RTCConnectionProvider from "./rtcconnectionprovider";
 import YPPeer from "./yppeer";
 const logger = getLogger();
-const debug = process.env.NODE_ENV === "development";
 
 export default class RootServer {
-    private httpServer: http.Server;
     private wsServer: WebSocketServer;
     private clients = new WeakMap<WebSocketConnection, YPPeer>();
     private rtcConnectionProviders = new Set<RTCConnectionProvider>();
 
-    constructor() {
-        this.httpServer = http.createServer((request, response) => {
-            if (debug) {
-                response.setHeader("Access-Control-Allow-Origin", "*");
-                response.writeHead(200);
-                response.end(this.createDebugJSON());
-                return;
-            }
-            logger.info((new Date()) + " Received request for " + request.url);
-            response.writeHead(404);
-            response.end();
-        });
+    constructor(private httpServer: http.Server) {
         this.wsServer = new WebSocketServer({
             httpServer: this.httpServer,
             // You should not use autoAcceptConnections for production
@@ -72,14 +59,6 @@ export default class RootServer {
         }
         this.clients.set(connection, client);
         logger.info((new Date()) + " Connection accepted.");
-    }
-
-    private createDebugJSON() {
-        return JSON.stringify({
-            clients: this.wsServer.connections
-                .map(x => this.clients.get(x) !)
-                .map(x => ({ id: x.id })),
-        });
     }
 }
 
