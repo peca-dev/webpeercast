@@ -11,5 +11,5 @@ before_script:
 script:
   - pushd local_modules/p2pcommunication
   - npm run debug-build
-  - node .& npm test; kill $!
+  - node lib/server.js& npm test; kill $!
   - popd
