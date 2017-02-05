@@ -38,6 +38,7 @@ export default class RTCConnectionProvider extends EventEmitter {
         server.on("receiveIceCandidate", serverReceiveIceCandidate);
         client.once("receiveRTCAnswer", clientReceiveRTCAnswer);
         client.on("receiveIceCandidate", clientReceiveIceCandidate);
+        // He don't check connection completed. It should do client.
         setTimeout(
             () => {
                 server.removeListener("receiveRTCOffer", serverReceiveRTCOffer);
@@ -45,7 +46,6 @@ export default class RTCConnectionProvider extends EventEmitter {
                 client.removeListener("receiveRTCAnswer", clientReceiveRTCAnswer);
                 client.removeListener("receiveIceCandidate", clientReceiveIceCandidate);
                 this.emit("timeout");
-                logger.debug("Timeout.");
             },
             3 * 1000,
         );

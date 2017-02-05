@@ -69,7 +69,6 @@ export default class RootServer extends EventEmitter {
         logger.info((new Date()) + " Connection accepted.");
     }
 
-    // TODO: 接続失敗を管理すべき
     private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient) {
         let provider = new RTCConnectionProvider(
             this.clients.get(randomOne(this.wsServer.connections, connection)) !,
