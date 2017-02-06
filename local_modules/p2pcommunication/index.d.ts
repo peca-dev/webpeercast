@@ -7,4 +7,5 @@ export declare class RemoteClient {
 
 export declare class RootServer extends EventEmitter {
     constructor(httpServer: http.Server);
+    get remoteClients(): RemoteClient[];
 }

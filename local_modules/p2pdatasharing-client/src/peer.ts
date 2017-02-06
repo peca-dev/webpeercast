@@ -11,18 +11,20 @@ export default class Peer<T extends { id: string }> extends EventEmitter {
         super();
 
         this.p2pPeer = new LocalPeer(url);
-        this.p2pPeer.addListener("broadcast", (data: Array<Query<T>>) => {
-            this.eventQueue.push(...data);
+        this.p2pPeer.addListener("broadcast", (data: ReadonlyArray<Query<T>>) => {
+            this.eventQueue.push(
+                ...(data.map(x => ({ type: x.type, date: new Date(<any>x.date), payload: x.payload }))),
+            );
             this.emit("update");
         });
     }
 
-    set(date: Date, data: T) {
-        this.p2pPeer.broadcast([{ type: "set", date, data }]);
+    set(date: Date, payload: T) {
+        this.p2pPeer.broadcast([{ type: "set", date, payload }]);
     }
 
     delete(date: Date, id: string) {
-        this.p2pPeer.broadcast([{ type: "delete", date, data: { id } }]);
+        this.p2pPeer.broadcast([{ type: "delete", date, payload: { id } }]);
     }
 
     getAll() {

@@ -10,20 +10,20 @@ async function main() {
     let server: RootServer<any>;
     let httpServer = http.createServer((request, response) => {
         if (debug) {
+            if (request.url === "/clear") {
+                (server as any).eventQueue.length = 0;
+                response.setHeader("Access-Control-Allow-Origin", "*");
+                response.writeHead(200);
+                response.end();
+                return;
+            }
             if (request.method === "POST") {
                 request.addListener("readable", () => {
                     let data = request.read(parseInt(request.headers["Content-Length"], 10));
                     if (data == null) {
                         return;
                     }
-                    (server as any).eventQueue.length = 0;
-                    for (let datum of JSON.parse(data) as ReadonlyArray<any>) {
-                        (server as any).eventQueue.push({
-                            type: "set",
-                            date: new Date(),
-                            payload: datum,
-                        });
-                    }
+                    server.setAll(JSON.parse(data));
                     response.setHeader("Access-Control-Allow-Origin", "*");
                     response.writeHead(200);
                     response.end();
@@ -31,7 +31,7 @@ async function main() {
                 return;
             }
         }
-        logger.info((new Date()) + " Received request for " + request.url);
+        logger.info((new Date()) + " Received request for " + request.url + ", " + request.method);
         response.writeHead(404);
         response.end();
     });

@@ -20,6 +20,13 @@ export default class RootServer extends EventEmitter implements declare.RootServ
     private clients = new WeakMap<WebSocketConnection, RemoteClient>();
     private rtcConnectionProviders = new Set<RTCConnectionProvider>();
 
+    get remoteClients() {
+        return this.wsServer
+            .connections
+            .map(x => this.clients.get(x) as RemoteClient)
+            .filter(x => x != null);
+    }
+
     constructor(private httpServer: http.Server) {
         super();
 

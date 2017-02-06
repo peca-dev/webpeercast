@@ -29,8 +29,75 @@ describe("Peer", () => {
                 resolve();
             });
         }));
+
+        after(async () => {
+            await clearTestData();
+        });
     });
+
+    describe("when data spawn from server incrementaly", () => {
+        before(async () => {
+            await postTestData([]);
+        });
+
+        it("has added data", async () => {
+            let peer: Peer<{ id: string, data: string }> = <any>null;
+            await new Promise(async (resolve, reject) => {
+                peer = new Peer<{ id: string, data: string }>(`ws://${server}`);
+                let describe = peer.addListener("update", () => {
+                    describe.remove();
+                    resolve();
+                });
+            });
+            let data0 = peer.getAll();
+            assert(data0.length === 0);
+            await waitUpdateAfterAction(
+                peer,
+                () => postTestData([{ id: "1", data: "one" }]),
+            );
+            let data1 = peer.getAll();
+            assert(data1.length === 1);
+            assert(data1.filter(x => x.id === "1")[0].data === "one");
+            await waitUpdateAfterAction(
+                peer,
+                () => postTestData([{ id: "2", data: "two" }]),
+            );
+            let data2 = peer.getAll();
+            assert(data2.length === 2);
+            assert(data2.filter(x => x.id === "1")[0].data === "one");
+            assert(data2.filter(x => x.id === "2")[0].data === "two");
+            await waitUpdateAfterAction(
+                peer,
+                () => postTestData([{ id: "3", data: "three" }]),
+            );
+            let data3 = peer.getAll();
+            assert(data3.length === 3);
+            assert(data3.filter(x => x.id === "1")[0].data === "one");
+            assert(data3.filter(x => x.id === "2")[0].data === "two");
+            assert(data3.filter(x => x.id === "3")[0].data === "three");
+        });
+
+        after(async () => {
+            await clearTestData();
+        });
+    });
+
+    function waitUpdateAfterAction(peer: Peer<any>, action: () => void) {
+        return new Promise(async (resolve, reject) => {
+            let describe = peer.addListener("update", () => {
+                describe.remove();
+                resolve();
+            });
+            action();
+        });
+    }
 });
+
+async function clearTestData() {
+    return (
+        await fetch(`http://${server}/clear`)
+    ).status;
+}
 
 async function postTestData(obj: any) {
     return (

@@ -15,4 +15,22 @@ export default class RootServer<T extends { id: string }> {
             remoteClient.broadcast(this.eventQueue);
         });
     }
+
+    set(payload: T) {
+        let item: Query<T> = { type: "set", date: new Date(), payload };
+        this.eventQueue.push(item);
+        for (let client of this.server.remoteClients) {
+            client.broadcast([item]);
+        }
+    }
+
+    setAll(payloads: T[]) {
+        let items = payloads.map(x => ({ type: "set", date: new Date(), payload: x }) as Query<T>);
+        for (let item of items) {
+            this.eventQueue.push(item);
+        }
+        for (let client of this.server.remoteClients) {
+            client.broadcast(items);
+        }
+    }
 }
