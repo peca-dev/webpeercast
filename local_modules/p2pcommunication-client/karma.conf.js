@@ -7,7 +7,7 @@ module.exports = config => {
         frameworks: ["mocha"],
         // list of files / patterns to load in the browser
         files: [
-            "lib/test/peer/test.js"
+            "lib/test/test.js"
         ],
         // list of files to exclude
         exclude: [

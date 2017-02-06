@@ -1,32 +1,32 @@
 import { EventEmitter } from "events";
-import YPPeer from "./yppeer";
+import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger("RTCConnectionProvider");
 
 export default class RTCConnectionProvider extends EventEmitter {
-    constructor(server: YPPeer, client: YPPeer) {
+    constructor(server: RemoteClient, client: RemoteClient) {
         super();
 
-        let serverReceiveRTCOffer = (payload: { to: string, offer: RTCSessionDescriptionInit }) => {
+        let serverReceiveRTCOffer = (payload: { to: string, offer: {} }) => {
             if (payload.to !== client.id) {
                 return;
             }
             client.receiveRTCOffer(server.id, payload.offer);
         };
-        let serverReceiveIceCandidate = (payload: { to: string, iceCandidate: RTCIceCandidateInit }) => {
+        let serverReceiveIceCandidate = (payload: { to: string, iceCandidate: {} }) => {
             if (payload.to !== client.id) {
                 return;
             }
             logger.debug("Send ice to client.");
             client.receiveIceCandidate(server.id, payload.iceCandidate);
         };
-        let clientReceiveRTCAnswer = (payload: { to: string, answer: RTCSessionDescriptionInit }) => {
+        let clientReceiveRTCAnswer = (payload: { to: string, answer: {} }) => {
             if (payload.to !== server.id) {
                 return;
             }
             server.receiveRTCAnswer(client.id, payload.answer);
         };
-        let clientReceiveIceCandidate = (payload: { to: string, iceCandidate: RTCIceCandidateInit }) => {
+        let clientReceiveIceCandidate = (payload: { to: string, iceCandidate: {} }) => {
             if (payload.to !== server.id) {
                 logger.debug("Invalid iceCandidate data from client to server.");
                 return;
@@ -38,6 +38,7 @@ export default class RTCConnectionProvider extends EventEmitter {
         server.on("receiveIceCandidate", serverReceiveIceCandidate);
         client.once("receiveRTCAnswer", clientReceiveRTCAnswer);
         client.on("receiveIceCandidate", clientReceiveIceCandidate);
+        // He don't check connection completed. It should do client.
         setTimeout(
             () => {
                 server.removeListener("receiveRTCOffer", serverReceiveRTCOffer);
@@ -45,7 +46,6 @@ export default class RTCConnectionProvider extends EventEmitter {
                 client.removeListener("receiveRTCAnswer", clientReceiveRTCAnswer);
                 client.removeListener("receiveIceCandidate", clientReceiveIceCandidate);
                 this.emit("timeout");
-                logger.debug("Timeout.");
             },
             3 * 1000,
         );

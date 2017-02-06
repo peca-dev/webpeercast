@@ -1,32 +1,28 @@
+import { EventEmitter } from "events";
 import * as http from "http";
 import {
     server as WebSocketServer,
     connection as WebSocketConnection,
 } from "websocket";
-import { getLogger } from "log4js";
+import * as declare from "../index";
 import RTCConnectionProvider from "./rtcconnectionprovider";
-import YPPeer from "./yppeer";
+import RemoteClient from "./remoteclient";
+import { getLogger } from "log4js";
 const logger = getLogger();
-const debug = process.env.NODE_ENV === "development";
 
-export default class RootServer {
-    private httpServer: http.Server;
+/**
+ * Emitting events:
+ * - broadcast
+ * - connect
+ */
+export default class RootServer extends EventEmitter implements declare.RootServer {
     private wsServer: WebSocketServer;
-    private clients = new WeakMap<WebSocketConnection, YPPeer>();
+    private clients = new WeakMap<WebSocketConnection, RemoteClient>();
     private rtcConnectionProviders = new Set<RTCConnectionProvider>();
 
-    constructor() {
-        this.httpServer = http.createServer((request, response) => {
-            if (debug) {
-                response.setHeader("Access-Control-Allow-Origin", "*");
-                response.writeHead(200);
-                response.end(this.createDebugJSON());
-                return;
-            }
-            logger.info((new Date()) + " Received request for " + request.url);
-            response.writeHead(404);
-            response.end();
-        });
+    constructor(private httpServer: http.Server) {
+        super();
+
         this.wsServer = new WebSocketServer({
             httpServer: this.httpServer,
             // You should not use autoAcceptConnections for production
@@ -57,29 +53,38 @@ export default class RootServer {
         });
     }
 
+    broadcast(payload: any) {
+        let remotePeers = this.wsServer
+            .connections
+            .map(x => this.clients.get(x) as RemoteClient);
+        for (let remotePeer of remotePeers) {
+            remotePeer.broadcast(payload);
+        }
+    }
+
     private acceptNewConnection(connection: WebSocketConnection) {
         logger.debug("Connection count:", this.wsServer.connections.length);
-        let client = new YPPeer(connection);
+        let remoteClient = new RemoteClient(connection);
+        remoteClient.addListener("broadcast", (payload: any) => {
+            this.emit("broadcast", { from: remoteClient.id, payload });
+        });
+        this.emit("connect", remoteClient);
         if (this.wsServer.connections.length > 1) {
-            let provider = new RTCConnectionProvider(
-                this.clients.get(randomOne(this.wsServer.connections, connection)) !,
-                client,
-            );
-            provider.on("timeout", () => {
-                this.rtcConnectionProviders.delete(provider);
-            });
-            this.rtcConnectionProviders.add(provider);
+            this.startToConnectOtherPeer(connection, remoteClient);
         }
-        this.clients.set(connection, client);
+        this.clients.set(connection, remoteClient);
         logger.info((new Date()) + " Connection accepted.");
     }
 
-    private createDebugJSON() {
-        return JSON.stringify({
-            clients: this.wsServer.connections
-                .map(x => this.clients.get(x) !)
-                .map(x => ({ id: x.id })),
+    private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient) {
+        let provider = new RTCConnectionProvider(
+            this.clients.get(randomOne(this.wsServer.connections, connection)) !,
+            client,
+        );
+        provider.on("timeout", () => {
+            this.rtcConnectionProviders.delete(provider);
         });
+        this.rtcConnectionProviders.add(provider);
     }
 }
 

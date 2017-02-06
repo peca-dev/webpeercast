@@ -1,10 +1,11 @@
 import { EventEmitter } from "events";
 import { connection as WebSocketConnection } from "websocket";
 import * as uuid from "uuid";
+import * as declare from "../index";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class YPPeer extends EventEmitter {
+export default class RemoteClient extends EventEmitter implements declare.RemoteClient {
     readonly id = uuid.v4();
 
     constructor(private connection: WebSocketConnection) {
@@ -30,6 +31,9 @@ export default class YPPeer extends EventEmitter {
                                 break;
                             case "receiveIceCandidate":
                                 this.emit("receiveIceCandidate", obj.payload);
+                                break;
+                            case "broadcast":
+                                this.emit("broadcast", obj.payload);
                                 break;
                             default:
                                 throw new Error("Unsupported data type: " + obj.type);
@@ -57,7 +61,7 @@ export default class YPPeer extends EventEmitter {
         }));
     }
 
-    receiveRTCOffer(from: string, offer: RTCSessionDescriptionInit) {
+    receiveRTCOffer(from: string, offer: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveRTCOffer",
             payload: {
@@ -67,7 +71,7 @@ export default class YPPeer extends EventEmitter {
         }));
     }
 
-    receiveRTCAnswer(from: string, answer: RTCSessionDescriptionInit) {
+    receiveRTCAnswer(from: string, answer: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveRTCAnswer",
             payload: {
@@ -77,13 +81,20 @@ export default class YPPeer extends EventEmitter {
         }));
     }
 
-    receiveIceCandidate(from: string, iceCandidate: RTCIceCandidateInit) {
+    receiveIceCandidate(from: string, iceCandidate: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveIceCandidate",
             payload: {
                 from,
                 iceCandidate,
             },
+        }));
+    }
+
+    broadcast(payload: any) {
+        this.connection.send(JSON.stringify({
+            type: "broadcast",
+            payload,
         }));
     }
 }

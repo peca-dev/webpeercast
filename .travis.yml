@@ -1,15 +1,16 @@
 sudo: false
 language: node_js
 node_js: 6
-install:
-  - pushd local_modules/p2pcommunication
-  - npm install
-  - popd
-before_script:
+addons:
+  firefox: "51.0.1"
+before_install:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
+install:
+  - pushd local_modules/p2pcommunication && npm install && popd
+  - pushd local_modules/p2pcommunication-client && npm install && popd
+before_script:
+  - pushd local_modules/p2pcommunication && npm run build && popd
+  - pushd local_modules/p2pcommunication-client && npm run build && popd
 script:
-  - pushd local_modules/p2pcommunication
-  - npm run debug-build
-  - node lib/server.js& npm test; kill $!
-  - popd
+  - cd local_modules/p2pcommunication && npm run test-server& pushd local_modules/p2pcommunication-client && npm test && kill $! && popd
