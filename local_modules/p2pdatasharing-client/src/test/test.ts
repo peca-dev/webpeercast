@@ -1,13 +1,8 @@
 /// <reference path="../../typings/index.d.ts" />
 import * as assert from "power-assert";
-import fetch from "node-fetch";
 import Peer from "../peer";
 
 const server = "localhost:8080";
-
-// ルートサーバーから送った情報をピアで受け取ることができる
-// Aから送った情報をBで受け取ることができる
-// ... ここまではp2pcommunicationの機能
 
 // ルートサーバーから送った情報を任意のタイミングでAから取得できる
 // Bから送った情報を任意のタイミングでAから取得できる
@@ -15,8 +10,8 @@ const server = "localhost:8080";
 describe("Peer", () => {
     describe("when data spawn from server", () => {
         let testData = [{ id: "1", this: "this", is: "is", test: "test", data: 12345678 }];
-        before(() => {
-            postTestData(testData);
+        before(async () => {
+            await postTestData(testData);
         });
 
         it("has all data", () => new Promise((resolve, reject) => {
@@ -25,7 +20,7 @@ describe("Peer", () => {
                 describe.remove();
                 let data = peer.getAll();
                 assert(data.length === testData.length);
-                for (let i = 0; i < data.lentgth; i++) {
+                for (let i = 0; i < data.length; i++) {
                     assert(data[i].this === testData[i].this);
                     assert(data[i].is === testData[i].is);
                     assert(data[i].test === testData[i].test);

@@ -1,5 +1,6 @@
 import { EventEmitter } from "fbemitter";
-import { LocalPeer } from "p2pcommunication";
+import { LocalPeer } from "p2pcommunication-client";
+import { Query } from "./query";
 
 // キューを保持して、必要があれば送ったりする
 export default class Peer<T extends { id: string }> extends EventEmitter {
@@ -12,6 +13,7 @@ export default class Peer<T extends { id: string }> extends EventEmitter {
         this.p2pPeer = new LocalPeer(url);
         this.p2pPeer.addListener("broadcast", (data: Array<Query<T>>) => {
             this.eventQueue.push(...data);
+            this.emit("update");
         });
     }
 
@@ -39,12 +41,6 @@ export default class Peer<T extends { id: string }> extends EventEmitter {
         }
         return Array.from(map.values());
     }
-}
-
-interface Query<T extends { id: string }> {
-    type: "set" | "delete";
-    date: Date;
-    payload: T;
 }
 
 function asc(a: Query<any>, b: Query<any>) {
