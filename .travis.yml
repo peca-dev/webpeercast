@@ -9,8 +9,13 @@ before_install:
 install:
   - pushd local_modules/p2pcommunication && npm install && popd
   - pushd local_modules/p2pcommunication-client && npm install && popd
+  - pushd local_modules/p2pdatasharing && npm install && popd
+  - pushd local_modules/p2pdatasharing-client && npm install && popd
 before_script:
   - pushd local_modules/p2pcommunication && npm run build && popd
   - pushd local_modules/p2pcommunication-client && npm run build && popd
+  - pushd local_modules/p2pdatasharing && npm run build && popd
+  - pushd local_modules/p2pdatasharing-client && npm run build && popd
 script:
   - cd local_modules/p2pcommunication && npm run test-server& pushd local_modules/p2pcommunication-client && npm test && kill $! && popd
+  - cd local_modules/p2pdatasharing && npm run test-server& pushd local_modules/p2pdatasharing-client && npm test && kill $! && popd
