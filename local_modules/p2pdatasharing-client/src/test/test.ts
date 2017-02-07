@@ -8,6 +8,8 @@ const server = "localhost:8080";
 // Bから送った情報を任意のタイミングでAから取得できる
 
 describe("Peer", () => {
+    this.timeout(10 * 1000); // tslint:disable-line:no-invalid-this
+
     describe("when data spawn from server", () => {
         let testData = [{ id: "1", this: "this", is: "is", test: "test", data: 12345678 }];
         before(async () => {
