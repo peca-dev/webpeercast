@@ -23,11 +23,11 @@ script:
   - pushd local_modules/p2pcommunication-client
   - npm test
   - popd
-  - kill
+  - killall node
   - pushd local_modules/p2pdatasharing
   - npm run test-server&
   - popd
   - pushd local_modules/p2pdatasharing-client
   - npm test
   - popd
-  - kill
+  - killall node
