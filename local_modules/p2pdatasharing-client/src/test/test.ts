@@ -7,7 +7,7 @@ const server = "localhost:8080";
 // ルートサーバーから送った情報を任意のタイミングでAから取得できる
 // Bから送った情報を任意のタイミングでAから取得できる
 
-describe("Peer", () => {
+describe("Peer", function () { // tslint:disable-line:only-arrow-functions
     this.timeout(10 * 1000); // tslint:disable-line:no-invalid-this
 
     describe("when data spawn from server", () => {
