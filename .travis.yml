@@ -11,16 +11,15 @@ install:
   - pushd local_modules/p2pcommunication-client && npm install && popd
   - pushd local_modules/p2pdatasharing && npm install && popd
   - pushd local_modules/p2pdatasharing-client && npm install && popd
-  - npm install --global forever
 before_script:
   - pushd local_modules/p2pcommunication && npm run build && popd
   - pushd local_modules/p2pcommunication-client && npm run build && popd
   - pushd local_modules/p2pdatasharing && npm run build && popd
   - pushd local_modules/p2pdatasharing-client && npm run build && popd
 script:
-  - forever start local_modules/p2pcommunication/lib/server.js
+  - node local_modules/p2pcommunication/lib/server.js&
   - pushd local_modules/p2pcommunication-client && npm test && popd
-  - forever stopall
-  - forever start local_modules/p2pdatasharing/lib/server.js
+  - kill $!
+  - node local_modules/p2pdatasharing/lib/server.js&
   - pushd local_modules/p2pdatasharing-client && npm test && popd
-  - forever stopall
+  - kill $!
