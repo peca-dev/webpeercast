@@ -17,12 +17,16 @@ before_script:
   - pushd local_modules/p2pdatasharing && npm run build && popd
   - pushd local_modules/p2pdatasharing-client && npm run build && popd
 script:
-  - node local_modules/p2pcommunication/lib/server.js& sleep 1s
+  - pushd local_modules/p2pcommunication
+  - npm run test-server&
+  - popd
   - pushd local_modules/p2pcommunication-client
   - npm test
   - popd
   - kill $!
-  - node local_modules/p2pdatasharing/lib/server.js& sleep 1s
+  - pushd local_modules/p2pdatasharing
+  - npm run test-server&
+  - popd
   - pushd local_modules/p2pdatasharing-client
   - npm test
   - popd
