@@ -2,7 +2,7 @@
 import * as assert from "power-assert";
 import Peer from "../peer";
 
-const server = "localhost:8080";
+const server = "127.0.0.1:8080";
 
 // ルートサーバーから送った情報を任意のタイミングでAから取得できる
 // Bから送った情報を任意のタイミングでAから取得できる

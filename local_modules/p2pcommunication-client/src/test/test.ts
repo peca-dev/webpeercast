@@ -1,7 +1,7 @@
 /// <reference path="../../typings/index.d.ts" />
 import * as assert from "power-assert";
 import LocalPeer from "../localpeer";
-const server = "localhost:8080";
+const server = "127.0.0.1:8080";
 const log4js2 = require("log4js2");
 log4js2.configure({ loggers: [{ logLevel: log4js2.LogLevel.DEBUG }] });
 
