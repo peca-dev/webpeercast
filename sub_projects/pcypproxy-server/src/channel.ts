@@ -15,7 +15,7 @@ export interface Channel {
         readonly title: string;
         readonly url: string;
     };
-    readonly uptimeMinutes: number;
+    readonly createdAt: Date;
     readonly comment: string;
     readonly direct: boolean;
     readonly bandType: string;

@@ -52,15 +52,17 @@ function getDiffList(old: Channel[], now: Channel[]) {
 }
 
 async function fetchChannels() {
+    let now = new Date();
     let channels = <Channel[]>[];
     channels = channels.concat(parseIndexTxt(
         await (await fetch("http://temp.orz.hm/yp/index.txt")).text(),
         "TP",
+        now,
     ));
     return channels;
 }
 
-function parseIndexTxt(body: string, yp: string) {
+function parseIndexTxt(body: string, yp: string, now: Date) {
     return body.trim().split("\n")
         .map(line => line.split("<>"))
         .map(entries => entries.map(unescapeSpecialLetters))
@@ -83,7 +85,7 @@ function parseIndexTxt(body: string, yp: string) {
                     title: entries[12],
                     url: entries[13],
                 },
-                uptimeMinutes: hoursMinToMin(entries[15]),
+                createdAt: getDateMinutesBeforeDate(hoursMinToMin(entries[15]), now),
                 comment: entries[17],
                 direct: entries[18] === "1",
                 bandType,
@@ -109,6 +111,12 @@ function parseDescAndBandType(fullDesc: string) {
 function hoursMinToMin(hmm: string) {
     let nums = hmm.split(":").map(x => parseInt(x, 10));
     return nums[0] * 60 + nums[1];
+}
+
+function getDateMinutesBeforeDate(minutes: number, beforeDate: Date) {
+    let date = new Date(beforeDate);
+    date.setUTCMinutes(date.getUTCMinutes() - minutes);
+    return date;
 }
 
 function unescapeSpecialLetters(str: string) {
