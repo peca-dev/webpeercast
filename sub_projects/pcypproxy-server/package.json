@@ -5,10 +5,16 @@
   "author": "progre",
   "bugs": "https://github.com/progre/webpeercast/issues",
   "dependencies": {
-    "babel-polyfill": "^6.22.0"
+    "babel-polyfill": "^6.22.0",
+    "deep-equal": "^1.0.1",
+    "log4js": "^1.1.0",
+    "node-fetch": "^1.6.3"
   },
   "devDependencies": {
+    "@types/deep-equal": "0.0.30",
+    "@types/log4js": "0.0.32",
     "@types/node": "^7.0.5",
+    "@types/node-fetch": "^1.6.7",
     "babel-core": "^6.22.1",
     "babel-loader": "^6.2.10",
     "babel-plugin-espower": "^2.3.2",

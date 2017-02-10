@@ -1,6 +1,7 @@
 try { require("source-map-support").install(); } catch (e) { /* empty */ }
 import * as http from "http";
 import RootServer from "./server/rootserver";
+import { Query } from "./query";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
@@ -23,7 +24,10 @@ async function main() {
                     if (data == null) {
                         return;
                     }
-                    server.setAll(JSON.parse(data));
+                    server.pushAll(
+                        (JSON.parse(data) as ReadonlyArray<any>)
+                            .map(x => <Query<any>>{ type: "set", date: new Date(), payload: x })
+                    );
                     response.setHeader("Access-Control-Allow-Origin", "*");
                     response.writeHead(200);
                     response.end();

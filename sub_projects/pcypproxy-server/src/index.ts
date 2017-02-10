@@ -1,8 +1,5 @@
 try { require("source-map-support").install(); } catch (e) { /* empty */ }
-import module from "./module";
+import Server from "./server";
 
-async function main() {
-    module();
-}
-
-main().catch(e => console.error(e.stack || e));
+// tslint:disable-next-line:no-unused-new
+new Server();
