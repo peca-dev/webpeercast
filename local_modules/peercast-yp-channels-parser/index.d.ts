@@ -1,5 +1,5 @@
-export function stringify(channels: Channel[]): string;
-export function parse(body: string): Channel[];
+export function stringify(channels: Channel[], date: Date): string;
+export function parse(body: string, date: Date): Channel[];
 
 export interface Channel {
     readonly name: string;

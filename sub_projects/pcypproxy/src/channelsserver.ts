@@ -15,17 +15,9 @@ export default class ChannelsServer {
                 }
                 response.writeHead(200);
                 response.write(
-                    stringify(currentTimeChannels(this.channels, this.date))
+                    stringify(this.channels, new Date()),
                 );
             },
         ).listen(port);
     }
-}
-
-function currentTimeChannels(channels: Channel[], date: Date) {
-    let now = Date.now();
-    return channels.map(channel => <Channel>{
-        ...channel,
-        uptime: channel.uptime + (now - date.getTime()),
-    });
 }

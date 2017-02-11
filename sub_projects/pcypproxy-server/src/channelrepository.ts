@@ -9,7 +9,6 @@ const logger = getLogger(__filename);
 // let TP_UPLOAD = "Temporary yellow Pages◆アップロード帯域";
 
 export default class ChannelRepository extends EventEmitter {
-    private date = new Date(0);
     private channels = <Channel[]>[];
 
     constructor() {
@@ -28,9 +27,9 @@ export default class ChannelRepository extends EventEmitter {
     }
 
     private async update() {
-        let {channels: nowChannels, date: nowDate} = await fetchChannels();
+        let nowChannels = await fetchChannels();
         let { deleteList, setList }
-            = getDiffList(this.channels, this.date, nowChannels, nowDate);
+            = getDiffList(this.channels, nowChannels);
         let now = new Date();
         this.emit(
             "update",
@@ -51,14 +50,12 @@ export default class ChannelRepository extends EventEmitter {
 
 function getDiffList(
     old: Channel[],
-    oldDate: Date,
     now: Channel[],
-    nowDate: Date,
 ) {
     return {
         deleteList: old.filter(x => now.every(y => x.id !== y.id)),
         setList: now.filter(x => old.every(
-            y => !deepEqualOrNearCreatedAt(x, nowDate, y, oldDate),
+            y => !deepEqualOrNearCreatedAt(x, y),
         )), // include updates
     };
 }
@@ -66,16 +63,13 @@ function getDiffList(
 async function fetchChannels() {
     let channels = <Channel[]>[];
     let res = await fetch("http://temp.orz.hm/yp/index.txt");
-    let date = new Date();
-    channels = channels.concat(parse(await res.text()));
-    return { channels, date };
+    let now = new Date();
+    return channels.concat(parse(await res.text(), now));
 }
 
 function deepEqualOrNearCreatedAt(
     a: Channel,
-    aDate: Date,
     b: Channel,
-    bDate: Date,
 ) {
     if (
         a.name !== b.name ||
@@ -93,7 +87,7 @@ function deepEqualOrNearCreatedAt(
         a.track.album !== b.track.album ||
         a.track.title !== b.track.title ||
         a.track.url !== b.track.url ||
-        // uptime isn't checked.
+        // createdAt isn't checked.
         a.comment !== b.comment ||
         a.direct !== b.direct
     ) {
@@ -101,7 +95,7 @@ function deepEqualOrNearCreatedAt(
     }
     // difference of 2 minutes or more
     if (
-        Math.abs(aDate.getTime() - a.uptime - (bDate.getTime() - b.uptime))
+        Math.abs(a.createdAt.getTime() - b.createdAt.getTime())
         > 2 * 60 * 1000
     ) {
         return false;
