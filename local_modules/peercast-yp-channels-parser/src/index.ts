@@ -1,6 +1,6 @@
 import { Channel } from "../index";
 
-export function stringify(channels: Channel[]) {
+export function stringify(channels: Channel[], date: Date) {
     return channels.map(channel => [
         channel.name,
         channel.id,
@@ -17,7 +17,7 @@ export function stringify(channels: Channel[]) {
         channel.track.title,
         channel.track.url,
         encodeURIComponent(channel.name),
-        stringifyUptime(channel.uptime),
+        stringifyUptime(date.getTime() - channel.createdAt.getTime()),
         "click",
         channel.comment,
         channel.direct ? "1" : "0",
@@ -27,7 +27,7 @@ export function stringify(channels: Channel[]) {
         .join("\n");
 }
 
-export function parse(body: string) {
+export function parse(body: string, date: Date) {
     return body.trim().split("\n")
         .map(line => line.split("<>"))
         .map(channel => channel.map(unescapeSpecialLetters))
@@ -50,7 +50,7 @@ export function parse(body: string) {
                     title: channel[12],
                     url: channel[13],
                 },
-                uptime: parseUptime(channel[15]),
+                createdAt: new Date(date.getTime() - parseUptime(channel[15])),
                 comment: channel[17],
                 direct: channel[18] === "1",
                 bandType,

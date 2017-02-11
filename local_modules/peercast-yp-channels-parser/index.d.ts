@@ -19,7 +19,7 @@ export interface Channel {
         readonly title: string;
         readonly url: string;
     };
-    readonly uptime: number;
+    readonly createdAt: Date;
     readonly comment: string;
     readonly direct: boolean;
 }
@@ -42,7 +42,7 @@ export interface MutableChannel extends Channel {
         title: string;
         url: string;
     };
-    uptime: number;
+    createdAt: Date;
     comment: string;
     direct: boolean;
 }
