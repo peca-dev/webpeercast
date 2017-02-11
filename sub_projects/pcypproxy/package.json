@@ -48,7 +48,7 @@
     "debug-build": "cross-env NODE_ENV=development webpack --progress",
     "package": "node pack.js",
     "postinstall": "npm run postinstall:link & npm run postinstall:typings",
-    "postinstall:link": "npm link ../../local_modules/p2pdatasharing-client",
+    "postinstall:link": "npm link ../../local_modules/p2pdatasharing-client && npm link ../../local_modules/peercast-yp-channels-parser",
     "postinstall:typings": "typings install || echo Skipped.",
     "start": "electron .",
     "test": "mocha lib/test/",
