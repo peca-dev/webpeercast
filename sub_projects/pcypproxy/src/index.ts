@@ -17,7 +17,7 @@ async function main() {
     });
     win.loadURL(`file://${__dirname}/public/index.html`);
     // tslint:disable-next-line:no-unused-new
-    new ChannelsServer();
+    new ChannelsServer(8080);
 }
 
 main().catch(e => log4js.getLogger().error(e.stack || e));
