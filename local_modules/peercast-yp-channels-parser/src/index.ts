@@ -81,7 +81,7 @@ function parseDescAndBandType(fullDesc: string) {
 
 function stringifyUptime(uptime: number) {
     let minutes = uptime / 1000 / 60;
-    return `${minutes / 60}:${(minutes % 60).toString().padStart(2, "0")}`;
+    return `${minutes / 60 | 0}:${(minutes % 60).toString().padStart(2, "0")}`;
 }
 
 function parseUptime(hmm: string) {
