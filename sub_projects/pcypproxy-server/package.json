@@ -6,12 +6,10 @@
   "bugs": "https://github.com/progre/webpeercast/issues",
   "dependencies": {
     "babel-polyfill": "^6.22.0",
-    "deep-equal": "^1.0.1",
     "log4js": "^1.1.0",
     "node-fetch": "^1.6.3"
   },
   "devDependencies": {
-    "@types/deep-equal": "0.0.30",
     "@types/log4js": "0.0.32",
     "@types/node": "^7.0.5",
     "@types/node-fetch": "^1.6.7",
@@ -46,7 +44,7 @@
     "build": "cross-env NODE_ENV=production webpack --progress",
     "debug-build": "cross-env NODE_ENV=development webpack --progress",
     "postinstall": "npm run postinstall:link & npm run postinstall:typings",
-    "postinstall:link": "npm link ../../local_modules/p2pdatasharing",
+    "postinstall:link": "npm link ../../local_modules/p2pdatasharing && npm link ../../local_modules/peercast-yp-channels-parser",
     "postinstall:typings": "typings install || echo Skipped.",
     "test": "mocha lib/test/",
     "watch": "cross-env NODE_ENV=development webpack --progress --watch"

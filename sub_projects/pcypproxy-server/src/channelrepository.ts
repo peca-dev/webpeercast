@@ -1,8 +1,7 @@
 import { EventEmitter } from "events";
 import fetch from "node-fetch";
-import * as deepEquals from "deep-equal";
 import { Query } from "p2pdatasharing";
-import { Channel } from "./channel";
+import { Channel, parse } from "peercast-yp-channels-parser";
 import { getLogger } from "log4js";
 const logger = getLogger(__filename);
 
@@ -10,6 +9,7 @@ const logger = getLogger(__filename);
 // let TP_UPLOAD = "Temporary yellow Pages◆アップロード帯域";
 
 export default class ChannelRepository extends EventEmitter {
+    private date = new Date(0);
     private channels = <Channel[]>[];
 
     constructor() {
@@ -18,23 +18,7 @@ export default class ChannelRepository extends EventEmitter {
         setInterval(
             async () => {
                 try {
-                    let nowChannels = await fetchChannels();
-                    let { deleteList, setList } = getDiffList(this.channels, nowChannels);
-                    let now = new Date();
-                    this.emit(
-                        "update",
-                        setList
-                            .map(x => <Query<Channel>>{
-                                type: "set",
-                                date: now,
-                                payload: x,
-                            })
-                            .concat(deleteList.map(x => <Query<Channel>>{
-                                type: "delete",
-                                date: now,
-                                payload: x,
-                            })),
-                    );
+                    this.update();
                 } catch (e) {
                     logger.error(e);
                 }
@@ -42,86 +26,85 @@ export default class ChannelRepository extends EventEmitter {
             10 * 1000,
         );
     }
+
+    private async update() {
+        let {channels: nowChannels, date: nowDate} = await fetchChannels();
+        let { deleteList, setList }
+            = getDiffList(this.channels, this.date, nowChannels, nowDate);
+        let now = new Date();
+        this.emit(
+            "update",
+            setList
+                .map(x => <Query<Channel>>{
+                    type: "set",
+                    date: now,
+                    payload: x,
+                })
+                .concat(deleteList.map(x => <Query<Channel>>{
+                    type: "delete",
+                    date: now,
+                    payload: x,
+                })),
+        );
+    }
 }
 
-function getDiffList(old: Channel[], now: Channel[]) {
+function getDiffList(
+    old: Channel[],
+    oldDate: Date,
+    now: Channel[],
+    nowDate: Date,
+) {
     return {
         deleteList: old.filter(x => now.every(y => x.id !== y.id)),
-        setList: now.filter(x => old.every(y => !deepEquals(x, y))), // include updates
+        setList: now.filter(x => old.every(
+            y => !deepEqualOrNearCreatedAt(x, nowDate, y, oldDate),
+        )), // include updates
     };
 }
 
 async function fetchChannels() {
-    let now = new Date();
     let channels = <Channel[]>[];
-    channels = channels.concat(parseIndexTxt(
-        await (await fetch("http://temp.orz.hm/yp/index.txt")).text(),
-        "TP",
-        now,
-    ));
-    return channels;
+    let res = await fetch("http://temp.orz.hm/yp/index.txt");
+    let date = new Date();
+    channels = channels.concat(parse(await res.text()));
+    return { channels, date };
 }
 
-function parseIndexTxt(body: string, yp: string, now: Date) {
-    return body.trim().split("\n")
-        .map(line => line.split("<>"))
-        .map(entries => entries.map(unescapeSpecialLetters))
-        .map(entries => {
-            let {desc, bandType} = parseDescAndBandType(entries[5]);
-            return <Channel>{
-                name: entries[0],
-                id: entries[1],
-                ip: entries[2],
-                url: entries[3],
-                genre: entries[4],
-                desc,
-                listeners: parseInt(entries[6], 10),
-                relays: parseInt(entries[7], 10),
-                bitrate: parseInt(entries[8], 10),
-                type: entries[9],
-                track: {
-                    creator: entries[10],
-                    album: entries[11],
-                    title: entries[12],
-                    url: entries[13],
-                },
-                createdAt: getDateMinutesBeforeDate(hoursMinToMin(entries[15]), now),
-                comment: entries[17],
-                direct: entries[18] === "1",
-                bandType,
-                yp,
-            };
-        });
-}
-
-function parseDescAndBandType(fullDesc: string) {
-    let r = fullDesc.match(/(?: - )?<(.*)>$/);
-    if (r == null) {
-        return {
-            desc: fullDesc,
-            bandType: "",
-        };
+function deepEqualOrNearCreatedAt(
+    a: Channel,
+    aDate: Date,
+    b: Channel,
+    bDate: Date,
+) {
+    if (
+        a.name !== b.name ||
+        a.id !== b.id ||
+        a.ip !== b.ip ||
+        a.url !== b.url ||
+        a.genre !== b.genre ||
+        a.desc !== b.desc ||
+        a.bandType !== b.bandType ||
+        a.listeners !== b.listeners ||
+        a.relays !== b.relays ||
+        a.bitrate !== b.bitrate ||
+        a.type !== b.type ||
+        a.track.creator !== b.track.creator ||
+        a.track.album !== b.track.album ||
+        a.track.title !== b.track.title ||
+        a.track.url !== b.track.url ||
+        // uptime isn't checked.
+        a.comment !== b.comment ||
+        a.direct !== b.direct
+    ) {
+        return false;
     }
-    return {
-        desc: fullDesc.substring(0, r.index),
-        bandType: r[1],
-    };
-}
-
-function hoursMinToMin(hmm: string) {
-    let nums = hmm.split(":").map(x => parseInt(x, 10));
-    return nums[0] * 60 + nums[1];
-}
-
-function getDateMinutesBeforeDate(minutes: number, beforeDate: Date) {
-    let date = new Date(beforeDate);
-    date.setUTCMinutes(date.getUTCMinutes() - minutes);
-    return date;
-}
-
-function unescapeSpecialLetters(str: string) {
-    return str.replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&#039;/g, "'")
-        .replace(/&amp;/g, "&");
+    // difference of 2 minutes or more
+    if (
+        Math.abs(aDate.getTime() - a.uptime - (bDate.getTime() - b.uptime))
+        > 2 * 60 * 1000
+    ) {
+        return false;
+    }
+    return true;
 }
