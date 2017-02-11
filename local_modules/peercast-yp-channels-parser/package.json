@@ -1,0 +1,52 @@
+{
+  "name": "peercast-yp-channels-parser",
+  "description": "A parser for PeerCast yellowpages channels.",
+  "version": "1.0.0",
+  "author": "progre",
+  "bugs": {
+    "url": "https://github.com/progre/webpeercast/issues"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.5",
+    "babel-core": "^6.22.1",
+    "babel-loader": "^6.2.10",
+    "babel-plugin-espower": "^2.3.2",
+    "babel-preset-env": "^1.1.8",
+    "copy-webpack-plugin": "^4.0.1",
+    "cross-env": "^3.1.4",
+    "mocha": "^3.2.0",
+    "power-assert": "^1.4.2",
+    "source-map-support": "^0.4.11",
+    "ts-loader": "^2.0.0",
+    "tslint": "^4.4.2",
+    "typescript": "^2.1.5",
+    "typings": "^2.1.0",
+    "uglify-save-license": "^0.4.1",
+    "webpack": "^2.2.1",
+    "webpack-fail-plugin": "^1.0.5"
+  },
+  "files": [
+    "index.d.ts",
+    "lib"
+  ],
+  "homepage": "https://github.com/progre/webpeercast#readme",
+  "keywords": [
+    "template"
+  ],
+  "main": "lib/index.js",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/progre/webpeercast.git"
+  },
+  "scripts": {
+    "build": "cross-env NODE_ENV=production webpack --progress",
+    "debug-build": "cross-env NODE_ENV=development webpack --progress",
+    "postinstall": "typings install || echo Skipped.",
+    "test": "mocha lib/test/",
+    "watch": "cross-env NODE_ENV=development webpack --progress --watch"
+  }
+}
