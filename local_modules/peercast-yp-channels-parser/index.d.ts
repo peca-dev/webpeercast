@@ -19,7 +19,7 @@ export interface Channel {
         readonly title: string;
         readonly url: string;
     };
-    readonly createdAt: Date;
+    readonly createdAt: number;
     readonly comment: string;
     readonly direct: boolean;
 }
@@ -42,7 +42,7 @@ export interface MutableChannel extends Channel {
         title: string;
         url: string;
     };
-    createdAt: Date;
+    createdAt: number;
     comment: string;
     direct: boolean;
 }

@@ -13,9 +13,9 @@ const STRINGIFIED_CHANNELS = [
 ].join("\n");
 const PARSED_CHANNELS: Channel[] = [
     // tslint:disable:max-line-length
-    { name: "test channel1", id: "0123456789012345678901234567890", ip: "127.0.0.1:7144", url: "http://example.com", genre: "Some genre", desc: "any desc", bandType: "Open", listeners: 10, relays: 20, bitrate: 7144, type: "FLV", track: { creator: "track creator", album: "track album", title: "track title", url: "track url" }, createdAt: new Date(0), comment: "comment area", direct: false, },
-    { name: "test channel2", id: "0123456789012345678901234567890", ip: "127.0.0.1:7144", url: "http://example.com", genre: "Some genre", desc: "any desc", bandType: "Open", listeners: 10, relays: 20, bitrate: 7144, type: "FLV", track: { creator: "track creator", album: "track album", title: "track title", url: "track url" }, createdAt: new Date(-1 * 60 * 1000), comment: "comment area", direct: false, },
-    { name: "test channel3", id: "0123456789012345678901234567890", ip: "127.0.0.1:7144", url: "http://example.com", genre: "Some genre", desc: "any desc", bandType: "Open", listeners: 10, relays: 20, bitrate: 7144, type: "FLV", track: { creator: "track creator", album: "track album", title: "track title", url: "track url" }, createdAt: new Date(-2 * 60 * 1000), comment: "comment area", direct: false, },
+    { name: "test channel1", id: "0123456789012345678901234567890", ip: "127.0.0.1:7144", url: "http://example.com", genre: "Some genre", desc: "any desc", bandType: "Open", listeners: 10, relays: 20, bitrate: 7144, type: "FLV", track: { creator: "track creator", album: "track album", title: "track title", url: "track url" }, createdAt: 0, comment: "comment area", direct: false, },
+    { name: "test channel2", id: "0123456789012345678901234567890", ip: "127.0.0.1:7144", url: "http://example.com", genre: "Some genre", desc: "any desc", bandType: "Open", listeners: 10, relays: 20, bitrate: 7144, type: "FLV", track: { creator: "track creator", album: "track album", title: "track title", url: "track url" }, createdAt: -1 * 60 * 1000, comment: "comment area", direct: false, },
+    { name: "test channel3", id: "0123456789012345678901234567890", ip: "127.0.0.1:7144", url: "http://example.com", genre: "Some genre", desc: "any desc", bandType: "Open", listeners: 10, relays: 20, bitrate: 7144, type: "FLV", track: { creator: "track creator", album: "track album", title: "track title", url: "track url" }, createdAt: -2 * 60 * 1000, comment: "comment area", direct: false, },
     // tslint:enable:max-line-length
 ];
 
