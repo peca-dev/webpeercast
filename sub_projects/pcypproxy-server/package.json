@@ -7,7 +7,8 @@
   "dependencies": {
     "babel-polyfill": "^6.22.0",
     "log4js": "^1.1.0",
-    "node-fetch": "^1.6.3"
+    "node-fetch": "^1.6.3",
+    "peercast-yp-channels-parser": "0.0.5"
   },
   "devDependencies": {
     "@types/log4js": "0.0.32",
@@ -44,7 +45,7 @@
     "build": "cross-env NODE_ENV=production webpack --progress",
     "debug-build": "cross-env NODE_ENV=development webpack --progress",
     "postinstall": "npm run postinstall:link & npm run postinstall:typings",
-    "postinstall:link": "npm link ../../local_modules/p2pdatasharing && npm link ../../local_modules/peercast-yp-channels-parser",
+    "postinstall:link": "npm link ../../local_modules/p2pdatasharing",
     "postinstall:typings": "typings install || echo Skipped.",
     "start": "node .",
     "test": "mocha lib/test/",

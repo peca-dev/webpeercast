@@ -78,7 +78,7 @@ function deepEqualOrNearCreatedAt(
         a.url !== b.url ||
         a.genre !== b.genre ||
         a.desc !== b.desc ||
-        a.bandType !== b.bandType ||
+        a.bandwidthType !== b.bandwidthType ||
         a.listeners !== b.listeners ||
         a.relays !== b.relays ||
         a.bitrate !== b.bitrate ||
