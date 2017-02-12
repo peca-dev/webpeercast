@@ -46,6 +46,7 @@
     "postinstall": "npm run postinstall:link & npm run postinstall:typings",
     "postinstall:link": "npm link ../../local_modules/p2pdatasharing && npm link ../../local_modules/peercast-yp-channels-parser",
     "postinstall:typings": "typings install || echo Skipped.",
+    "start": "node .",
     "test": "mocha lib/test/",
     "watch": "cross-env NODE_ENV=development webpack --progress --watch"
   }
