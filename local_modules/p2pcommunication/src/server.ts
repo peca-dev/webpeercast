@@ -23,6 +23,9 @@ async function main() {
         response.end();
     });
     server = new RootServer(httpServer);
+    httpServer.listen(8080, () => {
+        logger.info((new Date()) + " Server is listening on port 8080");
+    });
 }
 
 function createDebugJSON(wsServer: WebSocketServer, clients: WeakMap<WebSocketConnection, { id: string }>) {

@@ -40,6 +40,9 @@ async function main() {
         response.end();
     });
     server = new RootServer<any>(httpServer);
+    httpServer.listen(8080, () => {
+        logger.info((new Date()) + " Server is listening on port 8080");
+    });
 }
 
 main().catch(e => console.error(e.stack || e));

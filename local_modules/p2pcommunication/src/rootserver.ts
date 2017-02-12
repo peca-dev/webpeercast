@@ -55,9 +55,6 @@ export default class RootServer extends EventEmitter implements declare.RootServ
                 logger.error(e.stack || e);
             }
         });
-        this.httpServer.listen(8080, () => {
-            logger.info((new Date()) + " Server is listening on port 8080");
-        });
     }
 
     broadcast(payload: any) {
