@@ -95,7 +95,7 @@ function deepEqualOrNearCreatedAt(
     }
     // difference of 2 minutes or more
     if (
-        Math.abs(a.createdAt.getTime() - b.createdAt.getTime())
+        Math.abs(a.createdAt - b.createdAt)
         > 2 * 60 * 1000
     ) {
         return false;

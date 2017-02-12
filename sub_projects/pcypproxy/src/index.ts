@@ -4,9 +4,8 @@ import * as log4js from "log4js";
 import { app, BrowserWindow, ipcMain } from "electron";
 
 log4js.configure({
-    appenders: [{ type: "console", layout: { type: "basic" } }]
+    appenders: [{ type: "console", layout: { type: "basic" } }],
 });
-const logger = log4js.getLogger(__filename);
 
 async function main() {
     await new Promise((resolve, reject) => app.once("ready", resolve));
@@ -17,10 +16,8 @@ async function main() {
         show: false,
     });
     win.loadURL(`file://${__dirname}/public/index.html`);
-    // tslint:disable-next-line:no-unused-new
     let server = new ChannelsServer(8081);
     ipcMain.on("update", (e, channels) => {
-        logger.debug("", channels);
         server.channels = channels;
     });
 }

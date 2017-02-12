@@ -13,10 +13,11 @@ export default class ChannelsServer {
                     response.end();
                     return;
                 }
-                response.writeHead(200);
-                response.write(
-                    stringify(this.channels, new Date()),
+                response.writeHead(
+                    200,
+                    { "Content-Type": "text/plain; charset=UTF-8" },
                 );
+                response.end(stringify(this.channels, new Date()));
             },
         ).listen(port);
     }
