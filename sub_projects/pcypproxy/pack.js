@@ -10,7 +10,7 @@ let electronVersion = package.devDependencies.electron.slice(1);
 mkdir("tmp").catch(errorHandler)
     .then(() => mkdir("tmp/dest").catch(errorHandler))
     .then(() => exec("cp -r lib/ tmp/dest/lib").then(printStdout))
-    .then(() => exec("cp LICENSE tmp/dest/").then(printStdout))
+    .then(() => exec("cp ../../LICENSE tmp/dest/").then(printStdout))
     .then(() => exec("cp package.json tmp/dest/").then(printStdout))
     .then(() => exec("cp README*.md tmp/dest/").then(printStdout))
     .then(() => exec("npm install --production", { cwd: "tmp/dest" }).then(printStdout))
