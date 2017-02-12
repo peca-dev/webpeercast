@@ -16,7 +16,6 @@ install:
 - pushd local_modules/p2pcommunication-client && npm install && popd
 - pushd local_modules/p2pdatasharing && npm install && popd
 - pushd local_modules/p2pdatasharing-client && npm install && popd
-- pushd local_modules/peercast-yp-channels-parser && npm install && popd
 - pushd sub_projects/pcypproxy-server && npm install && popd
 - pushd sub_projects/pcypproxy && npm install && popd
 before_script:
@@ -24,7 +23,6 @@ before_script:
 - pushd local_modules/p2pcommunication-client && npm run build && popd
 - pushd local_modules/p2pdatasharing && npm run build && popd
 - pushd local_modules/p2pdatasharing-client && npm run build && popd
-- pushd local_modules/peercast-yp-channels-parser && npm run build && popd
 - pushd sub_projects/pcypproxy-server && npm run build && popd
 - pushd sub_projects/pcypproxy && npm run build && popd
 script:
@@ -42,9 +40,6 @@ script:
 - npm test
 - popd
 - killall node
-- pushd local_modules/peercast-yp-channels-parser
-- npm test
-- popd
 - pushd sub_projects/pcypproxy
 - npm run package
 - popd
