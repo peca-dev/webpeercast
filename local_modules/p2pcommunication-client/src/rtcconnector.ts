@@ -76,6 +76,9 @@ async function exchangeIceCandidate<T>(
     let receiveIceCandidateSubscribe = upstream.addListener(
         "receiveIceCandidate",
         safe(logger, async (payload: any) => {
+            if (payload.from !== to) {
+                return;
+            }
             pc.addIceCandidate(payload.iceCandidate);
             receiveIceCandidateSubscribe.remove();
         }),

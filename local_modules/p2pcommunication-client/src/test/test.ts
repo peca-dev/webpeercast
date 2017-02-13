@@ -35,6 +35,43 @@ describe("Connection", () => {
             assert(serverStatus.clients.length === 0);
         });
     });
+
+    context("between many peers on one layer", function (this: any) {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(5 * 1000);
+        let a = <LocalPeer[]>[];
+
+        before(async () => {
+            for (let i = 0; i < 10; i++) {
+                a.push(new LocalPeer(`ws://${server}`));
+            }
+            await new Promise(
+                (resolve, reject) => setTimeout(resolve, 3 * 1000),
+            );
+        });
+
+        it("connects to server", async () => {
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === a.length);
+            assert(a.every(
+                x => a
+                    .filter(y => y.id !== x.id)
+                    .every(y => y.debug.hasPeer(x.id)),
+            ));
+        });
+
+        after(async () => {
+            for (let x of a) {
+                x.disconnect();
+            }
+            await new Promise(
+                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+            );
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === 0);
+        });
+    });
+
 });
 
 describe("Sharing", () => {

@@ -28,15 +28,14 @@ export default class RTCConnectionProvider extends EventEmitter {
         };
         let clientReceiveIceCandidate = (payload: { to: string, iceCandidate: {} }) => {
             if (payload.to !== server.id) {
-                logger.debug("Invalid iceCandidate data from client to server.");
                 return;
             }
             logger.debug("Send ice to server.");
             server.receiveIceCandidate(client.id, payload.iceCandidate);
         };
-        server.once("receiveRTCOffer", serverReceiveRTCOffer);
+        server.on("receiveRTCOffer", serverReceiveRTCOffer);
         server.on("receiveIceCandidate", serverReceiveIceCandidate);
-        client.once("receiveRTCAnswer", clientReceiveRTCAnswer);
+        client.on("receiveRTCAnswer", clientReceiveRTCAnswer);
         client.on("receiveIceCandidate", clientReceiveIceCandidate);
         // He don't check connection completed. It should do client.
         setTimeout(

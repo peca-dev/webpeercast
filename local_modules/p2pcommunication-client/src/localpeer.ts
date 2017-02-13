@@ -75,18 +75,18 @@ export default class LocalPeer extends EventEmitter {
     private initUpstream(upstream: RemotePeer) {
         upstream.addListener(
             "makeRTCOffer",
-            safe(logger, async (to: string) => {
+            safe(getLogger(`${__filename}-makeRTCOffer`), async (to: string) => {
                 await this.makeRTCOffer(to, upstream);
             }),
         );
         type Data = { from: string, offer: RTCSessionDescriptionInit };
         upstream.addListener(
             "receiveRTCOffer",
-            safe(logger, async (data: Data) => {
+            safe(getLogger(`${__filename}-receiveRTCOffer`), async (data: Data) => {
                 await this.receiveRTCOffer(data.from, data.offer, upstream);
             }),
         );
-        upstream.addListener("close", safe(logger, async () => {
+        upstream.addListener("close", safe(getLogger(`${__filename}-close`), async () => {
             this.upstreams.delete(upstream);
             this.startConnectToServer();
         }));

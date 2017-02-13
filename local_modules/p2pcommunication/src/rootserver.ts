@@ -81,14 +81,19 @@ export default class RootServer extends EventEmitter implements declare.RootServ
     }
 
     private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient) {
-        let provider = new RTCConnectionProvider(
-            this.clients.get(randomOne(this.wsServer.connections, connection)) !,
-            client,
-        );
-        provider.on("timeout", () => {
-            this.rtcConnectionProviders.delete(provider);
-        });
-        this.rtcConnectionProviders.add(provider);
+        let otherClients = this.wsServer.connections
+            .filter(x => x !== connection)
+            .map(x => this.clients.get(x) as RemoteClient);
+        for (let otherClient of otherClients) {
+            let provider = new RTCConnectionProvider(
+                otherClient,
+                client,
+            );
+            provider.on("timeout", () => {
+                this.rtcConnectionProviders.delete(provider);
+            });
+            this.rtcConnectionProviders.add(provider);
+        }
     }
 }
 
