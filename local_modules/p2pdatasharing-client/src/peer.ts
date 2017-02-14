@@ -19,6 +19,10 @@ export default class Peer<T extends { id: string }> extends EventEmitter {
         });
     }
 
+    disconnect() {
+        this.p2pPeer.disconnect();
+    }
+
     set(date: Date, payload: T) {
         this.p2pPeer.broadcast([{ type: "set", date, payload }]);
     }

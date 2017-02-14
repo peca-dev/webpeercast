@@ -16,21 +16,30 @@ describe("Peer", function () { // tslint:disable-line:only-arrow-functions
             await postTestData(testData);
         });
 
-        it("has all data", () => new Promise((resolve, reject) => {
-            let peer = new Peer<typeof testData[0]>(`ws://${server}`);
-            let describe = peer.addListener("update", () => {
-                describe.remove();
-                let data = peer.getAll();
-                assert(data.length === testData.length);
-                for (let i = 0; i < data.length; i++) {
-                    assert(data[i].this === testData[i].this);
-                    assert(data[i].is === testData[i].is);
-                    assert(data[i].test === testData[i].test);
-                    assert(data[i].data === testData[i].data);
-                }
-                resolve();
-            });
-        }));
+        it("has all data", async () => {
+            let array = <Array<Promise<Peer<typeof testData[0]>>>>[];
+            for (let i = 0; i < 10; i++) {
+                array.push(new Promise((resolve, reject) => {
+                    let peer = new Peer<typeof testData[0]>(`ws://${server}`);
+                    let describe = peer.addListener("update", () => {
+                        describe.remove();
+                        let data = peer.getAll();
+                        assert(data.length === testData.length);
+                        for (let i = 0; i < data.length; i++) {
+                            assert(data[i].this === testData[i].this);
+                            assert(data[i].is === testData[i].is);
+                            assert(data[i].test === testData[i].test);
+                            assert(data[i].data === testData[i].data);
+                        }
+                        resolve(peer);
+                    });
+                }));
+            }
+            let results = await Promise.all(array);
+            for (let result of results) {
+                result.disconnect();
+            }
+        });
 
         after(async () => {
             await clearTestData();
