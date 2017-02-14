@@ -71,7 +71,6 @@ describe("Connection", () => {
             assert(serverStatus.clients.length === 0);
         });
     });
-
 });
 
 describe("Sharing", () => {
@@ -106,6 +105,36 @@ describe("Sharing", () => {
                 b.broadcast(messageDataB);
             });
             assert(receiveB === messageDataB);
+        });
+    });
+
+    context("between many peers on one layer", function (this: any) {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(5 * 1000);
+
+        let peers = <LocalPeer[]>[];
+
+        before(async () => {
+            for (let i = 0; i < 10; i++) {
+                peers.push(new LocalPeer(`ws://${server}`));
+            }
+            await new Promise(
+                (resolve, reject) => setTimeout(resolve, 3 * 1000),
+            );
+        });
+
+        it("with one message is received 9 messages", async () => {
+            let count = 0;
+            for (let i = 1; i < 10; i++) {
+                peers[i].addListener("broadcast", (data: any) => {
+                    count++;
+                });
+            }
+            peers[0].broadcast("data");
+            await new Promise(
+                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+            );
+            assert(count === 9);
         });
     });
 });
