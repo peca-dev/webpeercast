@@ -40,6 +40,9 @@ script:
 - npm test
 - popd
 - killall node
+- pushd sub_projects/pcypproxy-server
+- docker build -t progre/pcypproxy-server .
+- popd
 - pushd sub_projects/pcypproxy
 - npm run package
 - popd
