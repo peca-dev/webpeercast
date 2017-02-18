@@ -1,9 +1,6 @@
 import { EventSubscription } from "fbemitter";
-import * as log4js from "log4js";
-const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { safe } from "./printerror";
 import { RemotePeer } from "./remotepeer";
-const logger = getLogger(__filename);
 
 export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: RemotePeer) {
     return exchangeIceCandidate(pc, to, upstream, async () => {
@@ -75,7 +72,7 @@ async function exchangeIceCandidate<T>(
     pc.addEventListener("icecandidate", iceCandidateListener);
     let receiveIceCandidateSubscribe = upstream.addListener(
         "receiveIceCandidate",
-        safe(logger, async (payload: any) => {
+        safe(async (payload: any) => {
             if (payload.from !== to) {
                 return;
             }
@@ -100,7 +97,7 @@ function waitMessage(upstream: RemotePeer, type: string, from: string) {
                 reject(new Error("Timeout."));
             }, 3 * 1000,
         );
-        eventSubscription = upstream.addListener(type, safe(logger, async (payload: any) => {
+        eventSubscription = upstream.addListener(type, safe(async (payload: any) => {
             if (payload.from !== from) {
                 return;
             }
@@ -119,7 +116,7 @@ function waitEvent<T extends Event>(eventTarget: EventTarget, event: string, fun
                 reject(new Error("Timeout."));
             }, 3 * 1000,
         );
-        let listener = safe(logger, async (e: T) => {
+        let listener = safe(async (e: T) => {
             clearTimeout(timer);
             eventTarget.removeEventListener(event, listener);
             resolve(e);

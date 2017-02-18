@@ -1,15 +1,13 @@
-import { Logger } from "log4js";
-
-export function safe<T>(logger: Logger, func: (e: T) => Promise<void>) {
-    return (event: T) => func(event).catch((e: any) => printError(logger, e));
+export function safe<T>(func: (e: T) => Promise<void>) {
+    return (event: T) => func(event).catch((e: any) => printError(e));
 }
 
-export function printError(logger: Logger, e: any) {
+export function printError(e: any) {
     if (e.toString == null || e.stack == null) {
-        logger.error("Unsupported error object:" + e);
+        console.error("Unsupported error object:" + e);
         return;
     }
-    logger.error(
+    console.error(
         e.toString() + "\n"
         + (<string>e.stack)
             .split("\n")

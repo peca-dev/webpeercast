@@ -1,9 +1,6 @@
 import { EventEmitter } from "fbemitter";
-import * as log4js from "log4js";
-const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { RemotePeer } from "./remotepeer";
 import { printError, safe } from "./printerror";
-const logger = getLogger();
 
 export default class RemoteRootServer extends EventEmitter implements RemotePeer {
     readonly id = "";
@@ -36,11 +33,11 @@ export default class RemoteRootServer extends EventEmitter implements RemotePeer
     constructor(public socket: WebSocket) {
         super();
 
-        this.socket.addEventListener("message", safe(logger, async (e: MessageEvent) => {
+        this.socket.addEventListener("message", safe(async (e: MessageEvent) => {
             let data = JSON.parse(e.data);
             this.emit(data.type, data.payload);
         }));
-        this.socket.addEventListener("error", e => printError(logger, e));
+        this.socket.addEventListener("error", printError);
         this.socket.addEventListener("close", e => {
             this.emit("close");
         });

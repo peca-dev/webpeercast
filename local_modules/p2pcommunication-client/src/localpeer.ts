@@ -1,12 +1,9 @@
 import { EventEmitter } from "fbemitter";
-import * as log4js from "log4js";
-const getLogger = (<typeof log4js>require("log4js2")).getLogger;
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
 import { createDataChannel, fetchDataChannel } from "./rtcconnector";
 import { RemotePeer } from "./remotepeer";
 import RTCRemotePeer from "./rtcremotepeer";
-const logger = getLogger(__filename);
 
 /**
  * It does nothing when it's disconnected with a downstream.
