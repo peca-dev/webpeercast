@@ -1,16 +1,19 @@
-import { EventEmitter } from "events";
+import * as Rx from "rxjs";
 import { connection as WebSocketConnection } from "websocket";
 import * as uuid from "uuid";
 import * as declare from "../index";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RemoteClient extends EventEmitter implements declare.RemoteClient {
+export default class RemoteClient implements declare.RemoteClient {
     readonly id = uuid.v4();
+    rtcOfferReceived = new Rx.Subject<any>();
+    rtcAnswerReceived = new Rx.Subject<any>();
+    iceCandidateReceived = new Rx.Subject<any>();
+    broadcastReceived = new Rx.Subject<any>();
+    closed = new Rx.Subject<any>();
 
     constructor(private connection: WebSocketConnection) {
-        super();
-
         logger.debug("new peer", this.id);
         connection.send(JSON.stringify({
             type: "id",
@@ -24,16 +27,16 @@ export default class RemoteClient extends EventEmitter implements declare.Remote
                         let obj = JSON.parse(message.utf8Data!);
                         switch (obj.type) {
                             case "receiveRTCOffer":
-                                this.emit("receiveRTCOffer", obj.payload);
+                                this.rtcOfferReceived.next(obj.payload);
                                 break;
                             case "receiveRTCAnswer":
-                                this.emit("receiveRTCAnswer", obj.payload);
+                                this.rtcAnswerReceived.next(obj.payload);
                                 break;
                             case "receiveIceCandidate":
-                                this.emit("receiveIceCandidate", obj.payload);
+                                this.iceCandidateReceived.next(obj.payload);
                                 break;
                             case "broadcast":
-                                this.emit("broadcast", obj.payload);
+                                this.broadcastReceived.next(obj.payload);
                                 break;
                             default:
                                 throw new Error("Unsupported data type: " + obj.type);
@@ -50,7 +53,8 @@ export default class RemoteClient extends EventEmitter implements declare.Remote
             }
         });
         connection.on("close", (reasonCode, description) => {
-            this.emit("close", reasonCode, description);
+            this.closed.next({ reasonCode, description });
+            this.closed.complete();
         });
     }
 

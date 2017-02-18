@@ -1,21 +1,18 @@
-import { EventEmitter } from "events";
 import * as http from "http";
 import {
     server as WebSocketServer,
     connection as WebSocketConnection,
 } from "websocket";
+import * as Rx from "rxjs";
 import * as declare from "../index";
 import RTCConnectionProvider from "./rtcconnectionprovider";
 import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-/**
- * Emitting events:
- * - broadcast
- * - connect
- */
-export default class RootServer extends EventEmitter implements declare.RootServer {
+export default class RootServer implements declare.RootServer {
+    broadcastReceived = new Rx.Subject<{ from: string; payload: any; }>();
+    connected = new Rx.Subject<RemoteClient>();
     private wsServer: WebSocketServer;
     private clients = new WeakMap<WebSocketConnection, RemoteClient>();
     private rtcConnectionProviders = new Set<RTCConnectionProvider>();
@@ -28,8 +25,6 @@ export default class RootServer extends EventEmitter implements declare.RootServ
     }
 
     constructor(private httpServer: http.Server) {
-        super();
-
         this.wsServer = new WebSocketServer({
             httpServer: this.httpServer,
             // You should not use autoAcceptConnections for production
@@ -69,10 +64,10 @@ export default class RootServer extends EventEmitter implements declare.RootServ
     private acceptNewConnection(connection: WebSocketConnection) {
         logger.debug("Connection count:", this.wsServer.connections.length);
         let remoteClient = new RemoteClient(connection);
-        remoteClient.addListener("broadcast", (payload: any) => {
-            this.emit("broadcast", { from: remoteClient.id, payload });
+        remoteClient.broadcastReceived.subscribe(payload => {
+            this.broadcastReceived.next({ from: remoteClient.id, payload });
         });
-        this.emit("connect", remoteClient);
+        this.connected.next(remoteClient);
         if (this.wsServer.connections.length > 1) {
             this.startToConnectOtherPeer(connection, remoteClient);
         }
@@ -89,7 +84,7 @@ export default class RootServer extends EventEmitter implements declare.RootServ
                 otherClient,
                 client,
             );
-            provider.on("timeout", () => {
+            provider.timedOut.subscribe(() => {
                 this.rtcConnectionProviders.delete(provider);
             });
             this.rtcConnectionProviders.add(provider);

@@ -11,7 +11,7 @@ export default class RootServer<T extends { id: string }> {
 
     constructor(httpServer: http.Server) {
         this.server = new p2pCommunication.RootServer(httpServer);
-        this.server.addListener("connect", (remoteClient: p2pCommunication.RemoteClient) => {
+        this.server.connected.subscribe(remoteClient => {
             remoteClient.broadcast(this.eventQueue);
         });
     }
