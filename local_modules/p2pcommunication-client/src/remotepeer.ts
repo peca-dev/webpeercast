@@ -1,13 +1,19 @@
-import { EventSubscription } from "fbemitter";
+import * as Rx from "rxjs";
 
-export interface RemotePeer {
+export interface RemotePeer<T> {
     readonly id: string;
 
+    onClosed: Rx.Observable<{}>;
+    onMakeRTCOfferRequesting: Rx.Observable<string>;
+    onRTCOffering: Rx.Observable<RTCOfferData>;
+    onRTCAnswering: Rx.Observable<RTCAnswerData>;
+    onIceCandidateEmitting: Rx.Observable<IceCandidateData>;
+    onBroadcasting: Rx.Observable<T>;
+
     send(obj: { type: string, payload: Object }): void;
-    addListener(
-        eventType: string,
-        listener: (payload: any) => void,
-        context?: any,
-    ): EventSubscription;
     disconnect(): void;
 }
+
+export type RTCOfferData = { from: string, offer: RTCSessionDescriptionInit };
+export type RTCAnswerData = { from: string, offer: RTCSessionDescriptionInit };
+export type IceCandidateData = { from: string, iceCandidate: RTCIceCandidateInit };

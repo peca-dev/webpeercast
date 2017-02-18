@@ -1,15 +1,16 @@
-import { EventEmitter } from "fbemitter";
+import * as Rx from "rxjs";
+import * as description from "../";
 import { LocalPeer } from "p2pcommunication-client";
 import { Query } from "./query";
 
 // キューを保持して、必要があれば送ったりする
-export default class Peer<T extends { id: string }> extends EventEmitter {
+export default class Peer<T extends { id: string }> implements description.Peer<T> {
     private p2pPeer: LocalPeer<ReadonlyArray<Query<T>>>;
     private eventQueue: Array<Query<T>> = [];
 
-    constructor(url: string) {
-        super();
+    onUpdated = new Rx.Subject();
 
+    constructor(url: string) {
         this.p2pPeer = new LocalPeer(url);
         this.p2pPeer.onBroadcastReceived.subscribe(data => {
             this.eventQueue.push(
@@ -19,7 +20,7 @@ export default class Peer<T extends { id: string }> extends EventEmitter {
                     payload: x.payload,
                 }))),
             );
-            this.emit("update");
+            this.onUpdated.next();
         });
     }
 

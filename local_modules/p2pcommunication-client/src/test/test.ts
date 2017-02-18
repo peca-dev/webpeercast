@@ -5,8 +5,8 @@ const server = "127.0.0.1:8080";
 
 describe("Connection", () => {
     context("between two peers", () => {
-        let a: LocalPeer;
-        let b: LocalPeer;
+        let a: LocalPeer<{}>;
+        let b: LocalPeer<{}>;
 
         before(async () => {
             a = new LocalPeer(`ws://${server}`);
@@ -37,7 +37,7 @@ describe("Connection", () => {
     context("between many peers on one layer", function (this: any) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5 * 1000);
-        let a = <LocalPeer[]>[];
+        let a = <Array<LocalPeer<{}>>>[];
 
         before(async () => {
             for (let i = 0; i < 10; i++) {
@@ -73,8 +73,8 @@ describe("Connection", () => {
 
 describe("Sharing", () => {
     context("between two peers", () => {
-        let a: LocalPeer;
-        let b: LocalPeer;
+        let a: LocalPeer<string>;
+        let b: LocalPeer<string>;
 
         before(async () => {
             a = new LocalPeer(`ws://${server}`);
@@ -87,8 +87,8 @@ describe("Sharing", () => {
         it("with one message does", async () => {
             let messageDataA = "message-data-a";
             let receiveA = await new Promise<string>(resolve => {
-                let subscribe = b.addListener("broadcast", (data: any) => {
-                    subscribe.remove();
+                let subscription = b.onBroadcastReceived.subscribe(data => {
+                    subscription.unsubscribe();
                     resolve(data);
                 });
                 a.broadcast(messageDataA);
@@ -96,8 +96,8 @@ describe("Sharing", () => {
             assert(receiveA === messageDataA);
             let messageDataB = "message-data-b";
             let receiveB = await new Promise<string>(resolve => {
-                let subscribe = a.addListener("broadcast", (data: any) => {
-                    subscribe.remove();
+                let subscription = a.onBroadcastReceived.subscribe(data => {
+                    subscription.unsubscribe();
                     resolve(data);
                 });
                 b.broadcast(messageDataB);
@@ -110,7 +110,7 @@ describe("Sharing", () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5 * 1000);
 
-        let peers = <LocalPeer[]>[];
+        let peers = <Array<LocalPeer<{}>>>[];
 
         before(async () => {
             for (let i = 0; i < 10; i++) {
@@ -124,7 +124,7 @@ describe("Sharing", () => {
         it("with one message is received 9 messages", async () => {
             let count = 0;
             for (let i = 1; i < 10; i++) {
-                peers[i].addListener("broadcast", (data: any) => {
+                peers[i].onBroadcastReceived.subscribe(data => {
                     count++;
                 });
             }
@@ -140,8 +140,8 @@ describe("Sharing", () => {
 xdescribe("Layer connection", () => {
     describe("When given a signaling server running and any peer standbying,", () => {
         describe("peer on level 1 layer", () => {
-            let peer: LocalPeer;
-            let otherPeers: LocalPeer[];
+            let peer: LocalPeer<{}>;
+            let otherPeers: Array<LocalPeer<{}>>;
             before(async () => {
                 otherPeers = initPeers();
                 await new Promise(
@@ -171,7 +171,7 @@ xdescribe("Layer connection", () => {
 });
 
 function initPeers() {
-    let peers: LocalPeer[] = [];
+    let peers: Array<LocalPeer<{}>> = [];
     for (let i = 0; i < 10; i++) {
         peers.push(new LocalPeer(`ws://${server}`));
     }

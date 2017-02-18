@@ -1,12 +1,19 @@
-import { EventEmitter } from "fbemitter";
-import { RemotePeer } from "./remotepeer";
+import * as Rx from "rxjs";
+import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "./remotepeer";
 import { printError, safe } from "./printerror";
 
-export default class RemoteRootServer extends EventEmitter implements RemotePeer {
+export default class RemoteRootServer<T> implements RemotePeer<T> {
     readonly id = "";
 
-    static fetch(url: string) {
-        return new Promise<{ id: string, upstream: RemoteRootServer }>((resolve, reject) => {
+    onClosed = new Rx.Subject();
+    onMakeRTCOfferRequesting = new Rx.Subject<string>();
+    onRTCOffering = new Rx.Subject<RTCOfferData>();
+    onRTCAnswering = new Rx.Subject<RTCAnswerData>();
+    onIceCandidateEmitting = new Rx.Subject<IceCandidateData>();
+    onBroadcasting = new Rx.Subject<T>();
+
+    static fetch<T>(url: string) {
+        return new Promise<{ id: string, upstream: RemoteRootServer<T> }>((resolve, reject) => {
             let socket = new WebSocket(url);
             let timer = setTimeout(
                 () => {
@@ -31,15 +38,32 @@ export default class RemoteRootServer extends EventEmitter implements RemotePeer
     }
 
     constructor(public socket: WebSocket) {
-        super();
-
         this.socket.addEventListener("message", safe(async (e: MessageEvent) => {
             let data = JSON.parse(e.data);
-            this.emit(data.type, data.payload);
+            switch (data.type) {
+                case "makeRTCOffer":
+                    this.onMakeRTCOfferRequesting.next(data.payload);
+                    break;
+                case "receiveRTCOffer":
+                    this.onRTCOffering.next(data.payload);
+                    break;
+                case "receiveRTCAnswer":
+                    this.onRTCAnswering.next(data.payload);
+                    break;
+                case "receiveIceCandidate":
+                    this.onIceCandidateEmitting.next(data.payload);
+                    break;
+                case "broadcast":
+                    this.onBroadcasting.next(data.payload);
+                    break;
+                default:
+                    throw new Error(`Unsupported data type: ${data}`);
+            }
         }));
         this.socket.addEventListener("error", printError);
         this.socket.addEventListener("close", e => {
-            this.emit("close");
+            this.onClosed.next();
+            this.onClosed.complete();
         });
     }
 

@@ -7,7 +7,7 @@ export default class YPPeer {
 
     constructor(url: string) {
         this.peer = new Peer<Channel>(url);
-        this.peer.addListener("update", () => {
+        this.peer.onUpdated.subscribe(() => {
             ipcRenderer.send("update", this.peer.getAll());
         });
     }

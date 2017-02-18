@@ -3,7 +3,7 @@ import * as declaration from "../index";
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
 import { createDataChannel, fetchDataChannel } from "./rtcconnector";
-import { RemotePeer } from "./remotepeer";
+import { RemotePeer, RTCOfferData } from "./remotepeer";
 import RTCRemotePeer from "./rtcremotepeer";
 
 /**
@@ -16,9 +16,9 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     /** Decide by root server */
     id: string | null;
     private url: string | null;
-    private upstreams = new Set<RemotePeer>();
-    private otherStreams = new Set<RemotePeer>();
-    private downstreams = new Set<RemotePeer>();
+    private upstreams = new Set<RemotePeer<T>>();
+    private otherStreams = new Set<RemotePeer<T>>();
+    private downstreams = new Set<RemotePeer<T>>();
 
     debug = {
         hasPeer: (id: string | null) => {
@@ -56,7 +56,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         (async () => {
             try {
                 this.id = null;
-                let { id, upstream } = await RemoteRootServer.fetch(url);
+                let { id, upstream } = await RemoteRootServer.fetch<T>(url);
                 this.id = id;
                 this.initUpstream(upstream);
                 this.upstreams.add(upstream);
@@ -70,32 +70,25 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         })();
     }
 
-    private initUpstream(upstream: RemotePeer) {
-        upstream.addListener(
-            "makeRTCOffer",
-            safe(async (to: string) => {
-                await this.makeRTCOffer(to, upstream);
-            }),
-        );
-        type Data = { from: string, offer: RTCSessionDescriptionInit };
-        upstream.addListener(
-            "receiveRTCOffer",
-            safe(async (data: Data) => {
-                await this.receiveRTCOffer(data.from, data.offer, upstream);
-            }),
-        );
-        upstream.addListener("close", safe(async () => {
+    private initUpstream(upstream: RemotePeer<T>) {
+        upstream.onMakeRTCOfferRequesting.subscribe(safe(async (to: string) => {
+            await this.makeRTCOffer(to, upstream);
+        }));
+        upstream.onRTCOffering.subscribe(safe(async (data: RTCOfferData) => {
+            await this.receiveRTCOffer(data.from, data.offer, upstream);
+        }));
+        upstream.onClosed.subscribe(safe(async () => {
             this.upstreams.delete(upstream);
             this.startConnectToServer();
         }));
-        upstream.addListener("broadcast", (data: any) => {
+        upstream.onBroadcasting.subscribe(data => {
             this.onBroadcastReceived.next(data);
             broadcastTo(data, this.otherStreams);
             broadcastTo(data, this.downstreams);
         });
     }
 
-    private async makeRTCOffer(to: string, upstream: RemotePeer) {
+    private async makeRTCOffer(to: string, upstream: RemotePeer<T>) {
         let peerConnection = new RTCPeerConnection();
         let dataChannel = await createDataChannel(
             peerConnection,
@@ -108,7 +101,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     private async receiveRTCOffer(
         from: string,
         offer: RTCSessionDescriptionInit,
-        upstream: RemotePeer,
+        upstream: RemotePeer<T>,
     ) {
         let peerConnection = new RTCPeerConnection();
         let dataChannel = await fetchDataChannel(
@@ -125,12 +118,12 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         peerConnection: RTCPeerConnection,
         dataChannel: RTCDataChannel,
     ) {
-        let otherStream = new RTCRemotePeer(
+        let otherStream = new RTCRemotePeer<T>(
             id,
             peerConnection,
             dataChannel,
         );
-        otherStream.addListener("broadcast", (data: any) => {
+        otherStream.onBroadcasting.subscribe(data => {
             this.onBroadcastReceived.next(data);
             broadcastTo(data, this.downstreams);
         });
@@ -138,7 +131,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     }
 }
 
-function broadcastTo(data: any, streams: Set<RemotePeer>) {
+function broadcastTo(data: any, streams: Set<RemotePeer<any>>) {
     for (let peer of streams) {
         peer.send({ type: "broadcast", payload: data });
     }

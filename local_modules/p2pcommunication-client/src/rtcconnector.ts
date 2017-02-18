@@ -1,8 +1,8 @@
-import { EventSubscription } from "fbemitter";
+import * as Rx from "rxjs";
 import { safe } from "./printerror";
-import { RemotePeer } from "./remotepeer";
+import { RemotePeer, IceCandidateData } from "./remotepeer";
 
-export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: RemotePeer) {
+export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: RemotePeer<{}>) {
     return exchangeIceCandidate(pc, to, upstream, async () => {
         let dataChannel: RTCDataChannel | null = null;
         await waitEvent(pc, "negotiationneeded", () => {
@@ -14,14 +14,14 @@ export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: R
     });
 }
 
-async function exchangeOfferWithAnswer(pc: RTCPeerConnection, to: string, upstream: RemotePeer) {
+async function exchangeOfferWithAnswer(pc: RTCPeerConnection, to: string, upstream: RemotePeer<{}>) {
     let offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     upstream.send({
         type: "receiveRTCOffer",
         payload: { to, offer },
     });
-    let payload = await waitMessage(upstream, "receiveRTCAnswer", to);
+    let payload = await waitMessage(upstream.onRTCAnswering, to);
     await pc.setRemoteDescription(payload.answer);
 }
 
@@ -29,7 +29,7 @@ export function fetchDataChannel(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
-    upstream: RemotePeer,
+    upstream: RemotePeer<{}>,
 ) {
     return exchangeIceCandidate(pc, from, upstream, async () => {
         await exchangeAnswerWithOffer(pc, from, offer, upstream);
@@ -43,7 +43,7 @@ async function exchangeAnswerWithOffer(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
-    upstream: RemotePeer,
+    upstream: RemotePeer<{}>,
 ) {
     await pc.setRemoteDescription(offer);
     let answer = await pc.createAnswer();
@@ -57,7 +57,7 @@ async function exchangeAnswerWithOffer(
 async function exchangeIceCandidate<T>(
     pc: RTCPeerConnection,
     to: string,
-    upstream: RemotePeer,
+    upstream: RemotePeer<{}>,
     func: () => Promise<T>,
 ) {
     let iceCandidateListener = (e: RTCPeerConnectionIceEvent) => {
@@ -70,39 +70,36 @@ async function exchangeIceCandidate<T>(
         });
     };
     pc.addEventListener("icecandidate", iceCandidateListener);
-    let receiveIceCandidateSubscribe = upstream.addListener(
-        "receiveIceCandidate",
-        safe(async (payload: any) => {
-            if (payload.from !== to) {
-                return;
-            }
-            pc.addIceCandidate(payload.iceCandidate);
-            receiveIceCandidateSubscribe.remove();
-        }),
-    );
+    let subscription = upstream.onIceCandidateEmitting.subscribe(safe(async (payload: IceCandidateData) => {
+        if (payload.from !== to) {
+            return;
+        }
+        pc.addIceCandidate(payload.iceCandidate);
+        subscription.unsubscribe();
+    }));
     try {
         return await func();
     } finally {
         pc.removeEventListener("icecandidate", iceCandidateListener);
-        receiveIceCandidateSubscribe.remove();
+        subscription.unsubscribe();
     }
 }
 
-function waitMessage(upstream: RemotePeer, type: string, from: string) {
+function waitMessage(observable: Rx.Observable<{ from: string }>, from: string) {
     return new Promise<any>((resolve, reject) => {
-        let eventSubscription: EventSubscription;
+        let subscription: Rx.Subscription;
         let timer = setTimeout(
             () => {
-                eventSubscription.remove();
+                subscription.unsubscribe();
                 reject(new Error("Timeout."));
             }, 3 * 1000,
         );
-        eventSubscription = upstream.addListener(type, safe(async (payload: any) => {
+        subscription = observable.subscribe(safe(async (payload: { from: string }) => {
             if (payload.from !== from) {
                 return;
             }
             clearTimeout(timer);
-            eventSubscription.remove();
+            subscription.unsubscribe();
             resolve(payload);
         }));
     });

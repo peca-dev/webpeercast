@@ -1,14 +1,19 @@
-import { EventEmitter } from "fbemitter";
-import { RemotePeer } from "./remotepeer";
+import * as Rx from "rxjs";
+import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "./remotepeer";
 
-export default class RTCRemotePeer extends EventEmitter implements RemotePeer {
+export default class RTCRemotePeer<T> implements RemotePeer<T> {
+    onClosed = new Rx.Subject();
+    onMakeRTCOfferRequesting = new Rx.Subject<string>(); // TODO: ピアによるハンドシェイク
+    onRTCOffering = new Rx.Subject<RTCOfferData>(); // TODO: ピアによるハンドシェイク
+    onRTCAnswering = new Rx.Subject<RTCAnswerData>(); // TODO: ピアによるハンドシェイク
+    onIceCandidateEmitting = new Rx.Subject<IceCandidateData>(); // TODO: ピアによるハンドシェイク
+    onBroadcasting = new Rx.Subject<T>();
+
     constructor(
         public readonly id: string,
         private peerConnection: RTCPeerConnection,
-        private dataChannel: RTCDataChannel
+        private dataChannel: RTCDataChannel,
     ) {
-        super();
-
         dataChannel.addEventListener("message", (e: MessageEvent) => {
             if (e.type !== "message") {
                 throw new Error(`Unsupported message type: ${e.type}`);
@@ -17,7 +22,14 @@ export default class RTCRemotePeer extends EventEmitter implements RemotePeer {
             if (data.type !== "broadcast") {
                 throw new Error(`Unsupported data type: ${e.type}`);
             }
-            this.emit("broadcast", data.payload);
+            this.onBroadcasting.next(data.payload);
+        });
+        dataChannel.addEventListener("error", (e: ErrorEvent) => {
+            console.error(e);
+        });
+        dataChannel.addEventListener("close", (e: Event) => {
+            this.onClosed.next();
+            this.onClosed.complete();
         });
     }
 

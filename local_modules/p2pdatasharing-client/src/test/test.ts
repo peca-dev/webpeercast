@@ -21,8 +21,8 @@ describe("Peer", function () { // tslint:disable-line:only-arrow-functions
             for (let i = 0; i < 10; i++) {
                 array.push(new Promise((resolve, reject) => {
                     let peer = new Peer<typeof testData[0]>(`ws://${server}`);
-                    let describe = peer.addListener("update", () => {
-                        describe.remove();
+                    let description = peer.onUpdated.subscribe(() => {
+                        description.unsubscribe();
                         let data = peer.getAll();
                         assert(data.length === testData.length);
                         for (let i = 0; i < data.length; i++) {
@@ -55,8 +55,8 @@ describe("Peer", function () { // tslint:disable-line:only-arrow-functions
             let peer: Peer<{ id: string, data: string }> = <any>null;
             await new Promise(async (resolve, reject) => {
                 peer = new Peer<{ id: string, data: string }>(`ws://${server}`);
-                let describe = peer.addListener("update", () => {
-                    describe.remove();
+                let description = peer.onUpdated.subscribe(() => {
+                    description.unsubscribe();
                     resolve();
                 });
             });
@@ -95,8 +95,8 @@ describe("Peer", function () { // tslint:disable-line:only-arrow-functions
 
     function waitUpdateAfterAction(peer: Peer<any>, action: () => void) {
         return new Promise(async (resolve, reject) => {
-            let describe = peer.addListener("update", () => {
-                describe.remove();
+            let description = peer.onUpdated.subscribe(() => {
+                description.unsubscribe();
                 resolve();
             });
             action();
