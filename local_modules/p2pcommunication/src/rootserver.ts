@@ -11,8 +11,8 @@ import { getLogger } from "log4js";
 const logger = getLogger();
 
 export default class RootServer implements declare.RootServer {
-    broadcastReceived = new Rx.Subject<{ from: string; payload: any; }>();
-    connected = new Rx.Subject<RemoteClient>();
+    onBroadcasted = new Rx.Subject<{ from: string; payload: any; }>();
+    onConnected = new Rx.Subject<RemoteClient>();
     private wsServer: WebSocketServer;
     private clients = new WeakMap<WebSocketConnection, RemoteClient>();
     private rtcConnectionProviders = new Set<RTCConnectionProvider>();
@@ -64,10 +64,10 @@ export default class RootServer implements declare.RootServer {
     private acceptNewConnection(connection: WebSocketConnection) {
         logger.debug("Connection count:", this.wsServer.connections.length);
         let remoteClient = new RemoteClient(connection);
-        remoteClient.broadcastReceived.subscribe(payload => {
-            this.broadcastReceived.next({ from: remoteClient.id, payload });
+        remoteClient.onBroadcasted.subscribe(payload => {
+            this.onBroadcasted.next({ from: remoteClient.id, payload });
         });
-        this.connected.next(remoteClient);
+        this.onConnected.next(remoteClient);
         if (this.wsServer.connections.length > 1) {
             this.startToConnectOtherPeer(connection, remoteClient);
         }
@@ -84,7 +84,7 @@ export default class RootServer implements declare.RootServer {
                 otherClient,
                 client,
             );
-            provider.timedOut.subscribe(() => {
+            provider.onTimedOut.subscribe(() => {
                 this.rtcConnectionProviders.delete(provider);
             });
             this.rtcConnectionProviders.add(provider);

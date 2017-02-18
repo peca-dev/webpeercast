@@ -7,11 +7,11 @@ const logger = getLogger();
 
 export default class RemoteClient implements declare.RemoteClient {
     readonly id = uuid.v4();
-    rtcOfferReceived = new Rx.Subject<any>();
-    rtcAnswerReceived = new Rx.Subject<any>();
-    iceCandidateReceived = new Rx.Subject<any>();
-    broadcastReceived = new Rx.Subject<any>();
-    closed = new Rx.Subject<any>();
+    onOffered = new Rx.Subject<any>();
+    onAnswered = new Rx.Subject<any>();
+    onIceCandidateEmitted = new Rx.Subject<any>();
+    onBroadcasted = new Rx.Subject<any>();
+    onClosed = new Rx.Subject<any>();
 
     constructor(private connection: WebSocketConnection) {
         logger.debug("new peer", this.id);
@@ -27,16 +27,16 @@ export default class RemoteClient implements declare.RemoteClient {
                         let obj = JSON.parse(message.utf8Data!);
                         switch (obj.type) {
                             case "receiveRTCOffer":
-                                this.rtcOfferReceived.next(obj.payload);
+                                this.onOffered.next(obj.payload);
                                 break;
                             case "receiveRTCAnswer":
-                                this.rtcAnswerReceived.next(obj.payload);
+                                this.onAnswered.next(obj.payload);
                                 break;
                             case "receiveIceCandidate":
-                                this.iceCandidateReceived.next(obj.payload);
+                                this.onIceCandidateEmitted.next(obj.payload);
                                 break;
                             case "broadcast":
-                                this.broadcastReceived.next(obj.payload);
+                                this.onBroadcasted.next(obj.payload);
                                 break;
                             default:
                                 throw new Error("Unsupported data type: " + obj.type);
@@ -53,8 +53,8 @@ export default class RemoteClient implements declare.RemoteClient {
             }
         });
         connection.on("close", (reasonCode, description) => {
-            this.closed.next({ reasonCode, description });
-            this.closed.complete();
+            this.onClosed.next({ reasonCode, description });
+            this.onClosed.complete();
         });
     }
 

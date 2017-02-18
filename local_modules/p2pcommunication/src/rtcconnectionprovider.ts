@@ -4,18 +4,18 @@ import { getLogger } from "log4js";
 const logger = getLogger("RTCConnectionProvider");
 
 export default class RTCConnectionProvider {
-    timedOut = new Rx.Subject<{}>();
+    onTimedOut = new Rx.Subject<{}>();
 
     constructor(server: RemoteClient, client: RemoteClient) {
         let serverRTCOfferReceivedSubscription
-            = server.rtcOfferReceived.subscribe((payload: { to: string, offer: {} }) => {
+            = server.onOffered.subscribe((payload: { to: string, offer: {} }) => {
                 if (payload.to !== client.id) {
                     return;
                 }
                 client.receiveRTCOffer(server.id, payload.offer);
             });
         let serverIceCandidateReceivedSubscription
-            = server.iceCandidateReceived.subscribe((payload: { to: string, iceCandidate: {} }) => {
+            = server.onIceCandidateEmitted.subscribe((payload: { to: string, iceCandidate: {} }) => {
                 if (payload.to !== client.id) {
                     return;
                 }
@@ -23,14 +23,14 @@ export default class RTCConnectionProvider {
                 client.receiveIceCandidate(server.id, payload.iceCandidate);
             });
         let clientRTCAnswerReceivedSubscription
-            = client.rtcAnswerReceived.subscribe((payload: { to: string, answer: {} }) => {
+            = client.onAnswered.subscribe((payload: { to: string, answer: {} }) => {
                 if (payload.to !== server.id) {
                     return;
                 }
                 server.receiveRTCAnswer(client.id, payload.answer);
             });
         let clientIceCandidateReceivedSubscription
-            = client.iceCandidateReceived.subscribe((payload: { to: string, iceCandidate: {} }) => {
+            = client.onIceCandidateEmitted.subscribe((payload: { to: string, iceCandidate: {} }) => {
                 if (payload.to !== server.id) {
                     return;
                 }
@@ -44,8 +44,8 @@ export default class RTCConnectionProvider {
                 serverIceCandidateReceivedSubscription.unsubscribe();
                 clientRTCAnswerReceivedSubscription.unsubscribe();
                 clientIceCandidateReceivedSubscription.unsubscribe();
-                this.timedOut.subscribe();
-                this.timedOut.complete();
+                this.onTimedOut.subscribe();
+                this.onTimedOut.complete();
             },
             3 * 1000,
         );
