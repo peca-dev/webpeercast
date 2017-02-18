@@ -1,11 +1,11 @@
 import * as Rx from "rxjs";
 import { connection as WebSocketConnection } from "websocket";
 import * as uuid from "uuid";
-import * as declare from "../index";
+import * as declaration from "../index";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RemoteClient implements declare.RemoteClient {
+export default class RemoteClient implements declaration.RemoteClient {
     readonly id = uuid.v4();
     onOffered = new Rx.Subject<any>();
     onAnswered = new Rx.Subject<any>();

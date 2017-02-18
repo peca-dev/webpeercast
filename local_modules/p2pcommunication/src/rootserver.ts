@@ -4,13 +4,13 @@ import {
     connection as WebSocketConnection,
 } from "websocket";
 import * as Rx from "rxjs";
-import * as declare from "../index";
+import * as declaration from "../index";
 import RTCConnectionProvider from "./rtcconnectionprovider";
 import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RootServer implements declare.RootServer {
+export default class RootServer implements declaration.RootServer {
     onBroadcasted = new Rx.Subject<{ from: string; payload: any; }>();
     onConnected = new Rx.Subject<RemoteClient>();
     private wsServer: WebSocketServer;

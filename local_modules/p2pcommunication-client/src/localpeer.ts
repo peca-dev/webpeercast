@@ -1,4 +1,5 @@
 import { EventEmitter } from "fbemitter";
+import * as declaration from "../index";
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
 import { createDataChannel, fetchDataChannel } from "./rtcconnector";
@@ -9,7 +10,7 @@ import RTCRemotePeer from "./rtcremotepeer";
  * It does nothing when it's disconnected with a downstream.
  * It connects to upstream when it's disconnected with a upstream.
  */
-export default class LocalPeer extends EventEmitter {
+export default class LocalPeer extends EventEmitter implements declaration.LocalPeer {
     /** Decide by root server */
     id: string | null;
     private url: string | null;
