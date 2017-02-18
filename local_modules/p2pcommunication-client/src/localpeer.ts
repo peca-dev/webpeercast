@@ -1,4 +1,4 @@
-import { EventEmitter } from "fbemitter";
+import * as Rx from "rxjs";
 import * as declaration from "../index";
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
@@ -10,7 +10,9 @@ import RTCRemotePeer from "./rtcremotepeer";
  * It does nothing when it's disconnected with a downstream.
  * It connects to upstream when it's disconnected with a upstream.
  */
-export default class LocalPeer extends EventEmitter implements declaration.LocalPeer {
+export default class LocalPeer<T> implements declaration.LocalPeer<T> {
+    onBroadcastReceived = new Rx.Subject<T>();
+
     /** Decide by root server */
     id: string | null;
     private url: string | null;
@@ -30,8 +32,6 @@ export default class LocalPeer extends EventEmitter implements declaration.Local
     };
 
     constructor(url: string) {
-        super();
-
         this.url = url;
         this.startConnectToServer();
     }
@@ -89,7 +89,7 @@ export default class LocalPeer extends EventEmitter implements declaration.Local
             this.startConnectToServer();
         }));
         upstream.addListener("broadcast", (data: any) => {
-            this.emit("broadcast", data);
+            this.onBroadcastReceived.next(data);
             broadcastTo(data, this.otherStreams);
             broadcastTo(data, this.downstreams);
         });
@@ -131,7 +131,7 @@ export default class LocalPeer extends EventEmitter implements declaration.Local
             dataChannel,
         );
         otherStream.addListener("broadcast", (data: any) => {
-            this.emit("broadcast", data);
+            this.onBroadcastReceived.next(data);
             broadcastTo(data, this.downstreams);
         });
         this.otherStreams.add(otherStream);

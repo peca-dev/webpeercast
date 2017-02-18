@@ -4,16 +4,20 @@ import { Query } from "./query";
 
 // キューを保持して、必要があれば送ったりする
 export default class Peer<T extends { id: string }> extends EventEmitter {
-    private p2pPeer: LocalPeer;
+    private p2pPeer: LocalPeer<ReadonlyArray<Query<T>>>;
     private eventQueue: Array<Query<T>> = [];
 
     constructor(url: string) {
         super();
 
         this.p2pPeer = new LocalPeer(url);
-        this.p2pPeer.addListener("broadcast", (data: ReadonlyArray<Query<T>>) => {
+        this.p2pPeer.onBroadcastReceived.subscribe(data => {
             this.eventQueue.push(
-                ...(data.map(x => ({ type: x.type, date: new Date(<any>x.date), payload: x.payload }))),
+                ...(data.map(x => ({
+                    type: x.type,
+                    date: new Date(<any>x.date),
+                    payload: x.payload,
+                }))),
             );
             this.emit("update");
         });
@@ -28,7 +32,7 @@ export default class Peer<T extends { id: string }> extends EventEmitter {
     }
 
     delete(date: Date, id: string) {
-        this.p2pPeer.broadcast([{ type: "delete", date, payload: { id } }]);
+        this.p2pPeer.broadcast([{ type: "delete", date, payload: <T>{ id } }]);
     }
 
     getAll() {
