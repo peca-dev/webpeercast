@@ -7,6 +7,7 @@ export declare class RemoteClient {
 
 export declare class RootServer {
     onConnected: Rx.Observable<RemoteClient>;
+
     constructor(httpServer: http.Server);
     get remoteClients(): RemoteClient[];
 }
