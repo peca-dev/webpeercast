@@ -1,12 +1,8 @@
 import * as Rx from "rxjs";
-import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "p2pcommunication-common";
+import { RemotePeer } from "p2pcommunication-common";
 
 export default class RTCRemotePeer<T> implements RemotePeer<T> {
     onClosed = new Rx.Subject();
-    onOfferRequesting = new Rx.Subject<string>(); // TODO: ピアによるハンドシェイク
-    onOffering = new Rx.Subject<RTCOfferData>(); // TODO: ピアによるハンドシェイク
-    onAnswering = new Rx.Subject<RTCAnswerData>(); // TODO: ピアによるハンドシェイク
-    onIceCandidateEmitting = new Rx.Subject<IceCandidateData>(); // TODO: ピアによるハンドシェイク
     onBroadcasting = new Rx.Subject<T>();
 
     constructor(

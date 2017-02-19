@@ -3,7 +3,7 @@ import { AnonymousSubscription } from "rxjs/Subscription";
 import {
     RemotePeer,
     Upstream,
-    IceCandidateData,
+    SignalingIceCandidateData,
     Subscribable,
 } from "p2pcommunication-common";
 
@@ -30,7 +30,7 @@ async function exchangeOfferWithAnswer(
         type: "receiveRTCOffer",
         payload: { to, offer },
     });
-    let payload = await waitMessage(upstream.onAnsweringFromOther, to);
+    let payload = await waitMessage(upstream.onSignalingAnswer, to);
     await pc.setRemoteDescription(payload.answer);
 }
 
@@ -79,8 +79,8 @@ async function exchangeIceCandidate<T>(
         });
     };
     pc.addEventListener("icecandidate", iceCandidateListener);
-    let subscription = upstream.onIceCandidateEmittingFromOther
-        .subscribe(safe(async (payload: IceCandidateData) => {
+    let subscription = upstream.onSignalingIceCandidate
+        .subscribe(safe(async (payload: SignalingIceCandidateData) => {
             if (payload.from !== to) {
                 return;
             }

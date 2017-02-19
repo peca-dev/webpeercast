@@ -7,23 +7,36 @@ export interface RemotePeer<T> {
     onClosed: Subscribable<{}>;
     onBroadcasting: Subscribable<T>;
 
-    send(obj: { type: string, payload: Object }): void;
     disconnect(): void;
+    // broadcast(payload: T);
+    send(obj: { type: string, payload: Object }): void;
 }
 
 export interface Upstream<T> extends RemotePeer<T> {
     onOfferRequesting: Subscribable<string>;
-    onOfferingFromOther: Subscribable<RTCOfferData>;
-    onAnsweringFromOther: Subscribable<RTCAnswerData>;
-    onIceCandidateEmittingFromOther: Subscribable<IceCandidateData>;
+    onSignalingOffer: Subscribable<SignalingOfferData>;
+    onSignalingAnswer: Subscribable<SignalingAnswerData>;
+    onSignalingIceCandidate: Subscribable<SignalingIceCandidateData>;
+
+    // offer(to: string, offer: RTCSessionDescriptionInit): void;
+    // answer(to: string, answer: RTCSessionDescriptionInit): void;
+    // emitIceCandidate(to: string, iceCandidate: RTCIceCandidate): void;
 }
 
 export interface Downstream<T> extends RemotePeer<T> {
-    onOfferingToOther: Subscribable<RTCOfferData>;
-    onAnsweringToOther: Subscribable<RTCAnswerData>;
-    onIceCandidateEmittingToOther: Subscribable<IceCandidateData>;
+    onOffering: Subscribable<SignalingOfferData>;
+    onAnswering: Subscribable<SignalingAnswerData>;
+    onIceCandidateEmitting: Subscribable<SignalingIceCandidateData>;
+
+    // requestOffer(to: string): void;
+    // signalOffer(from: string, offer: RTCSessionDescriptionInit): void;
+    // signalAnswer(from: string, answer: RTCSessionDescriptionInit): void;
+    // signalIceCandidate(from: string, iceCandidate: RTCIceCandidate): void;
 }
 
-export type RTCOfferData = { from: string, offer: RTCSessionDescriptionInit };
-export type RTCAnswerData = { from: string, answer: RTCSessionDescriptionInit };
-export type IceCandidateData = { from: string, iceCandidate: RTCIceCandidateInit };
+export type SignalingOfferData = { from: string, offer: RTCSessionDescriptionInit };
+export type SignalingAnswerData = { from: string, answer: RTCSessionDescriptionInit };
+export type SignalingIceCandidateData = { from: string, iceCandidate: RTCIceCandidateInit };
+export type OfferingData = { to: string, offer: RTCSessionDescriptionInit };
+export type AnsweringData = { to: string, answer: RTCSessionDescriptionInit };
+export type IceCandidateEmittingData = { to: string, iceCandidate: RTCIceCandidateInit };

@@ -1,5 +1,5 @@
 import * as Rx from "rxjs";
-import { RemotePeer, Upstream, RTCOfferData } from "p2pcommunication-common";
+import { RemotePeer, Upstream, SignalingOfferData } from "p2pcommunication-common";
 import * as declaration from "../index";
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
@@ -74,7 +74,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         upstream.onOfferRequesting.subscribe(safe(async (to: string) => {
             await this.makeRTCOffer(to, upstream);
         }));
-        upstream.onOfferingFromOther.subscribe(safe(async (data: RTCOfferData) => {
+        upstream.onSignalingOffer.subscribe(safe(async (data: SignalingOfferData) => {
             await this.receiveRTCOffer(data.from, data.offer, upstream);
         }));
         upstream.onClosed.subscribe(safe(async () => {
