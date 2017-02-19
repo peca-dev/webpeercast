@@ -1,5 +1,6 @@
 import * as Rx from "rxjs";
 import {
+    OfferRequestData,
     Upstream,
     SignalingOfferData,
     SignalingAnswerData,
@@ -11,7 +12,7 @@ export default class RemoteRootServer<T> implements Upstream<T> {
     readonly id = "";
 
     onClosed = new Rx.Subject();
-    onOfferRequesting = new Rx.Subject<string>();
+    onOfferRequesting = new Rx.Subject<OfferRequestData>();
     onSignalingOffer = new Rx.Subject<SignalingOfferData>();
     onSignalingAnswer = new Rx.Subject<SignalingAnswerData>();
     onSignalingIceCandidate = new Rx.Subject<SignalingIceCandidateData>();

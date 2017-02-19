@@ -7,12 +7,13 @@ export default class RTCConnectionProvider<T> {
     onTimedOut = new Rx.Subject<{}>();
 
     constructor(server: RemoteClient<T>, client: RemoteClient<T>) {
+        const peerType = "otherStream";
         let serverRTCOfferReceivedSubscription
             = server.onOffering.subscribe((payload: { to: string, offer: {} }) => {
                 if (payload.to !== client.id) {
                     return;
                 }
-                client.signalOffer(server.id, payload.offer);
+                client.signalOffer(server.id, peerType, payload.offer);
             });
         let serverIceCandidateReceivedSubscription
             = server.onIceCandidateEmitting.subscribe((payload: { to: string, iceCandidate: {} }) => {
@@ -50,6 +51,6 @@ export default class RTCConnectionProvider<T> {
             3 * 1000,
         );
 
-        server.requestOfferTo(client.id);
+        server.requestOfferTo(client.id, peerType);
     }
 }

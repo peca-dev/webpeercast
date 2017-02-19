@@ -1,5 +1,11 @@
 import * as Rx from "rxjs";
-import { RemotePeer, Upstream, SignalingOfferData } from "p2pcommunication-common";
+import {
+    OfferRequestData,
+    PeerType,
+    RemotePeer,
+    Upstream,
+    SignalingOfferData,
+} from "p2pcommunication-common";
 import * as declaration from "../index";
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
@@ -71,11 +77,11 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     }
 
     private initUpstream(upstream: Upstream<T>) {
-        upstream.onOfferRequesting.subscribe(safe(async (to: string) => {
-            await this.makeRTCOffer(to, upstream);
+        upstream.onOfferRequesting.subscribe(safe(async (data: OfferRequestData) => {
+            await this.createNewConnection(data.to, data.peerType, upstream);
         }));
         upstream.onSignalingOffer.subscribe(safe(async (data: SignalingOfferData) => {
-            await this.receiveRTCOffer(data.from, data.offer, upstream);
+            await this.fetchNewOtherConnection(data.from, data.peerType, data.offer, upstream);
         }));
         upstream.onClosed.subscribe(safe(async () => {
             this.upstreams.delete(upstream);
@@ -88,18 +94,23 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         });
     }
 
-    private async makeRTCOffer(to: string, upstream: Upstream<T>) {
+    private async createNewConnection(
+        to: string,
+        peerType: PeerType,
+        upstream: Upstream<T>,
+    ) {
         let peerConnection = new RTCPeerConnection();
         let dataChannel = await createDataChannel(
             peerConnection,
             to,
             upstream,
         );
-        this.addNewOtherStream(to, peerConnection, dataChannel);
+        this.addNewConnection(to, peerConnection, dataChannel, peerType);
     }
 
-    private async receiveRTCOffer(
+    private async fetchNewOtherConnection(
         from: string,
+        peerType: PeerType,
         offer: RTCSessionDescriptionInit,
         upstream: Upstream<T>,
     ) {
@@ -110,7 +121,25 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
             offer,
             upstream,
         );
-        this.addNewOtherStream(from, peerConnection, dataChannel);
+        this.addNewConnection(from, peerConnection, dataChannel, peerType);
+    }
+
+    private addNewConnection(
+        id: string,
+        peerConnection: RTCPeerConnection,
+        dataChannel: RTCDataChannel,
+        peerType: PeerType,
+    ) {
+        switch (peerType) {
+            case "upstream":
+                throw new Error("Not implemented");
+            case "otherStream":
+                this.addNewOtherStream(id, peerConnection, dataChannel);
+            case "downstream":
+                throw new Error("Not implemented");
+            default:
+                throw new Error(`Unsupported peerType: ${peerType}`);
+        }
     }
 
     private addNewOtherStream(

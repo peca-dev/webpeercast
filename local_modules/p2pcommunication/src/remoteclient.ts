@@ -1,7 +1,13 @@
 import * as Rx from "rxjs";
 import { connection as WebSocketConnection } from "websocket";
 import * as uuid from "uuid";
-import { Downstream, OfferingData, AnsweringData, IceCandidateEmittingData } from "p2pcommunication-common";
+import {
+    AnsweringData,
+    Downstream,
+    IceCandidateEmittingData,
+    OfferingData,
+    PeerType,
+} from "p2pcommunication-common";
 import * as declaration from "../index";
 import { getLogger } from "log4js";
 const logger = getLogger();
@@ -64,40 +70,31 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Dow
         throw new Error("Not implemented.");
     }
 
-    requestOfferTo(to: string) {
+    requestOfferTo(to: string, peerType: PeerType) {
         this.connection.send(JSON.stringify({
             type: "makeRTCOffer",
-            payload: to,
+            payload: { to, peerType },
         }));
     }
 
-    signalOffer(from: string, offer: {}) {
+    signalOffer(from: string, peerType: PeerType, offer: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveRTCOffer",
-            payload: {
-                from,
-                offer,
-            },
+            payload: { from, peerType, offer },
         }));
     }
 
     signalAnswer(from: string, answer: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveRTCAnswer",
-            payload: {
-                from,
-                answer,
-            },
+            payload: { from, answer },
         }));
     }
 
     signalIceCandidate(from: string, iceCandidate: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveIceCandidate",
-            payload: {
-                from,
-                iceCandidate,
-            },
+            payload: { from, iceCandidate },
         }));
     }
 
