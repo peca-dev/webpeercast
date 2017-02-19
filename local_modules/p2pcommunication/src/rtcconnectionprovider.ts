@@ -3,10 +3,10 @@ import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger("RTCConnectionProvider");
 
-export default class RTCConnectionProvider {
+export default class RTCConnectionProvider<T> {
     onTimedOut = new Rx.Subject<{}>();
 
-    constructor(server: RemoteClient, client: RemoteClient) {
+    constructor(server: RemoteClient<T>, client: RemoteClient<T>) {
         let serverRTCOfferReceivedSubscription
             = server.onOffering.subscribe((payload: { to: string, offer: {} }) => {
                 if (payload.to !== client.id) {

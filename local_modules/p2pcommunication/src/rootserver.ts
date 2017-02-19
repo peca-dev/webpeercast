@@ -10,17 +10,17 @@ import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RootServer implements declaration.RootServer {
+export default class RootServer<T> implements declaration.RootServer {
     private wsServer: WebSocketServer;
-    private clients = new WeakMap<WebSocketConnection, RemoteClient>();
-    private rtcConnectionProviders = new Set<RTCConnectionProvider>();
+    private clients = new WeakMap<WebSocketConnection, RemoteClient<T>>();
+    private rtcConnectionProviders = new Set<RTCConnectionProvider<T>>();
 
-    onConnected = new Rx.Subject<RemoteClient>();
+    onConnected = new Rx.Subject<RemoteClient<T>>();
 
     get remoteClients() {
         return this.wsServer
             .connections
-            .map(x => this.clients.get(x) as RemoteClient)
+            .map(x => this.clients.get(x) as RemoteClient<T>)
             .filter(x => x != null);
     }
 
@@ -55,7 +55,7 @@ export default class RootServer implements declaration.RootServer {
     broadcast(payload: any) {
         let remotePeers = this.wsServer
             .connections
-            .map(x => this.clients.get(x) as RemoteClient);
+            .map(x => this.clients.get(x) as RemoteClient<T>);
         for (let remotePeer of remotePeers) {
             remotePeer.broadcast(payload);
         }
@@ -75,10 +75,10 @@ export default class RootServer implements declaration.RootServer {
         logger.info((new Date()) + " Connection accepted.");
     }
 
-    private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient) {
+    private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient<T>) {
         let otherClients = this.wsServer.connections
             .filter(x => x !== connection)
-            .map(x => this.clients.get(x) as RemoteClient);
+            .map(x => this.clients.get(x) as RemoteClient<T>);
         for (let otherClient of otherClients) {
             let provider = new RTCConnectionProvider(
                 otherClient,

@@ -1,18 +1,20 @@
 import * as Rx from "rxjs";
 import { connection as WebSocketConnection } from "websocket";
 import * as uuid from "uuid";
+import { RemotePeer } from "p2pcommunication-common";
 import * as declaration from "../index";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RemoteClient implements declaration.RemoteClient {
+export default class RemoteClient<T> implements declaration.RemoteClient<T>, RemotePeer<T> {
     readonly id = uuid.v4();
 
+    onOfferRequesting = Rx.Observable.never();
     onOffering = new Rx.Subject<any>();
     onAnswering = new Rx.Subject<any>();
     onIceCandidateEmitting = new Rx.Subject<any>();
     onBroadcasting = new Rx.Subject<any>();
-    onClosed = new Rx.Subject<any>();
+    onClosed = new Rx.Subject<{}>();
 
     constructor(private connection: WebSocketConnection) {
         logger.debug("new peer", this.id);
@@ -59,6 +61,14 @@ export default class RemoteClient implements declaration.RemoteClient {
         });
     }
 
+    disconnect() {
+        throw new Error("Not implemented.");
+    }
+
+    send(obj: { type: string, payload: Object }) {
+        throw new Error("Not implemented.");
+    }
+
     makeRTCOffer(to: string) {
         this.connection.send(JSON.stringify({
             type: "makeRTCOffer",
@@ -96,7 +106,7 @@ export default class RemoteClient implements declaration.RemoteClient {
         }));
     }
 
-    broadcast(payload: any) {
+    broadcast(payload: T) {
         this.connection.send(JSON.stringify({
             type: "broadcast",
             payload,

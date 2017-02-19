@@ -3,7 +3,7 @@ import * as p2pCommunication from "p2pcommunication";
 import { Query } from "../query";
 
 export default class RootServer<T extends { id: string }> {
-    private server: p2pCommunication.RootServer;
+    private server: p2pCommunication.RootServer<ReadonlyArray<Query<T>>>;
     private eventQueue: Array<Query<T>> = [];
 
     constructor(httpServer: http.Server) {
