@@ -1,4 +1,3 @@
-import "webrtc";
 import { Subscribable } from "rxjs/Observable";
 export { Subscribable }
 
