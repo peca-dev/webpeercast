@@ -5,47 +5,49 @@ node_js: 6
 addons:
   firefox: 51.0.1
 before_install:
-- export DISPLAY=:99.0
-- sh -e /etc/init.d/xvfb start
-- sudo rm /etc/apt/sources.list.d/google-chrome.list
-- sudo dpkg --add-architecture i386
-- sudo apt-get update
-- sudo apt-get install -y wine1.6
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
+  - sudo rm /etc/apt/sources.list.d/google-chrome.list
+  - sudo dpkg --add-architecture i386
+  - sudo apt-get update
+  - sudo apt-get install -y wine1.6
 install:
-- pushd local_modules/p2pcommunication && npm install && popd
-- pushd local_modules/p2pcommunication-client && npm install && popd
-- pushd local_modules/p2pdatasharing && npm install && popd
-- pushd local_modules/p2pdatasharing-client && npm install && popd
-- pushd sub_projects/pcypproxy-server && npm install && popd
-- pushd sub_projects/pcypproxy && npm install && popd
+  - pushd local_modules/p2pcommunication-common && npm install && popd
+  - pushd local_modules/p2pcommunication && npm install && popd
+  - pushd local_modules/p2pcommunication-client && npm install && popd
+  - pushd local_modules/p2pdatasharing && npm install && popd
+  - pushd local_modules/p2pdatasharing-client && npm install && popd
+  - pushd sub_projects/pcypproxy-server && npm install && popd
+  - pushd sub_projects/pcypproxy && npm install && popd
 before_script:
-- pushd local_modules/p2pcommunication && npm run build && popd
-- pushd local_modules/p2pcommunication-client && npm run build && popd
-- pushd local_modules/p2pdatasharing && npm run build && popd
-- pushd local_modules/p2pdatasharing-client && npm run build && popd
-- pushd sub_projects/pcypproxy-server && npm run build && popd
-- pushd sub_projects/pcypproxy && npm run build && popd
+  - pushd local_modules/p2pcommunication-common && npm run build && popd
+  - pushd local_modules/p2pcommunication && npm run build && popd
+  - pushd local_modules/p2pcommunication-client && npm run build && popd
+  - pushd local_modules/p2pdatasharing && npm run build && popd
+  - pushd local_modules/p2pdatasharing-client && npm run build && popd
+  - pushd sub_projects/pcypproxy-server && npm run build && popd
+  - pushd sub_projects/pcypproxy && npm run build && popd
 script:
-- pushd local_modules/p2pcommunication
-- npm run test-server&
-- popd
-- pushd local_modules/p2pcommunication-client
-- npm test
-- popd
-- killall node
-- pushd local_modules/p2pdatasharing
-- npm run test-server&
-- popd
-- pushd local_modules/p2pdatasharing-client
-- npm test
-- popd
-- killall node
-- pushd sub_projects/pcypproxy-server
-- docker build -t progre/pcypproxy-server .
-- popd
-- pushd sub_projects/pcypproxy
-- npm run package
-- popd
+  - pushd local_modules/p2pcommunication
+  - npm run test-server&
+  - popd
+  - pushd local_modules/p2pcommunication-client
+  - npm test
+  - popd
+  - killall node
+  - pushd local_modules/p2pdatasharing
+  - npm run test-server&
+  - popd
+  - pushd local_modules/p2pdatasharing-client
+  - npm test
+  - popd
+  - killall node
+  - pushd sub_projects/pcypproxy-server
+  - docker build -t progre/pcypproxy-server .
+  - popd
+  - pushd sub_projects/pcypproxy
+  - npm run package
+  - popd
 deploy:
   provider: releases
   api_key:
