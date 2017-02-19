@@ -1,5 +1,5 @@
 import * as Rx from "rxjs";
-import { RemotePeer, RTCOfferData } from "p2pcommunication-common";
+import { RemotePeer, Upstream, RTCOfferData } from "p2pcommunication-common";
 import * as declaration from "../index";
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
@@ -70,11 +70,11 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         })();
     }
 
-    private initUpstream(upstream: RemotePeer<T>) {
+    private initUpstream(upstream: Upstream<T>) {
         upstream.onOfferRequesting.subscribe(safe(async (to: string) => {
             await this.makeRTCOffer(to, upstream);
         }));
-        upstream.onOffering.subscribe(safe(async (data: RTCOfferData) => {
+        upstream.onOfferingFromOther.subscribe(safe(async (data: RTCOfferData) => {
             await this.receiveRTCOffer(data.from, data.offer, upstream);
         }));
         upstream.onClosed.subscribe(safe(async () => {
@@ -88,7 +88,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         });
     }
 
-    private async makeRTCOffer(to: string, upstream: RemotePeer<T>) {
+    private async makeRTCOffer(to: string, upstream: Upstream<T>) {
         let peerConnection = new RTCPeerConnection();
         let dataChannel = await createDataChannel(
             peerConnection,
@@ -101,7 +101,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     private async receiveRTCOffer(
         from: string,
         offer: RTCSessionDescriptionInit,
-        upstream: RemotePeer<T>,
+        upstream: Upstream<T>,
     ) {
         let peerConnection = new RTCPeerConnection();
         let dataChannel = await fetchDataChannel(

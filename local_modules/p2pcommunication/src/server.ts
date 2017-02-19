@@ -10,7 +10,7 @@ const logger = getLogger();
 const debug = process.env.NODE_ENV === "development";
 
 async function main() {
-    let server: RootServer;
+    let server: RootServer<{}>;
     let httpServer = http.createServer((request, response) => {
         if (debug) {
             response.setHeader("Access-Control-Allow-Origin", "*");

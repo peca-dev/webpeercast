@@ -2,11 +2,12 @@ import { safe } from "./printerror";
 import { AnonymousSubscription } from "rxjs/Subscription";
 import {
     RemotePeer,
+    Upstream,
     IceCandidateData,
     Subscribable,
 } from "p2pcommunication-common";
 
-export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: RemotePeer<{}>) {
+export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream<{}>) {
     return exchangeIceCandidate(pc, to, upstream, async () => {
         let dataChannel: RTCDataChannel | null = null;
         await waitEvent(pc, "negotiationneeded", () => {
@@ -18,14 +19,18 @@ export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: R
     });
 }
 
-async function exchangeOfferWithAnswer(pc: RTCPeerConnection, to: string, upstream: RemotePeer<{}>) {
+async function exchangeOfferWithAnswer(
+    pc: RTCPeerConnection,
+    to: string,
+    upstream: Upstream<{}>,
+) {
     let offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     upstream.send({
         type: "receiveRTCOffer",
         payload: { to, offer },
     });
-    let payload = await waitMessage(upstream.onAnswering, to);
+    let payload = await waitMessage(upstream.onAnsweringFromOther, to);
     await pc.setRemoteDescription(payload.answer);
 }
 
@@ -33,7 +38,7 @@ export function fetchDataChannel(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
-    upstream: RemotePeer<{}>,
+    upstream: Upstream<{}>,
 ) {
     return exchangeIceCandidate(pc, from, upstream, async () => {
         await exchangeAnswerWithOffer(pc, from, offer, upstream);
@@ -61,7 +66,7 @@ async function exchangeAnswerWithOffer(
 async function exchangeIceCandidate<T>(
     pc: RTCPeerConnection,
     to: string,
-    upstream: RemotePeer<{}>,
+    upstream: Upstream<{}>,
     func: () => Promise<T>,
 ) {
     let iceCandidateListener = (e: RTCPeerConnectionIceEvent) => {
@@ -74,13 +79,14 @@ async function exchangeIceCandidate<T>(
         });
     };
     pc.addEventListener("icecandidate", iceCandidateListener);
-    let subscription = upstream.onIceCandidateEmitting.subscribe(safe(async (payload: IceCandidateData) => {
-        if (payload.from !== to) {
-            return;
-        }
-        pc.addIceCandidate(payload.iceCandidate);
-        subscription.unsubscribe();
-    }));
+    let subscription = upstream.onIceCandidateEmittingFromOther
+        .subscribe(safe(async (payload: IceCandidateData) => {
+            if (payload.from !== to) {
+                return;
+            }
+            pc.addIceCandidate(payload.iceCandidate);
+            subscription.unsubscribe();
+        }));
     try {
         return await func();
     } finally {

@@ -1,15 +1,15 @@
 import * as Rx from "rxjs";
-import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "p2pcommunication-common";
+import { Upstream, RTCOfferData, RTCAnswerData, IceCandidateData } from "p2pcommunication-common";
 import { printError, safe } from "./printerror";
 
-export default class RemoteRootServer<T> implements RemotePeer<T> {
+export default class RemoteRootServer<T> implements Upstream<T> {
     readonly id = "";
 
     onClosed = new Rx.Subject();
     onOfferRequesting = new Rx.Subject<string>();
-    onOffering = new Rx.Subject<RTCOfferData>();
-    onAnswering = new Rx.Subject<RTCAnswerData>();
-    onIceCandidateEmitting = new Rx.Subject<IceCandidateData>();
+    onOfferingFromOther = new Rx.Subject<RTCOfferData>();
+    onAnsweringFromOther = new Rx.Subject<RTCAnswerData>();
+    onIceCandidateEmittingFromOther = new Rx.Subject<IceCandidateData>();
     onBroadcasting = new Rx.Subject<T>();
 
     static fetch<T>(url: string) {
@@ -45,13 +45,13 @@ export default class RemoteRootServer<T> implements RemotePeer<T> {
                     this.onOfferRequesting.next(data.payload);
                     break;
                 case "receiveRTCOffer":
-                    this.onOffering.next(data.payload);
+                    this.onOfferingFromOther.next(data.payload);
                     break;
                 case "receiveRTCAnswer":
-                    this.onAnswering.next(data.payload);
+                    this.onAnsweringFromOther.next(data.payload);
                     break;
                 case "receiveIceCandidate":
-                    this.onIceCandidateEmitting.next(data.payload);
+                    this.onIceCandidateEmittingFromOther.next(data.payload);
                     break;
                 case "broadcast":
                     this.onBroadcasting.next(data.payload);

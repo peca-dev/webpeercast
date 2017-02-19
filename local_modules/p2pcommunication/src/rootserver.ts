@@ -10,7 +10,7 @@ import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RootServer<T> implements declaration.RootServer {
+export default class RootServer<T> implements declaration.RootServer<T> {
     private wsServer: WebSocketServer;
     private clients = new WeakMap<WebSocketConnection, RemoteClient<T>>();
     private rtcConnectionProviders = new Set<RTCConnectionProvider<T>>();
