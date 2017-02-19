@@ -1,20 +1,19 @@
 import * as Rx from "rxjs";
 import { connection as WebSocketConnection } from "websocket";
 import * as uuid from "uuid";
-import { RemotePeer } from "p2pcommunication-common";
+import { Downstream, OfferingData, AnsweringData, IceCandidateEmittingData } from "p2pcommunication-common";
 import * as declaration from "../index";
 import { getLogger } from "log4js";
 const logger = getLogger();
 
-export default class RemoteClient<T> implements declaration.RemoteClient<T>, RemotePeer<T> {
+export default class RemoteClient<T> implements declaration.RemoteClient<T>, Downstream<T> {
     readonly id = uuid.v4();
 
-    onOfferRequesting = Rx.Observable.never();
-    onOffering = new Rx.Subject<any>();
-    onAnswering = new Rx.Subject<any>();
-    onIceCandidateEmitting = new Rx.Subject<any>();
-    onBroadcasting = new Rx.Subject<any>();
     onClosed = new Rx.Subject<{}>();
+    onOffering = new Rx.Subject<OfferingData>();
+    onAnswering = new Rx.Subject<AnsweringData>();
+    onIceCandidateEmitting = new Rx.Subject<IceCandidateEmittingData>();
+    onBroadcasting = new Rx.Subject<T>();
 
     constructor(private connection: WebSocketConnection) {
         logger.debug("new peer", this.id);
@@ -65,14 +64,14 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Rem
         throw new Error("Not implemented.");
     }
 
-    makeRTCOffer(to: string) {
+    requestOfferTo(to: string) {
         this.connection.send(JSON.stringify({
             type: "makeRTCOffer",
             payload: to,
         }));
     }
 
-    receiveRTCOffer(from: string, offer: {}) {
+    signalOffer(from: string, offer: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveRTCOffer",
             payload: {
@@ -82,7 +81,7 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Rem
         }));
     }
 
-    receiveRTCAnswer(from: string, answer: {}) {
+    signalAnswer(from: string, answer: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveRTCAnswer",
             payload: {
@@ -92,7 +91,7 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Rem
         }));
     }
 
-    receiveIceCandidate(from: string, iceCandidate: {}) {
+    signalIceCandidate(from: string, iceCandidate: {}) {
         this.connection.send(JSON.stringify({
             type: "receiveIceCandidate",
             payload: {

@@ -12,7 +12,7 @@ export default class RTCConnectionProvider<T> {
                 if (payload.to !== client.id) {
                     return;
                 }
-                client.receiveRTCOffer(server.id, payload.offer);
+                client.signalOffer(server.id, payload.offer);
             });
         let serverIceCandidateReceivedSubscription
             = server.onIceCandidateEmitting.subscribe((payload: { to: string, iceCandidate: {} }) => {
@@ -20,14 +20,14 @@ export default class RTCConnectionProvider<T> {
                     return;
                 }
                 logger.debug("Send ice to client.");
-                client.receiveIceCandidate(server.id, payload.iceCandidate);
+                client.signalIceCandidate(server.id, payload.iceCandidate);
             });
         let clientRTCAnswerReceivedSubscription
             = client.onAnswering.subscribe((payload: { to: string, answer: {} }) => {
                 if (payload.to !== server.id) {
                     return;
                 }
-                server.receiveRTCAnswer(client.id, payload.answer);
+                server.signalAnswer(client.id, payload.answer);
             });
         let clientIceCandidateReceivedSubscription
             = client.onIceCandidateEmitting.subscribe((payload: { to: string, iceCandidate: {} }) => {
@@ -35,7 +35,7 @@ export default class RTCConnectionProvider<T> {
                     return;
                 }
                 logger.debug("Send ice to server.");
-                server.receiveIceCandidate(client.id, payload.iceCandidate);
+                server.signalIceCandidate(client.id, payload.iceCandidate);
             });
         // He don't check connection completed. It should do client.
         setTimeout(
@@ -50,6 +50,6 @@ export default class RTCConnectionProvider<T> {
             3 * 1000,
         );
 
-        server.makeRTCOffer(client.id);
+        server.requestOfferTo(client.id);
     }
 }
