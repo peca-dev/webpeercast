@@ -48,7 +48,9 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --progress",
     "debug-build": "cross-env NODE_ENV=development webpack --progress",
-    "postinstall": "typings install || echo Skipped.",
+    "postinstall": "npm run postinstall:link & npm run postinstall:typings",
+    "postinstall:link": "npm link ../p2pcommunication-common",
+    "postinstall:typings": "typings install || echo Skipped.",
     "test": "karma start",
     "watch": "cross-env NODE_ENV=development webpack --progress --watch"
   }

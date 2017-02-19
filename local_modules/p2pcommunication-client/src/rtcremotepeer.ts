@@ -1,5 +1,5 @@
 import * as Rx from "rxjs";
-import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "./remotepeer";
+import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "p2pcommunication-common";
 
 export default class RTCRemotePeer<T> implements RemotePeer<T> {
     onClosed = new Rx.Subject();

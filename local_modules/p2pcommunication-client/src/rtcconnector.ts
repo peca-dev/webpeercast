@@ -1,6 +1,10 @@
-import * as Rx from "rxjs";
 import { safe } from "./printerror";
-import { RemotePeer, IceCandidateData } from "./remotepeer";
+import { AnonymousSubscription } from "rxjs/Subscription";
+import {
+    RemotePeer,
+    IceCandidateData,
+    Subscribable,
+} from "p2pcommunication-common";
 
 export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: RemotePeer<{}>) {
     return exchangeIceCandidate(pc, to, upstream, async () => {
@@ -85,9 +89,9 @@ async function exchangeIceCandidate<T>(
     }
 }
 
-function waitMessage(observable: Rx.Observable<{ from: string }>, from: string) {
+function waitMessage(observable: Subscribable<{ from: string }>, from: string) {
     return new Promise<any>((resolve, reject) => {
-        let subscription: Rx.Subscription;
+        let subscription: AnonymousSubscription;
         let timer = setTimeout(
             () => {
                 subscription.unsubscribe();

@@ -1,5 +1,5 @@
 import * as Rx from "rxjs";
-import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "./remotepeer";
+import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "p2pcommunication-common";
 import { printError, safe } from "./printerror";
 
 export default class RemoteRootServer<T> implements RemotePeer<T> {

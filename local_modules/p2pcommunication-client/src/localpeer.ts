@@ -1,9 +1,9 @@
 import * as Rx from "rxjs";
+import { RemotePeer, RTCOfferData } from "p2pcommunication-common";
 import * as declaration from "../index";
 import { printError, safe } from "./printerror";
 import RemoteRootServer from "./remoterootserver";
 import { createDataChannel, fetchDataChannel } from "./rtcconnector";
-import { RemotePeer, RTCOfferData } from "./remotepeer";
 import RTCRemotePeer from "./rtcremotepeer";
 
 /**
