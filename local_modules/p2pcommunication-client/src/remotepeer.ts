@@ -15,5 +15,5 @@ export interface RemotePeer<T> {
 }
 
 export type RTCOfferData = { from: string, offer: RTCSessionDescriptionInit };
-export type RTCAnswerData = { from: string, offer: RTCSessionDescriptionInit };
+export type RTCAnswerData = { from: string, answer: RTCSessionDescriptionInit };
 export type IceCandidateData = { from: string, iceCandidate: RTCIceCandidateInit };
