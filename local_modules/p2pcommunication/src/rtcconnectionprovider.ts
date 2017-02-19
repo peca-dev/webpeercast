@@ -8,14 +8,14 @@ export default class RTCConnectionProvider {
 
     constructor(server: RemoteClient, client: RemoteClient) {
         let serverRTCOfferReceivedSubscription
-            = server.onOffered.subscribe((payload: { to: string, offer: {} }) => {
+            = server.onOffering.subscribe((payload: { to: string, offer: {} }) => {
                 if (payload.to !== client.id) {
                     return;
                 }
                 client.receiveRTCOffer(server.id, payload.offer);
             });
         let serverIceCandidateReceivedSubscription
-            = server.onIceCandidateEmitted.subscribe((payload: { to: string, iceCandidate: {} }) => {
+            = server.onIceCandidateEmitting.subscribe((payload: { to: string, iceCandidate: {} }) => {
                 if (payload.to !== client.id) {
                     return;
                 }
@@ -23,14 +23,14 @@ export default class RTCConnectionProvider {
                 client.receiveIceCandidate(server.id, payload.iceCandidate);
             });
         let clientRTCAnswerReceivedSubscription
-            = client.onAnswered.subscribe((payload: { to: string, answer: {} }) => {
+            = client.onAnswering.subscribe((payload: { to: string, answer: {} }) => {
                 if (payload.to !== server.id) {
                     return;
                 }
                 server.receiveRTCAnswer(client.id, payload.answer);
             });
         let clientIceCandidateReceivedSubscription
-            = client.onIceCandidateEmitted.subscribe((payload: { to: string, iceCandidate: {} }) => {
+            = client.onIceCandidateEmitting.subscribe((payload: { to: string, iceCandidate: {} }) => {
                 if (payload.to !== server.id) {
                     return;
                 }

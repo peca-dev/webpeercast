@@ -11,11 +11,11 @@ import { getLogger } from "log4js";
 const logger = getLogger();
 
 export default class RootServer implements declaration.RootServer {
-    onBroadcasted = new Rx.Subject<{ from: string; payload: any; }>();
-    onConnected = new Rx.Subject<RemoteClient>();
     private wsServer: WebSocketServer;
     private clients = new WeakMap<WebSocketConnection, RemoteClient>();
     private rtcConnectionProviders = new Set<RTCConnectionProvider>();
+
+    onConnected = new Rx.Subject<RemoteClient>();
 
     get remoteClients() {
         return this.wsServer
@@ -64,8 +64,8 @@ export default class RootServer implements declaration.RootServer {
     private acceptNewConnection(connection: WebSocketConnection) {
         logger.debug("Connection count:", this.wsServer.connections.length);
         let remoteClient = new RemoteClient(connection);
-        remoteClient.onBroadcasted.subscribe(payload => {
-            this.onBroadcasted.next({ from: remoteClient.id, payload });
+        remoteClient.onBroadcasting.subscribe(payload => {
+            // NOP
         });
         this.onConnected.next(remoteClient);
         if (this.wsServer.connections.length > 1) {

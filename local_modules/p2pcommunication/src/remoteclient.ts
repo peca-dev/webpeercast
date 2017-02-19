@@ -7,10 +7,11 @@ const logger = getLogger();
 
 export default class RemoteClient implements declaration.RemoteClient {
     readonly id = uuid.v4();
-    onOffered = new Rx.Subject<any>();
-    onAnswered = new Rx.Subject<any>();
-    onIceCandidateEmitted = new Rx.Subject<any>();
-    onBroadcasted = new Rx.Subject<any>();
+
+    onOffering = new Rx.Subject<any>();
+    onAnswering = new Rx.Subject<any>();
+    onIceCandidateEmitting = new Rx.Subject<any>();
+    onBroadcasting = new Rx.Subject<any>();
     onClosed = new Rx.Subject<any>();
 
     constructor(private connection: WebSocketConnection) {
@@ -27,16 +28,16 @@ export default class RemoteClient implements declaration.RemoteClient {
                         let obj = JSON.parse(message.utf8Data!);
                         switch (obj.type) {
                             case "receiveRTCOffer":
-                                this.onOffered.next(obj.payload);
+                                this.onOffering.next(obj.payload);
                                 break;
                             case "receiveRTCAnswer":
-                                this.onAnswered.next(obj.payload);
+                                this.onAnswering.next(obj.payload);
                                 break;
                             case "receiveIceCandidate":
-                                this.onIceCandidateEmitted.next(obj.payload);
+                                this.onIceCandidateEmitting.next(obj.payload);
                                 break;
                             case "broadcast":
-                                this.onBroadcasted.next(obj.payload);
+                                this.onBroadcasting.next(obj.payload);
                                 break;
                             default:
                                 throw new Error("Unsupported data type: " + obj.type);
