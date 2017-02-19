@@ -17,15 +17,15 @@ export interface Upstream<T> extends RemotePeer<T> {
     onSignalingAnswer: Subscribable<SignalingAnswerData>;
     onSignalingIceCandidate: Subscribable<SignalingIceCandidateData>;
 
-    offer(to: string, offer: RTCSessionDescriptionInit): void;
-    answer(to: string, answer: RTCSessionDescriptionInit): void;
-    emitIceCandidate(to: string, iceCandidate: RTCIceCandidate): void;
+    offerTo(to: string, offer: RTCSessionDescriptionInit): void;
+    answerTo(to: string, answer: RTCSessionDescriptionInit): void;
+    emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate): void;
 }
 
 export interface Downstream<T> extends RemotePeer<T> {
-    onOffering: Subscribable<SignalingOfferData>;
-    onAnswering: Subscribable<SignalingAnswerData>;
-    onIceCandidateEmitting: Subscribable<SignalingIceCandidateData>;
+    onOffering: Subscribable<OfferingData>;
+    onAnswering: Subscribable<AnsweringData>;
+    onIceCandidateEmitting: Subscribable<IceCandidateEmittingData>;
 
     requestOffer(to: string): void;
     signalOffer(from: string, offer: RTCSessionDescriptionInit): void;

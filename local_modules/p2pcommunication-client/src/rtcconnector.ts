@@ -25,7 +25,7 @@ async function exchangeOfferWithAnswer(
 ) {
     let offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    upstream.offer(to, offer);
+    upstream.offerTo(to, offer);
     let payload = await waitMessage(upstream.onSignalingAnswer, to);
     await pc.setRemoteDescription(payload.answer);
 }
@@ -53,7 +53,7 @@ async function exchangeAnswerWithOffer(
     await pc.setRemoteDescription(offer);
     let answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
-    upstream.answer(from, answer);
+    upstream.answerTo(from, answer);
 }
 
 async function exchangeIceCandidate<T>(
@@ -66,7 +66,7 @@ async function exchangeIceCandidate<T>(
         if (e.candidate == null) {
             return;
         }
-        upstream.emitIceCandidate(to, e.candidate);
+        upstream.emitIceCandidateTo(to, e.candidate);
     };
     pc.addEventListener("icecandidate", iceCandidateListener);
     let subscription = upstream.onSignalingIceCandidate

@@ -72,21 +72,21 @@ export default class RemoteRootServer<T> implements Upstream<T> {
         });
     }
 
-    offer(to: string, offer: RTCSessionDescriptionInit) {
+    offerTo(to: string, offer: RTCSessionDescriptionInit) {
         this.socket.send(JSON.stringify({
             type: "receiveRTCOffer",
             payload: { to, offer },
         }));
     }
 
-    answer(to: string, answer: RTCSessionDescriptionInit) {
+    answerTo(to: string, answer: RTCSessionDescriptionInit) {
         this.socket.send(JSON.stringify({
             type: "receiveRTCAnswer",
             payload: { to, answer },
         }));
     }
 
-    emitIceCandidate(to: string, iceCandidate: RTCIceCandidate) {
+    emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate) {
         this.socket.send(JSON.stringify({
             type: "receiveIceCandidate",
             payload: { to, iceCandidate },
