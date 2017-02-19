@@ -65,10 +65,6 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Rem
         throw new Error("Not implemented.");
     }
 
-    send(obj: { type: string, payload: Object }) {
-        throw new Error("Not implemented.");
-    }
-
     makeRTCOffer(to: string) {
         this.connection.send(JSON.stringify({
             type: "makeRTCOffer",

@@ -29,8 +29,8 @@ export default class RTCRemotePeer<T> implements RemotePeer<T> {
         });
     }
 
-    send(obj: { type: string, payload: Object }) {
-        this.dataChannel.send(JSON.stringify(obj));
+    broadcast(payload: T) {
+        this.dataChannel.send(JSON.stringify({ type: "broadcast", payload }));
     }
 
     disconnect() {

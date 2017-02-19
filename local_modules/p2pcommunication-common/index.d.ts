@@ -8,8 +8,7 @@ export interface RemotePeer<T> {
     onBroadcasting: Subscribable<T>;
 
     disconnect(): void;
-    // broadcast(payload: T);
-    send(obj: { type: string, payload: Object }): void;
+    broadcast(payload: T);
 }
 
 export interface Upstream<T> extends RemotePeer<T> {
@@ -18,9 +17,9 @@ export interface Upstream<T> extends RemotePeer<T> {
     onSignalingAnswer: Subscribable<SignalingAnswerData>;
     onSignalingIceCandidate: Subscribable<SignalingIceCandidateData>;
 
-    // offer(to: string, offer: RTCSessionDescriptionInit): void;
-    // answer(to: string, answer: RTCSessionDescriptionInit): void;
-    // emitIceCandidate(to: string, iceCandidate: RTCIceCandidate): void;
+    offer(to: string, offer: RTCSessionDescriptionInit): void;
+    answer(to: string, answer: RTCSessionDescriptionInit): void;
+    emitIceCandidate(to: string, iceCandidate: RTCIceCandidate): void;
 }
 
 export interface Downstream<T> extends RemotePeer<T> {
@@ -28,10 +27,10 @@ export interface Downstream<T> extends RemotePeer<T> {
     onAnswering: Subscribable<SignalingAnswerData>;
     onIceCandidateEmitting: Subscribable<SignalingIceCandidateData>;
 
-    // requestOffer(to: string): void;
-    // signalOffer(from: string, offer: RTCSessionDescriptionInit): void;
-    // signalAnswer(from: string, answer: RTCSessionDescriptionInit): void;
-    // signalIceCandidate(from: string, iceCandidate: RTCIceCandidate): void;
+    requestOffer(to: string): void;
+    signalOffer(from: string, offer: RTCSessionDescriptionInit): void;
+    signalAnswer(from: string, answer: RTCSessionDescriptionInit): void;
+    signalIceCandidate(from: string, iceCandidate: RTCIceCandidate): void;
 }
 
 export type SignalingOfferData = { from: string, offer: RTCSessionDescriptionInit };

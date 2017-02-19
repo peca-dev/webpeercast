@@ -133,6 +133,6 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
 
 function broadcastTo(data: any, streams: Set<RemotePeer<any>>) {
     for (let peer of streams) {
-        peer.send({ type: "broadcast", payload: data });
+        peer.broadcast(data);
     }
 }

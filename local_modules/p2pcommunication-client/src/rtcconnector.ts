@@ -1,7 +1,6 @@
 import { safe } from "./printerror";
 import { AnonymousSubscription } from "rxjs/Subscription";
 import {
-    RemotePeer,
     Upstream,
     SignalingIceCandidateData,
     Subscribable,
@@ -26,10 +25,7 @@ async function exchangeOfferWithAnswer(
 ) {
     let offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    upstream.send({
-        type: "receiveRTCOffer",
-        payload: { to, offer },
-    });
+    upstream.offer(to, offer);
     let payload = await waitMessage(upstream.onSignalingAnswer, to);
     await pc.setRemoteDescription(payload.answer);
 }
@@ -52,15 +48,12 @@ async function exchangeAnswerWithOffer(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
-    upstream: RemotePeer<{}>,
+    upstream: Upstream<{}>,
 ) {
     await pc.setRemoteDescription(offer);
     let answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
-    upstream.send({
-        type: "receiveRTCAnswer",
-        payload: { to: from, answer: pc.localDescription! },
-    });
+    upstream.answer(from, answer);
 }
 
 async function exchangeIceCandidate<T>(
@@ -73,10 +66,7 @@ async function exchangeIceCandidate<T>(
         if (e.candidate == null) {
             return;
         }
-        upstream.send({
-            type: "receiveIceCandidate",
-            payload: { to, iceCandidate: e.candidate },
-        });
+        upstream.emitIceCandidate(to, e.candidate);
     };
     pc.addEventListener("icecandidate", iceCandidateListener);
     let subscription = upstream.onSignalingIceCandidate
