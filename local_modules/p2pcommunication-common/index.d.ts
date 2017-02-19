@@ -1,3 +1,4 @@
+import "webrtc";
 import { Subscribable } from "rxjs/Observable";
 export { Subscribable }
 
@@ -19,7 +20,7 @@ export interface Upstream<T> extends RemotePeer<T> {
 
     offerTo(to: string, offer: RTCSessionDescriptionInit): void;
     answerTo(to: string, answer: RTCSessionDescriptionInit): void;
-    emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate): void;
+    emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidateInit): void;
 }
 
 export interface Downstream<T> extends RemotePeer<T> {
@@ -30,7 +31,7 @@ export interface Downstream<T> extends RemotePeer<T> {
     requestOfferTo(to: string, peerType: PeerType): void;
     signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit): void;
     signalAnswer(from: string, answer: RTCSessionDescriptionInit): void;
-    signalIceCandidate(from: string, iceCandidate: RTCIceCandidate): void;
+    signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit): void;
 }
 
 export type PeerType = "upstream" | "otherStream" | "downstream";
