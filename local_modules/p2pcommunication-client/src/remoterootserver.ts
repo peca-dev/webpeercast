@@ -6,9 +6,9 @@ export default class RemoteRootServer<T> implements RemotePeer<T> {
     readonly id = "";
 
     onClosed = new Rx.Subject();
-    onMakeRTCOfferRequesting = new Rx.Subject<string>();
-    onRTCOffering = new Rx.Subject<RTCOfferData>();
-    onRTCAnswering = new Rx.Subject<RTCAnswerData>();
+    onOfferRequesting = new Rx.Subject<string>();
+    onOffering = new Rx.Subject<RTCOfferData>();
+    onAnswering = new Rx.Subject<RTCAnswerData>();
     onIceCandidateEmitting = new Rx.Subject<IceCandidateData>();
     onBroadcasting = new Rx.Subject<T>();
 
@@ -42,13 +42,13 @@ export default class RemoteRootServer<T> implements RemotePeer<T> {
             let data = JSON.parse(e.data);
             switch (data.type) {
                 case "makeRTCOffer":
-                    this.onMakeRTCOfferRequesting.next(data.payload);
+                    this.onOfferRequesting.next(data.payload);
                     break;
                 case "receiveRTCOffer":
-                    this.onRTCOffering.next(data.payload);
+                    this.onOffering.next(data.payload);
                     break;
                 case "receiveRTCAnswer":
-                    this.onRTCAnswering.next(data.payload);
+                    this.onAnswering.next(data.payload);
                     break;
                 case "receiveIceCandidate":
                     this.onIceCandidateEmitting.next(data.payload);

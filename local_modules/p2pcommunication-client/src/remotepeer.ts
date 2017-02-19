@@ -4,9 +4,9 @@ export interface RemotePeer<T> {
     readonly id: string;
 
     onClosed: Rx.Observable<{}>;
-    onMakeRTCOfferRequesting: Rx.Observable<string>;
-    onRTCOffering: Rx.Observable<RTCOfferData>;
-    onRTCAnswering: Rx.Observable<RTCAnswerData>;
+    onOfferRequesting: Rx.Observable<string>;
+    onOffering: Rx.Observable<RTCOfferData>;
+    onAnswering: Rx.Observable<RTCAnswerData>;
     onIceCandidateEmitting: Rx.Observable<IceCandidateData>;
     onBroadcasting: Rx.Observable<T>;
 

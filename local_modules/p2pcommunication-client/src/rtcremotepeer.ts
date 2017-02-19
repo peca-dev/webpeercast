@@ -3,9 +3,9 @@ import { RemotePeer, RTCOfferData, RTCAnswerData, IceCandidateData } from "./rem
 
 export default class RTCRemotePeer<T> implements RemotePeer<T> {
     onClosed = new Rx.Subject();
-    onMakeRTCOfferRequesting = new Rx.Subject<string>(); // TODO: ピアによるハンドシェイク
-    onRTCOffering = new Rx.Subject<RTCOfferData>(); // TODO: ピアによるハンドシェイク
-    onRTCAnswering = new Rx.Subject<RTCAnswerData>(); // TODO: ピアによるハンドシェイク
+    onOfferRequesting = new Rx.Subject<string>(); // TODO: ピアによるハンドシェイク
+    onOffering = new Rx.Subject<RTCOfferData>(); // TODO: ピアによるハンドシェイク
+    onAnswering = new Rx.Subject<RTCAnswerData>(); // TODO: ピアによるハンドシェイク
     onIceCandidateEmitting = new Rx.Subject<IceCandidateData>(); // TODO: ピアによるハンドシェイク
     onBroadcasting = new Rx.Subject<T>();
 

@@ -21,7 +21,7 @@ async function exchangeOfferWithAnswer(pc: RTCPeerConnection, to: string, upstre
         type: "receiveRTCOffer",
         payload: { to, offer },
     });
-    let payload = await waitMessage(upstream.onRTCAnswering, to);
+    let payload = await waitMessage(upstream.onAnswering, to);
     await pc.setRemoteDescription(payload.answer);
 }
 

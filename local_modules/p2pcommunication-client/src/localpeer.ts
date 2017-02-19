@@ -11,8 +11,6 @@ import RTCRemotePeer from "./rtcremotepeer";
  * It connects to upstream when it's disconnected with a upstream.
  */
 export default class LocalPeer<T> implements declaration.LocalPeer<T> {
-    onBroadcastReceived = new Rx.Subject<T>();
-
     /** Decide by root server */
     id: string | null;
     private url: string | null;
@@ -30,6 +28,8 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
             return false;
         },
     };
+
+    onBroadcastReceived = new Rx.Subject<T>();
 
     constructor(url: string) {
         this.url = url;
@@ -71,10 +71,10 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     }
 
     private initUpstream(upstream: RemotePeer<T>) {
-        upstream.onMakeRTCOfferRequesting.subscribe(safe(async (to: string) => {
+        upstream.onOfferRequesting.subscribe(safe(async (to: string) => {
             await this.makeRTCOffer(to, upstream);
         }));
-        upstream.onRTCOffering.subscribe(safe(async (data: RTCOfferData) => {
+        upstream.onOffering.subscribe(safe(async (data: RTCOfferData) => {
             await this.receiveRTCOffer(data.from, data.offer, upstream);
         }));
         upstream.onClosed.subscribe(safe(async () => {
