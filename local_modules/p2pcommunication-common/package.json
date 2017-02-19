@@ -1,0 +1,44 @@
+{
+  "name": "p2pcommunication-common",
+  "description": "P2P communication module.",
+  "version": "0.0.0",
+  "author": "progre",
+  "bugs": "https://github.com/progre/webpeercast/issues",
+  "dependencies": {
+    "babel-polyfill": "^6.23.0",
+    "rxjs": "^5.1.1"
+  },
+  "devDependencies": {
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "babel-plugin-espower": "^2.3.2",
+    "babel-preset-env": "^1.1.8",
+    "copy-webpack-plugin": "^4.0.1",
+    "cross-env": "^3.1.4",
+    "mocha": "^3.2.0",
+    "power-assert": "^1.4.2",
+    "source-map-support": "^0.4.11",
+    "ts-loader": "^2.0.0",
+    "tslint": "^4.4.2",
+    "typescript": "^2.1.6",
+    "typings": "^2.1.0",
+    "uglify-save-license": "^0.4.1",
+    "webpack": "^2.2.1",
+    "webpack-fail-plugin": "^1.0.5"
+  },
+  "files": [
+    "lib"
+  ],
+  "homepage": "https://github.com/progre/webpeercast/",
+  "main": "lib/index.js",
+  "private": true,
+  "repository": "https://github.com/progre/webpeercast.git",
+  "scripts": {
+    "build": "cross-env NODE_ENV=production webpack --progress",
+    "debug-build": "cross-env NODE_ENV=development webpack --progress",
+    "postinstall": "typings install || echo Skipped.",
+    "test": "mocha lib/test/",
+    "test-server": "cross-env NODE_ENV=development node lib/server.js",
+    "watch": "cross-env NODE_ENV=development webpack --progress --watch"
+  }
+}
