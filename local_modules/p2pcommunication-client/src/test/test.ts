@@ -104,6 +104,16 @@ describe("Sharing", () => {
             });
             assert(receiveB === messageDataB);
         });
+
+        after(async () => {
+            a.disconnect();
+            b.disconnect();
+            await new Promise(
+                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+            );
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === 0);
+        });
     });
 
     context("between many peers on one layer", function (this: any) {
@@ -133,6 +143,17 @@ describe("Sharing", () => {
                 (resolve, reject) => setTimeout(resolve, 1 * 1000),
             );
             assert(count === 9);
+        });
+
+        after(async () => {
+            for (let x of peers) {
+                x.disconnect();
+            }
+            await new Promise(
+                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+            );
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === 0);
         });
     });
 });

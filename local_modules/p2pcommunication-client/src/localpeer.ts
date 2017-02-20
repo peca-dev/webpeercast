@@ -135,6 +135,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
                 throw new Error("Not implemented");
             case "otherStream":
                 this.addNewOtherStream(id, peerConnection, dataChannel);
+                break;
             case "downstream":
                 throw new Error("Not implemented");
             default:

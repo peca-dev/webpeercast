@@ -1,11 +1,11 @@
 import * as Rx from "rxjs";
+import { PeerType } from "p2pcommunication-common";
 import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger("RTCConnectionProvider");
 
-export function provideConnection<T>(server: RemoteClient<T>, client: RemoteClient<T>) {
+export function provideConnection<T>(server: RemoteClient<T>, peerType: PeerType, client: RemoteClient<T>) {
     return new Promise((resolve, reject) => {
-        const peerType = "otherStream";
         let subscriptions = <Rx.Subscription[]>[];
         subscriptions.push(server.onOffering.subscribe((payload: { to: string, offer: {} }) => {
             if (payload.to !== client.id) {

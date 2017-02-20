@@ -13,13 +13,14 @@ const logger = getLogger();
 export default class RootServer<T> implements declaration.RootServer<T> {
     private wsServer: WebSocketServer;
     private clients = new WeakMap<WebSocketConnection, RemoteClient<T>>();
+    private readonly maxClients = 10;
 
     onConnected = new Rx.Subject<RemoteClient<T>>();
 
     get remoteClients() {
         return this.wsServer
             .connections
-            .map(x => this.clients.get(x) as RemoteClient<T>)
+            .map(x => this.clients.get(x) !)
             .filter(x => x != null);
     }
 
@@ -66,19 +67,39 @@ export default class RootServer<T> implements declaration.RootServer<T> {
         remoteClient.onBroadcasting.subscribe(payload => {
             // NOP
         });
-        this.onConnected.next(remoteClient);
-        if (this.wsServer.connections.length > 1) {
-            this.startToConnectOtherPeer(connection, remoteClient);
-        }
         this.clients.set(connection, remoteClient);
+        this.onConnected.next(remoteClient);
         logger.info((new Date()) + " Connection accepted.");
+
+        let clients = this.remoteClientsWithoutConnection(connection);
+        if (clients.length < 1) {
+            return;
+        }
+        if (1 <= clients.length && clients.length < this.maxClients) {
+            this.startToConnectOtherPeer(connection, remoteClient);
+            return;
+        }
+        if (this.maxClients <= clients.length) {
+            throw new Error("No implement yet.");
+            // this.startToConnectOtherPeer(connection, remoteClient);
+            // 繋がったら切る
+        }
     }
 
     private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient<T>) {
         this.wsServer.connections
             .filter(x => x !== connection)
             .map(x => this.clients.get(x) as RemoteClient<T>)
-            .map(otherClient => provideConnection(otherClient, client).catch(e => logger.error(e)));
+            .map(otherClient => provideConnection(otherClient, "otherStream", client)
+                .catch(e => logger.error(e)));
+    }
+
+    private remoteClientsWithoutConnection(connection: WebSocketConnection) {
+        return this.wsServer
+            .connections
+            .filter(x => x !== connection)
+            .map(x => this.clients.get(x) !)
+            .filter(x => x != null);
     }
 }
 
