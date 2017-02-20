@@ -5,7 +5,7 @@ import {
 } from "websocket";
 import * as Rx from "rxjs";
 import * as declaration from "../index";
-import RTCConnectionProvider from "./rtcconnectionprovider";
+import { provideConnection } from "./rtcconnectionprovider";
 import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger();
@@ -13,7 +13,6 @@ const logger = getLogger();
 export default class RootServer<T> implements declaration.RootServer<T> {
     private wsServer: WebSocketServer;
     private clients = new WeakMap<WebSocketConnection, RemoteClient<T>>();
-    private rtcConnectionProviders = new Set<RTCConnectionProvider<T>>();
 
     onConnected = new Rx.Subject<RemoteClient<T>>();
 
@@ -76,19 +75,10 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     }
 
     private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient<T>) {
-        let otherClients = this.wsServer.connections
+        this.wsServer.connections
             .filter(x => x !== connection)
-            .map(x => this.clients.get(x) as RemoteClient<T>);
-        for (let otherClient of otherClients) {
-            let provider = new RTCConnectionProvider(
-                otherClient,
-                client,
-            );
-            provider.onTimedOut.subscribe(() => {
-                this.rtcConnectionProviders.delete(provider);
-            });
-            this.rtcConnectionProviders.add(provider);
-        }
+            .map(x => this.clients.get(x) as RemoteClient<T>)
+            .map(otherClient => provideConnection(otherClient, client).catch(e => logger.error(e)));
     }
 }
 
