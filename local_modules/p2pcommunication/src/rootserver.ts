@@ -76,13 +76,15 @@ export default class RootServer<T> implements declaration.RootServer<T> {
             return;
         }
         if (1 <= clients.length && clients.length < this.maxClients) {
+            logger.debug("Add otherStream");
             this.startToConnectOtherPeer(connection, remoteClient);
             return;
         }
         if (this.maxClients <= clients.length) {
-            throw new Error("No implement yet.");
-            // this.startToConnectOtherPeer(connection, remoteClient);
-            // 繋がったら切る
+            logger.debug("Add downstream");
+            provideConnection(randomOne(clients), false, remoteClient);
+            setTimeout(() => connection.close(), 5 * 1000); // Disconnect when p2p connected
+            return;
         }
     }
 
@@ -90,7 +92,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
         this.wsServer.connections
             .filter(x => x !== connection)
             .map(x => this.clients.get(x) as RemoteClient<T>)
-            .map(otherClient => provideConnection(otherClient, "otherStream", client)
+            .map(otherClient => provideConnection(otherClient, true, client)
                 .catch(e => logger.error(e)));
     }
 
@@ -108,10 +110,6 @@ function originIsAllowed(origin: string) {
     return true;
 }
 
-function randomOne<T>(array: T[], without: T): T {
-    let one = array[Math.floor(Math.random() * array.length)];
-    if (one !== without) {
-        return one;
-    }
-    return randomOne(array, without);
+function randomOne<T>(array: T[]): T {
+    return array[Math.floor(Math.random() * array.length)];
 }

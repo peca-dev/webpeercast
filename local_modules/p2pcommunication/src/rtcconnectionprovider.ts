@@ -1,17 +1,16 @@
 import * as Rx from "rxjs";
-import { PeerType } from "p2pcommunication-common";
 import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
 const logger = getLogger("RTCConnectionProvider");
 
-export function provideConnection<T>(server: RemoteClient<T>, peerType: PeerType, client: RemoteClient<T>) {
+export function provideConnection<T>(server: RemoteClient<T>, isOtherStream: boolean, client: RemoteClient<T>) {
     return new Promise((resolve, reject) => {
         let subscriptions = <Rx.Subscription[]>[];
         subscriptions.push(server.onOffering.subscribe((payload: { to: string, offer: {} }) => {
             if (payload.to !== client.id) {
                 return;
             }
-            client.signalOffer(server.id, peerType, payload.offer);
+            client.signalOffer(server.id, isOtherStream ? "otherStream" : "upstream", payload.offer);
         }));
         subscriptions.push(server.onIceCandidateEmitting.subscribe((payload: { to: string, iceCandidate: {} }) => {
             if (payload.to !== client.id) {
@@ -43,6 +42,6 @@ export function provideConnection<T>(server: RemoteClient<T>, peerType: PeerType
             },
             3 * 1000,
         );
-        server.requestOfferTo(client.id, peerType);
+        server.requestOfferTo(client.id, isOtherStream ? "otherStream" : "downstream");
     });
 }

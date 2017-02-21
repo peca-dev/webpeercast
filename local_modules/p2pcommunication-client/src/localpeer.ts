@@ -132,15 +132,34 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     ) {
         switch (peerType) {
             case "upstream":
-                throw new Error("Not implemented");
+                this.addNewUpstream(id, peerConnection, dataChannel);
+                break;
             case "otherStream":
                 this.addNewOtherStream(id, peerConnection, dataChannel);
                 break;
             case "downstream":
-                throw new Error("Not implemented");
+                this.addNewDownstream(id, peerConnection, dataChannel);
+                break;
             default:
                 throw new Error(`Unsupported peerType: ${peerType}`);
         }
+    }
+
+    private addNewUpstream(
+        id: string,
+        peerConnection: RTCPeerConnection,
+        dataChannel: RTCDataChannel,
+    ) {
+        let upstream = new RTCRemotePeer<T>(
+            id,
+            peerConnection,
+            dataChannel,
+        );
+        upstream.onBroadcasting.subscribe(data => {
+            this.onBroadcastReceived.next(data);
+            broadcastTo(data, this.downstreams);
+        });
+        this.upstreams.add(upstream);
     }
 
     private addNewOtherStream(
@@ -158,6 +177,24 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
             broadcastTo(data, this.downstreams);
         });
         this.otherStreams.add(otherStream);
+    }
+
+    private addNewDownstream(
+        id: string,
+        peerConnection: RTCPeerConnection,
+        dataChannel: RTCDataChannel,
+    ) {
+        let downstream = new RTCRemotePeer<T>(
+            id,
+            peerConnection,
+            dataChannel,
+        );
+        downstream.onBroadcasting.subscribe(data => {
+            this.onBroadcastReceived.next(data);
+            broadcastTo(data, this.upstreams);
+            broadcastTo(data, this.otherStreams);
+        });
+        this.downstreams.add(downstream);
     }
 }
 
