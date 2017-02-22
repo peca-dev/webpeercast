@@ -11,9 +11,19 @@ describe("Connection", () => {
         before(async () => {
             a = new LocalPeer(`ws://${server}`);
             b = new LocalPeer(`ws://${server}`);
-            await new Promise(
-                (resolve, reject) => setTimeout(resolve, 1 * 1000),
-            );
+            await new Promise((resolve, reject) => {
+                let count = 2;
+                let countDown = () => {
+                    count -= 1;
+                    if (count === 0) {
+                        resolve();
+                    }
+                };
+                waitOtherPeer(a, countDown);
+                waitOtherPeer(b, countDown);
+            });
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === 2);
         });
 
         it("connects to server", async () => {
@@ -37,29 +47,40 @@ describe("Connection", () => {
     context("between many peers on one layer", function (this: any) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5 * 1000);
-        let a = <Array<LocalPeer<{}>>>[];
+        let peers = <Array<LocalPeer<{}>>>[];
 
         before(async () => {
             for (let i = 0; i < 10; i++) {
-                a.push(new LocalPeer(`ws://${server}`));
+                peers.push(new LocalPeer(`ws://${server}`));
             }
-            await new Promise(
-                (resolve, reject) => setTimeout(resolve, 3 * 1000),
-            );
+            await new Promise((resolve, reject) => {
+                let count = peers.length;
+                let countDown = () => {
+                    count -= 1;
+                    if (count === 0) {
+                        resolve();
+                    }
+                };
+                for (let peer of peers) {
+                    waitOtherPeer(peer, countDown);
+                }
+            });
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === 10);
         });
 
         it("connects to server", async () => {
             let serverStatus = await fetchServerStatus();
-            assert(serverStatus.clients.length === a.length);
-            assert(a.every(
-                x => a
+            assert(serverStatus.clients.length === peers.length);
+            assert(peers.every(
+                x => peers
                     .filter(y => y.id !== x.id)
                     .every(y => y.debug.hasPeer(x.id)),
             ));
         });
 
         after(async () => {
-            for (let x of a) {
+            for (let x of peers) {
                 x.disconnect();
             }
             await new Promise(
@@ -79,9 +100,19 @@ describe("Sharing", () => {
         before(async () => {
             a = new LocalPeer(`ws://${server}`);
             b = new LocalPeer(`ws://${server}`);
-            await new Promise(
-                (resolve, reject) => setTimeout(resolve, 1 * 1000),
-            );
+            await new Promise((resolve, reject) => {
+                let count = 2;
+                let countDown = () => {
+                    count -= 1;
+                    if (count === 0) {
+                        resolve();
+                    }
+                };
+                waitOtherPeer(a, countDown);
+                waitOtherPeer(b, countDown);
+            });
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length === 2);
         });
 
         it("with one message does", async () => {
@@ -116,34 +147,48 @@ describe("Sharing", () => {
         });
     });
 
-    context("between many peers on one layer", function (this: any) {
+    context("between many peers", function (this: any) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5 * 1000);
+        const PEERS_COUNT = 15;
 
         let peers = <Array<LocalPeer<{}>>>[];
 
         before(async () => {
-            for (let i = 0; i < 10; i++) {
-                peers.push(new LocalPeer(`ws://${server}`));
+            let count = PEERS_COUNT;
+            let callback: Function;
+            let countDown = () => {
+                count -= 1;
+                if (count === 0) {
+                    callback();
+                }
+            };
+            for (let i = 0; i < PEERS_COUNT; i++) {
+                let peer = new LocalPeer(`ws://${server}`);
+                waitOtherPeer(peer, countDown);
+                peers.push(peer);
             }
-            await new Promise(
-                (resolve, reject) => setTimeout(resolve, 3 * 1000),
-            );
+            await new Promise((resolve, reject) => {
+                callback = resolve;
+            });
+            let serverStatus = await fetchServerStatus();
+            assert(serverStatus.clients.length >= 10);
         });
 
-        it("with one message is received 9 messages", async () => {
-            let count = 0;
-            for (let i = 1; i < 10; i++) {
-                peers[i].onBroadcastReceived.subscribe(data => {
-                    count++;
-                });
-            }
-            peers[0].broadcast("data");
-            await new Promise(
-                (resolve, reject) => setTimeout(resolve, 1 * 1000),
-            );
-            assert(count === 9);
-        });
+        for (let i = 0; i < PEERS_COUNT; i++) {
+            it(`receive message from peer[${i}]`, ((testIndex: number) => async () => {
+                assert(peers.length === PEERS_COUNT);
+                let testPeer = peers[testIndex];
+                let promises = Promise.all(peers.filter(x => x !== testPeer).map(x => new Promise((resolve, reject) => {
+                    let subscriber = x.onBroadcastReceived.subscribe(() => {
+                        subscriber.unsubscribe();
+                        resolve();
+                    });
+                })));
+                testPeer.broadcast("ping");
+                await promises;
+            })(i));
+        }
 
         after(async () => {
             for (let x of peers) {
@@ -207,4 +252,15 @@ function initPeers() {
 
 async function fetchServerStatus() {
     return JSON.parse(await (await fetch(`http://${server}`)).text());
+}
+
+function waitOtherPeer<T>(peer: LocalPeer<T>, callback: () => void) {
+    let subscriber = peer.onConnected.subscribe(obj => {
+        if (obj.peerType === "upstream"
+            && obj.remotePeer.id === "00000000-0000-0000-0000-000000000000") {
+            return;
+        }
+        subscriber.unsubscribe();
+        callback();
+    });
 }

@@ -35,6 +35,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         },
     };
 
+    onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T> }>();
     onBroadcastReceived = new Rx.Subject<T>();
 
     constructor(url: string) {
@@ -52,6 +53,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     broadcast(data: any) {
         broadcastTo(data, this.upstreams);
         broadcastTo(data, this.otherStreams);
+        broadcastTo(data, this.downstreams);
     }
 
     private startConnectToServer() {
@@ -64,8 +66,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
                 this.id = null;
                 let { id, upstream } = await RemoteRootServer.fetch<T>(url);
                 this.id = id;
-                this.initUpstream(upstream);
-                this.upstreams.add(upstream);
+                this.addUpstream(upstream);
             } catch (e) {
                 printError(e);
                 setTimeout(
@@ -74,24 +75,6 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
                 );
             }
         })();
-    }
-
-    private initUpstream(upstream: Upstream<T>) {
-        upstream.onOfferRequesting.subscribe(safe(async (data: OfferRequestData) => {
-            await this.createNewConnection(data.to, data.peerType, upstream);
-        }));
-        upstream.onSignalingOffer.subscribe(safe(async (data: SignalingOfferData) => {
-            await this.fetchNewOtherConnection(data.from, data.peerType, data.offer, upstream);
-        }));
-        upstream.onClosed.subscribe(safe(async () => {
-            this.upstreams.delete(upstream);
-            this.startConnectToServer();
-        }));
-        upstream.onBroadcasting.subscribe(data => {
-            this.onBroadcastReceived.next(data);
-            broadcastTo(data, this.otherStreams);
-            broadcastTo(data, this.downstreams);
-        });
     }
 
     private async createNewConnection(
@@ -132,7 +115,12 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     ) {
         switch (peerType) {
             case "upstream":
-                this.addNewUpstream(id, peerConnection, dataChannel);
+                let upstream = new RTCRemotePeer<T>(
+                    id,
+                    peerConnection,
+                    dataChannel,
+                );
+                this.addUpstream(upstream);
                 break;
             case "otherStream":
                 this.addNewOtherStream(id, peerConnection, dataChannel);
@@ -145,21 +133,25 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         }
     }
 
-    private addNewUpstream(
-        id: string,
-        peerConnection: RTCPeerConnection,
-        dataChannel: RTCDataChannel,
-    ) {
-        let upstream = new RTCRemotePeer<T>(
-            id,
-            peerConnection,
-            dataChannel,
-        );
+    private addUpstream(upstream: Upstream<T>) {
+        upstream.onOfferRequesting.subscribe(safe(async (data: OfferRequestData) => {
+            await this.createNewConnection(data.to, data.peerType, upstream);
+        }));
+        upstream.onSignalingOffer.subscribe(safe(async (data: SignalingOfferData) => {
+            await this.fetchNewOtherConnection(data.from, data.peerType, data.offer, upstream);
+        }));
+        upstream.onClosed.subscribe(safe(async () => {
+            this.upstreams.delete(upstream);
+            if (this.upstreams.size <= 0) {
+                this.startConnectToServer();
+            }
+        }));
         upstream.onBroadcasting.subscribe(data => {
             this.onBroadcastReceived.next(data);
             broadcastTo(data, this.downstreams);
         });
         this.upstreams.add(upstream);
+        this.onConnected.next({ peerType: "upstream", remotePeer: upstream });
     }
 
     private addNewOtherStream(
@@ -172,11 +164,15 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
             peerConnection,
             dataChannel,
         );
+        otherStream.onClosed.subscribe(safe(async () => {
+            this.otherStreams.delete(otherStream);
+        }));
         otherStream.onBroadcasting.subscribe(data => {
             this.onBroadcastReceived.next(data);
             broadcastTo(data, this.downstreams);
         });
         this.otherStreams.add(otherStream);
+        this.onConnected.next({ peerType: "otherStream", remotePeer: otherStream });
     }
 
     private addNewDownstream(
@@ -189,12 +185,16 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
             peerConnection,
             dataChannel,
         );
+        downstream.onClosed.subscribe(safe(async () => {
+            this.downstreams.delete(downstream);
+        }));
         downstream.onBroadcasting.subscribe(data => {
             this.onBroadcastReceived.next(data);
             broadcastTo(data, this.upstreams);
             broadcastTo(data, this.otherStreams);
         });
         this.downstreams.add(downstream);
+        this.onConnected.next({ peerType: "downstream", remotePeer: downstream });
     }
 }
 

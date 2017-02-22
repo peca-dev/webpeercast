@@ -9,7 +9,7 @@ import {
 import { printError, safe } from "./printerror";
 
 export default class RemoteRootServer<T> implements Upstream<T> {
-    readonly id = "";
+    readonly id = "00000000-0000-0000-0000-000000000000";
 
     onClosed = new Rx.Subject();
     onOfferRequesting = new Rx.Subject<OfferRequestData>();
@@ -91,7 +91,8 @@ export default class RemoteRootServer<T> implements Upstream<T> {
         this.socket.send(JSON.stringify({
             type: "receiveIceCandidate",
             payload: { to, iceCandidate },
-        }));    }
+        }));
+    }
 
     broadcast(payload: T) {
         this.socket.send(JSON.stringify({ type: "broadcast", payload }));
