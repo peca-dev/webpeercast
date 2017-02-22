@@ -10,7 +10,7 @@ import {
 } from "p2pcommunication-common";
 import * as declaration from "../index";
 import { getLogger } from "log4js";
-const logger = getLogger();
+const logger = getLogger(__filename);
 
 export default class RemoteClient<T> implements declaration.RemoteClient<T>, Downstream<T> {
     readonly id = uuid.v4();

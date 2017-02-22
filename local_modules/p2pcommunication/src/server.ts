@@ -6,7 +6,7 @@ import {
 } from "websocket";
 import RootServer from "./rootserver";
 import { getLogger } from "log4js";
-const logger = getLogger();
+const logger = getLogger(__filename);
 const debug = process.env.NODE_ENV === "development";
 
 async function main() {

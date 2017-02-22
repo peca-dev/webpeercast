@@ -1,7 +1,7 @@
 import * as Rx from "rxjs";
 import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
-const logger = getLogger("RTCConnectionProvider");
+const logger = getLogger(__filename);
 
 export function provideConnection<T>(
     server: RemoteClient<T>,

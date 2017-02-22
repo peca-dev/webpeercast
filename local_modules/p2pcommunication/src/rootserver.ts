@@ -8,7 +8,7 @@ import * as declaration from "../index";
 import { provideConnection } from "./rtcconnectionprovider";
 import RemoteClient from "./remoteclient";
 import { getLogger } from "log4js";
-const logger = getLogger();
+const logger = getLogger(__filename);
 
 export default class RootServer<T> implements declaration.RootServer<T> {
     private wsServer: WebSocketServer;
