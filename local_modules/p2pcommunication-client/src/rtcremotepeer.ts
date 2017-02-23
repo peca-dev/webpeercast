@@ -1,6 +1,11 @@
 import * as Rx from "rxjs";
 import {
+    AnsweringData,
+    Downstream,
+    IceCandidateEmittingData,
+    OfferingData,
     OfferRequestData,
+    PeerType,
     RemotePeer,
     Upstream,
     SignalingOfferData,
@@ -8,12 +13,15 @@ import {
     SignalingIceCandidateData,
 } from "p2pcommunication-common";
 
-export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T> {
+export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
     onClosed = new Rx.Subject();
     onOfferRequesting = new Rx.Subject<OfferRequestData>();
     onSignalingOffer = new Rx.Subject<SignalingOfferData>();
     onSignalingAnswer = new Rx.Subject<SignalingAnswerData>();
     onSignalingIceCandidate = new Rx.Subject<SignalingIceCandidateData>();
+    onOffering = new Rx.Subject<OfferingData>();
+    onAnswering = new Rx.Subject<AnsweringData>();
+    onIceCandidateEmitting = new Rx.Subject<IceCandidateEmittingData>();
     onBroadcasting = new Rx.Subject<T>();
 
     constructor(
@@ -54,6 +62,22 @@ export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T> {
     }
 
     emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate) {
+        throw new Error("Not implemented yet.");
+    }
+
+    requestOfferTo(to: string, peerType: PeerType) {
+        throw new Error("Not implemented yet.");
+    }
+
+    signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit) {
+        throw new Error("Not implemented yet.");
+    }
+
+    signalAnswer(from: string, answer: RTCSessionDescriptionInit) {
+        throw new Error("Not implemented yet.");
+    }
+
+    signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit) {
         throw new Error("Not implemented yet.");
     }
 

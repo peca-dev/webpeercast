@@ -1,5 +1,6 @@
 import * as Rx from "rxjs";
 import {
+    Downstream,
     OfferRequestData,
     PeerType,
     RemotePeer,
@@ -113,20 +114,20 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         dataChannel: RTCDataChannel,
         peerType: PeerType,
     ) {
+        let peer = new RTCRemotePeer<T>(
+            id,
+            peerConnection,
+            dataChannel,
+        );
         switch (peerType) {
             case "upstream":
-                let upstream = new RTCRemotePeer<T>(
-                    id,
-                    peerConnection,
-                    dataChannel,
-                );
-                this.addUpstream(upstream);
+                this.addUpstream(peer);
                 break;
             case "otherStream":
-                this.addNewOtherStream(id, peerConnection, dataChannel);
+                this.addNewOtherStream(peer);
                 break;
             case "downstream":
-                this.addNewDownstream(id, peerConnection, dataChannel);
+                this.addNewDownstream(peer);
                 break;
             default:
                 throw new Error(`Unsupported peerType: ${peerType}`);
@@ -154,16 +155,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         this.onConnected.next({ peerType: "upstream", remotePeer: upstream });
     }
 
-    private addNewOtherStream(
-        id: string,
-        peerConnection: RTCPeerConnection,
-        dataChannel: RTCDataChannel,
-    ) {
-        let otherStream = new RTCRemotePeer<T>(
-            id,
-            peerConnection,
-            dataChannel,
-        );
+    private addNewOtherStream(otherStream: RemotePeer<T>) {
         otherStream.onClosed.subscribe(safe(async () => {
             this.otherStreams.delete(otherStream);
         }));
@@ -175,16 +167,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         this.onConnected.next({ peerType: "otherStream", remotePeer: otherStream });
     }
 
-    private addNewDownstream(
-        id: string,
-        peerConnection: RTCPeerConnection,
-        dataChannel: RTCDataChannel,
-    ) {
-        let downstream = new RTCRemotePeer<T>(
-            id,
-            peerConnection,
-            dataChannel,
-        );
+    private addNewDownstream(downstream: Downstream<T>) {
         downstream.onClosed.subscribe(safe(async () => {
             this.downstreams.delete(downstream);
         }));
