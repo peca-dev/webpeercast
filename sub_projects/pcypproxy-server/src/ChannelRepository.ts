@@ -1,12 +1,12 @@
-import { EventEmitter } from "events";
-import fetch from "node-fetch";
-import { Query } from "p2pdatasharing";
-import { Channel, parse } from "peercast-yp-channels-parser";
-import { getLogger } from "log4js";
+import { EventEmitter } from 'events';
+import { getLogger } from 'log4js';
+import fetch from 'node-fetch'; // tslint:disable-line:import-name
+import { Query } from 'p2pdatasharing';
+import { Channel, parse } from 'peercast-yp-channels-parser';
 const logger = getLogger(__filename);
 
-// let TP_OSHIRASE = "TPからのお知らせ◆お知らせ";
-// let TP_UPLOAD = "Temporary yellow Pages◆アップロード帯域";
+// let TP_OSHIRASE = 'TPからのお知らせ◆お知らせ';
+// let TP_UPLOAD = 'Temporary yellow Pages◆アップロード帯域';
 
 export default class ChannelRepository extends EventEmitter {
     private channels = <Channel[]>[];
@@ -22,54 +22,55 @@ export default class ChannelRepository extends EventEmitter {
                     logger.error(e);
                 }
             },
-            10 * 1000,
+            10 * 1000
         );
     }
 
     private async update() {
-        let nowChannels = await fetchChannels();
-        let { deleteList, setList }
+        const nowChannels = await fetchChannels();
+        const { deleteList, setList }
             = getDiffList(this.channels, nowChannels);
-        let now = new Date();
+        const now = new Date();
         this.emit(
-            "update",
+            'update',
             setList
                 .map(x => <Query<Channel>>{
-                    type: "set",
+                    type: 'set',
                     date: now,
-                    payload: x,
+                    payload: x
                 })
                 .concat(deleteList.map(x => <Query<Channel>>{
-                    type: "delete",
+                    type: 'delete',
                     date: now,
-                    payload: x,
-                })),
+                    payload: x
+                }))
         );
     }
 }
 
 function getDiffList(
     old: Channel[],
-    now: Channel[],
+    now: Channel[]
 ) {
     return {
         deleteList: old.filter(x => now.every(y => x.id !== y.id)),
         setList: now.filter(x => old.every(
-            y => !deepEqualOrNearCreatedAt(x, y),
-        )), // include updates
+            y => !deepEqualOrNearCreatedAt(x, y)
+        )) // include updates
     };
 }
 
 async function fetchChannels() {
-    let channels = <Channel[]>[];
-    let res = await fetch("http://temp.orz.hm/yp/index.txt");
-    let now = new Date();
+    const channels = <Channel[]>[];
+    // tslint:disable-next-line:no-http-string
+    const res = await fetch('http://temp.orz.hm/yp/index.txt');
+    const now = new Date();
     return channels.concat(parse(await res.text(), now));
 }
 
 function deepEqualOrNearCreatedAt(
     a: Channel,
-    b: Channel,
+    b: Channel
 ) {
     if (
         a.name !== b.name ||

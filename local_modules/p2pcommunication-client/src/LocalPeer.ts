@@ -1,17 +1,17 @@
-import * as Rx from "rxjs";
 import {
     Downstream,
     OfferRequestData,
     PeerType,
     RemotePeer,
-    Upstream,
     SignalingOfferData,
-} from "p2pcommunication-common";
-import * as declaration from "../index";
-import { printError, safe } from "./printerror";
-import RemoteRootServer from "./remoterootserver";
-import { createDataChannel, fetchDataChannel } from "./rtcconnector";
-import RTCRemotePeer from "./rtcremotepeer";
+    Upstream
+} from 'p2pcommunication-common';
+import * as Rx from 'rxjs';
+import * as declaration from '../index';
+import { printError, safe } from './printerror';
+import RemoteRootServer from './RemoteRootServer';
+import { createDataChannel, fetchDataChannel } from './rtcconnector';
+import RTCRemotePeer from './RTCRemotePeer';
 
 /**
  * It does nothing when it's disconnected with a downstream.
@@ -27,13 +27,13 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
 
     debug = {
         hasPeer: (id: string | null) => {
-            for (let conn of this.otherStreams) {
+            for (const conn of this.otherStreams) {
                 if (conn.id === id) {
                     return true;
                 }
             }
             return false;
-        },
+        }
     };
 
     onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T> }>();
@@ -46,7 +46,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
 
     disconnect() {
         this.url = null;
-        for (let peer of Array.from(this.upstreams).concat(Array.from(this.otherStreams))) {
+        for (const peer of Array.from(this.upstreams).concat(Array.from(this.otherStreams))) {
             peer.disconnect();
         }
     }
@@ -61,18 +61,18 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         if (this.url == null) {
             return;
         }
-        let url = this.url;
+        const url = this.url;
         (async () => {
             try {
                 this.id = null;
-                let { id, upstream } = await RemoteRootServer.fetch<T>(url);
+                const { id, upstream } = await RemoteRootServer.fetch<T>(url);
                 this.id = id;
                 this.addUpstream(upstream);
             } catch (e) {
                 printError(e);
                 setTimeout(
                     () => this.startConnectToServer(),
-                    3 * 1000,
+                    3 * 1000
                 );
             }
         })();
@@ -81,13 +81,13 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     private async createNewConnection(
         to: string,
         peerType: PeerType,
-        upstream: Upstream<T>,
+        upstream: Upstream<T>
     ) {
-        let peerConnection = new RTCPeerConnection();
-        let dataChannel = await createDataChannel(
+        const peerConnection = new RTCPeerConnection();
+        const dataChannel = await createDataChannel(
             peerConnection,
             to,
-            upstream,
+            upstream
         );
         this.addNewConnection(to, peerConnection, dataChannel, peerType);
     }
@@ -96,14 +96,14 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         from: string,
         peerType: PeerType,
         offer: RTCSessionDescriptionInit,
-        upstream: Upstream<T>,
+        upstream: Upstream<T>
     ) {
-        let peerConnection = new RTCPeerConnection();
-        let dataChannel = await fetchDataChannel(
+        const peerConnection = new RTCPeerConnection();
+        const dataChannel = await fetchDataChannel(
             peerConnection,
             from,
             offer,
-            upstream,
+            upstream
         );
         this.addNewConnection(from, peerConnection, dataChannel, peerType);
     }
@@ -112,21 +112,21 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         id: string,
         peerConnection: RTCPeerConnection,
         dataChannel: RTCDataChannel,
-        peerType: PeerType,
+        peerType: PeerType
     ) {
-        let peer = new RTCRemotePeer<T>(
+        const peer = new RTCRemotePeer<T>(
             id,
             peerConnection,
-            dataChannel,
+            dataChannel
         );
         switch (peerType) {
-            case "upstream":
+            case 'upstream':
                 this.addUpstream(peer);
                 break;
-            case "otherStream":
+            case 'otherStream':
                 this.addNewOtherStream(peer);
                 break;
-            case "downstream":
+            case 'downstream':
                 this.addNewDownstream(peer);
                 break;
             default:
@@ -152,7 +152,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
             broadcastTo(data, this.downstreams);
         });
         this.upstreams.add(upstream);
-        this.onConnected.next({ peerType: "upstream", remotePeer: upstream });
+        this.onConnected.next({ peerType: 'upstream', remotePeer: upstream });
     }
 
     private addNewOtherStream(otherStream: RemotePeer<T>) {
@@ -164,7 +164,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
             broadcastTo(data, this.downstreams);
         });
         this.otherStreams.add(otherStream);
-        this.onConnected.next({ peerType: "otherStream", remotePeer: otherStream });
+        this.onConnected.next({ peerType: 'otherStream', remotePeer: otherStream });
     }
 
     private addNewDownstream(downstream: Downstream<T>) {
@@ -177,12 +177,12 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
             broadcastTo(data, this.otherStreams);
         });
         this.downstreams.add(downstream);
-        this.onConnected.next({ peerType: "downstream", remotePeer: downstream });
+        this.onConnected.next({ peerType: 'downstream', remotePeer: downstream });
     }
 }
 
 function broadcastTo(data: any, streams: Set<RemotePeer<any>>) {
-    for (let peer of streams) {
+    for (const peer of streams) {
         peer.broadcast(data);
     }
 }

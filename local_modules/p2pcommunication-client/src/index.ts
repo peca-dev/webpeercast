@@ -1,4 +1,4 @@
-import LocalPeer from "./localpeer";
+import LocalPeer from './LocalPeer';
 
 export {
     LocalPeer,

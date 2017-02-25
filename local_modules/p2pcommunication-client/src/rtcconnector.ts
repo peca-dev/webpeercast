@@ -1,19 +1,19 @@
-import { safe } from "./printerror";
-import { AnonymousSubscription } from "rxjs/Subscription";
 import {
-    Upstream,
     SignalingIceCandidateData,
     Subscribable,
-} from "p2pcommunication-common";
+    Upstream
+} from 'p2pcommunication-common';
+import { AnonymousSubscription } from 'rxjs/Subscription';
+import { safe } from './printerror';
 
 export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream<{}>) {
     return exchangeIceCandidate(pc, to, upstream, async () => {
         let dataChannel: RTCDataChannel | null = null;
-        await waitEvent(pc, "negotiationneeded", () => {
-            dataChannel = pc.createDataChannel("");
+        await waitEvent(pc, 'negotiationneeded', () => {
+            dataChannel = pc.createDataChannel('');
         });
         await exchangeOfferWithAnswer(pc, to, upstream);
-        await waitEvent(dataChannel!, "open");
+        await waitEvent(dataChannel!, 'open');
         return dataChannel!;
     });
 }
@@ -21,12 +21,12 @@ export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: U
 async function exchangeOfferWithAnswer(
     pc: RTCPeerConnection,
     to: string,
-    upstream: Upstream<{}>,
+    upstream: Upstream<{}>
 ) {
-    let offer = await pc.createOffer();
+    const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     upstream.offerTo(to, offer);
-    let payload = await waitMessage(upstream.onSignalingAnswer, to);
+    const payload = await waitMessage(upstream.onSignalingAnswer, to);
     await pc.setRemoteDescription(payload.answer);
 }
 
@@ -34,12 +34,12 @@ export function fetchDataChannel(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
-    upstream: Upstream<{}>,
+    upstream: Upstream<{}>
 ) {
     return exchangeIceCandidate(pc, from, upstream, async () => {
         await exchangeAnswerWithOffer(pc, from, offer, upstream);
-        let event: RTCDataChannelEvent = <any>await waitEvent(pc, "datachannel");
-        await waitEvent(event.channel, "open");
+        const event: RTCDataChannelEvent = <any>await waitEvent(pc, 'datachannel');
+        await waitEvent(event.channel, 'open');
         return event.channel;
     });
 }
@@ -48,10 +48,10 @@ async function exchangeAnswerWithOffer(
     pc: RTCPeerConnection,
     from: string,
     offer: RTCSessionDescriptionInit,
-    upstream: Upstream<{}>,
+    upstream: Upstream<{}>
 ) {
     await pc.setRemoteDescription(offer);
-    let answer = await pc.createAnswer();
+    const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
     upstream.answerTo(from, answer);
 }
@@ -60,16 +60,16 @@ async function exchangeIceCandidate<T>(
     pc: RTCPeerConnection,
     to: string,
     upstream: Upstream<{}>,
-    func: () => Promise<T>,
+    func: () => Promise<T>
 ) {
-    let iceCandidateListener = (e: RTCPeerConnectionIceEvent) => {
+    const iceCandidateListener = (e: RTCPeerConnectionIceEvent) => {
         if (e.candidate == null) {
             return;
         }
         upstream.emitIceCandidateTo(to, e.candidate);
     };
-    pc.addEventListener("icecandidate", iceCandidateListener);
-    let subscription = upstream.onSignalingIceCandidate
+    pc.addEventListener('icecandidate', iceCandidateListener);
+    const subscription = upstream.onSignalingIceCandidate
         .subscribe(safe(async (payload: SignalingIceCandidateData) => {
             if (payload.from !== to) {
                 return;
@@ -80,7 +80,7 @@ async function exchangeIceCandidate<T>(
     try {
         return await func();
     } finally {
-        pc.removeEventListener("icecandidate", iceCandidateListener);
+        pc.removeEventListener('icecandidate', iceCandidateListener);
         subscription.unsubscribe();
     }
 }
@@ -88,11 +88,12 @@ async function exchangeIceCandidate<T>(
 function waitMessage(observable: Subscribable<{ from: string }>, from: string) {
     return new Promise<any>((resolve, reject) => {
         let subscription: AnonymousSubscription;
-        let timer = setTimeout(
+        const timer = setTimeout(
             () => {
                 subscription.unsubscribe();
-                reject(new Error("Timeout."));
-            }, 3 * 1000,
+                reject(new Error('Timeout.'));
+            },
+            3 * 1000
         );
         subscription = observable.subscribe(safe(async (payload: { from: string }) => {
             if (payload.from !== from) {
@@ -107,13 +108,15 @@ function waitMessage(observable: Subscribable<{ from: string }>, from: string) {
 
 function waitEvent<T extends Event>(eventTarget: EventTarget, event: string, func?: Function) {
     return new Promise<T>((resolve, reject) => {
-        let timer = setTimeout(
+        let listener: (event: T) => Promise<void>;
+        const timer = setTimeout(
             () => {
                 eventTarget.removeEventListener(event, listener);
-                reject(new Error("Timeout."));
-            }, 3 * 1000,
+                reject(new Error('Timeout.'));
+            },
+            3 * 1000
         );
-        let listener = safe(async (e: T) => {
+        listener = safe(async (e: T) => {
             clearTimeout(timer);
             eventTarget.removeEventListener(event, listener);
             resolve(e);

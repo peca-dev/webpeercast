@@ -1,4 +1,3 @@
-import * as Rx from "rxjs";
 import {
     AnsweringData,
     Downstream,
@@ -7,11 +6,12 @@ import {
     OfferRequestData,
     PeerType,
     RemotePeer,
-    Upstream,
-    SignalingOfferData,
     SignalingAnswerData,
     SignalingIceCandidateData,
-} from "p2pcommunication-common";
+    SignalingOfferData,
+    Upstream
+} from 'p2pcommunication-common';
+import * as Rx from 'rxjs';
 
 export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
     onClosed = new Rx.Subject();
@@ -29,20 +29,20 @@ export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Dow
         private peerConnection: RTCPeerConnection,
         private dataChannel: RTCDataChannel,
     ) {
-        dataChannel.addEventListener("message", (e: MessageEvent) => {
-            if (e.type !== "message") {
+        dataChannel.addEventListener('message', (e: MessageEvent) => {
+            if (e.type !== 'message') {
                 throw new Error(`Unsupported message type: ${e.type}`);
             }
             let data = JSON.parse(e.data);
-            if (data.type !== "broadcast") {
+            if (data.type !== 'broadcast') {
                 throw new Error(`Unsupported data type: ${e.type}`);
             }
             this.onBroadcasting.next(data.payload);
         });
-        dataChannel.addEventListener("error", (e: ErrorEvent) => {
+        dataChannel.addEventListener('error', (e: ErrorEvent) => {
             console.error(e);
         });
-        dataChannel.addEventListener("close", (e: Event) => {
+        dataChannel.addEventListener('close', (e: Event) => {
             this.onClosed.next();
             this.onClosed.complete();
         });
@@ -54,34 +54,34 @@ export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Dow
     }
 
     offerTo(to: string, offer: RTCSessionDescriptionInit) {
-        throw new Error("Not implemented yet.");
+        throw new Error('Not implemented yet.');
     }
 
     answerTo(to: string, answer: RTCSessionDescriptionInit) {
-        throw new Error("Not implemented yet.");
+        throw new Error('Not implemented yet.');
     }
 
     emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate) {
-        throw new Error("Not implemented yet.");
+        throw new Error('Not implemented yet.');
     }
 
     requestOfferTo(to: string, peerType: PeerType) {
-        throw new Error("Not implemented yet.");
+        throw new Error('Not implemented yet.');
     }
 
     signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit) {
-        throw new Error("Not implemented yet.");
+        throw new Error('Not implemented yet.');
     }
 
     signalAnswer(from: string, answer: RTCSessionDescriptionInit) {
-        throw new Error("Not implemented yet.");
+        throw new Error('Not implemented yet.');
     }
 
     signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit) {
-        throw new Error("Not implemented yet.");
+        throw new Error('Not implemented yet.');
     }
 
     broadcast(payload: T) {
-        this.dataChannel.send(JSON.stringify({ type: "broadcast", payload }));
+        this.dataChannel.send(JSON.stringify({ type: 'broadcast', payload }));
     }
 }

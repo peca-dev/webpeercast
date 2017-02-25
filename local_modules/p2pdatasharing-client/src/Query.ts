@@ -1,5 +1,5 @@
 export interface Query<T extends { id: string }> {
-    type: "set" | "delete";
+    type: 'set' | 'delete';
     date: Date;
     payload: T;
 }

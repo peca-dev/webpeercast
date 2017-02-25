@@ -4,14 +4,34 @@
         "tslint-microsoft-contrib"
     ],
     "rules": {
+        "array-type": [
+            true,
+            "array"
+        ],
         "export-name": false,
+        "function-name": [
+            true,
+            {
+                "method-regex": "^[a-z][\\w\\d]+$",
+                "private-method-regex": "^[a-z][\\w\\d]+$",
+                "protected-method-regex": "^[a-z][\\w\\d]+$",
+                "static-method-regex": "^[a-z][\\w\\d]+$",
+                "function-regex": "^[a-z][\\w\\d]+$"
+            }
+        ],
+        "linebreak-style": [
+            false
+        ],
         "member-access": false,
         "missing-jsdoc": false,
         "no-any": false,
+        "no-single-line-block-comment": false,
         "no-default-export": false,
         "no-for-in-array": false, // https://github.com/Microsoft/vscode-tslint/issues/70
+        "no-increment-decrement": false,
         "no-relative-imports": false,
         "no-reserved-keywords": false,
+        "no-string-based-set-timeout": false,
         "restrict-plus-operands": false
     }
 }

@@ -1,4 +1,4 @@
-import RootServer from "./server/rootserver";
+import RootServer from './server/RootServer';
 
 export {
     RootServer

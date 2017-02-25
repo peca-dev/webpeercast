@@ -1,5 +1,5 @@
-import * as Rx from "rxjs";
-import { PeerType, RemotePeer } from "p2pcommunication-common";
+import { PeerType, RemotePeer } from 'p2pcommunication-common';
+import * as Rx from 'rxjs';
 
 export declare class LocalPeer<T> {
     onConnected: Rx.Observable<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;

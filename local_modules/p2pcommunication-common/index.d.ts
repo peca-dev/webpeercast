@@ -1,4 +1,4 @@
-import { Subscribable } from "rxjs/Observable";
+import { Subscribable } from 'rxjs/Observable';
 export { Subscribable }
 
 export interface RemotePeer<T> {

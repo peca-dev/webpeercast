@@ -1,10 +1,11 @@
+// tslint:disable-next-line:no-reference
 /// <reference path="../../typings/index.d.ts" />
-import * as assert from "power-assert";
-import LocalPeer from "../localpeer";
-const server = "127.0.0.1:8080";
+import * as assert from 'power-assert';
+import LocalPeer from '../LocalPeer';
+const server = '127.0.0.1:8080';
 
-describe("Connection", () => {
-    context("between two peers", () => {
+describe('Connection', () => {
+    context('between two peers', () => {
         let a: LocalPeer<{}>;
         let b: LocalPeer<{}>;
 
@@ -13,7 +14,7 @@ describe("Connection", () => {
             b = new LocalPeer(`ws://${server}`);
             await new Promise((resolve, reject) => {
                 let count = 2;
-                let countDown = () => {
+                const countDown = () => {
                     count -= 1;
                     if (count === 0) {
                         resolve();
@@ -22,12 +23,12 @@ describe("Connection", () => {
                 waitOtherPeer(a, countDown);
                 waitOtherPeer(b, countDown);
             });
-            let serverStatus = await fetchServerStatus();
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 2);
         });
 
-        it("connects to server", async () => {
-            let serverStatus = await fetchServerStatus();
+        it('connects to server', async () => {
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 2);
             assert(a.debug.hasPeer(b.id));
             assert(b.debug.hasPeer(a.id));
@@ -37,63 +38,63 @@ describe("Connection", () => {
             a.disconnect();
             b.disconnect();
             await new Promise(
-                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+                (resolve, reject) => setTimeout(resolve, 1 * 1000)
             );
-            let serverStatus = await fetchServerStatus();
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 0);
         });
     });
 
-    context("between many peers on one layer", function (this: any) {
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(5 * 1000);
-        let peers = <Array<LocalPeer<{}>>>[];
+    context('between many peers on one layer', () => {
+        const peers = <LocalPeer<{}>[]>[];
 
         before(async () => {
+            // tslint:disable-next-line:no-invalid-this
+            this.timeout(5 * 1000);
             for (let i = 0; i < 10; i++) {
                 peers.push(new LocalPeer(`ws://${server}`));
             }
             await new Promise((resolve, reject) => {
                 let count = peers.length;
-                let countDown = () => {
+                const countDown = () => {
                     count -= 1;
                     if (count === 0) {
                         resolve();
                     }
                 };
-                for (let peer of peers) {
+                for (const peer of peers) {
                     waitOtherPeer(peer, countDown);
                 }
             });
-            let serverStatus = await fetchServerStatus();
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 10);
         });
 
-        it("connects to server", async () => {
-            let serverStatus = await fetchServerStatus();
+        it('connects to server', async () => {
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === peers.length);
             assert(peers.every(
                 x => peers
                     .filter(y => y.id !== x.id)
-                    .every(y => y.debug.hasPeer(x.id)),
+                    .every(y => y.debug.hasPeer(x.id))
             ));
         });
 
         after(async () => {
-            for (let x of peers) {
+            for (const x of peers) {
                 x.disconnect();
             }
             await new Promise(
-                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+                (resolve, reject) => setTimeout(resolve, 1 * 1000)
             );
-            let serverStatus = await fetchServerStatus();
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 0);
         });
     });
 });
 
-describe("Sharing", () => {
-    context("between two peers", () => {
+describe('Sharing', () => {
+    context('between two peers', () => {
         let a: LocalPeer<string>;
         let b: LocalPeer<string>;
 
@@ -102,7 +103,7 @@ describe("Sharing", () => {
             b = new LocalPeer(`ws://${server}`);
             await new Promise((resolve, reject) => {
                 let count = 2;
-                let countDown = () => {
+                const countDown = () => {
                     count -= 1;
                     if (count === 0) {
                         resolve();
@@ -111,23 +112,23 @@ describe("Sharing", () => {
                 waitOtherPeer(a, countDown);
                 waitOtherPeer(b, countDown);
             });
-            let serverStatus = await fetchServerStatus();
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 2);
         });
 
-        it("with one message does", async () => {
-            let messageDataA = "message-data-a";
-            let receiveA = await new Promise<string>(resolve => {
-                let subscription = b.onBroadcastReceived.subscribe(data => {
+        it('with one message does', async () => {
+            const messageDataA = 'message-data-a';
+            const receiveA = await new Promise<string>(resolve => {
+                const subscription = b.onBroadcastReceived.subscribe(data => {
                     subscription.unsubscribe();
                     resolve(data);
                 });
                 a.broadcast(messageDataA);
             });
             assert(receiveA === messageDataA);
-            let messageDataB = "message-data-b";
-            let receiveB = await new Promise<string>(resolve => {
-                let subscription = a.onBroadcastReceived.subscribe(data => {
+            const messageDataB = 'message-data-b';
+            const receiveB = await new Promise<string>(resolve => {
+                const subscription = a.onBroadcastReceived.subscribe(data => {
                     subscription.unsubscribe();
                     resolve(data);
                 });
@@ -140,96 +141,97 @@ describe("Sharing", () => {
             a.disconnect();
             b.disconnect();
             await new Promise(
-                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+                (resolve, reject) => setTimeout(resolve, 1 * 1000)
             );
-            let serverStatus = await fetchServerStatus();
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 0);
         });
     });
 
-    context("between many peers", function (this: any) {
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(5 * 1000);
+    context('between many peers', () => {
         const PEERS_COUNT = 15;
 
-        let peers = <Array<LocalPeer<{}>>>[];
+        const peers = <LocalPeer<{}>[]>[];
 
         before(async () => {
+            // tslint:disable-next-line:no-invalid-this
+            this.timeout(5 * 1000);
             let count = PEERS_COUNT;
             let callback: Function;
-            let countDown = () => {
+            const countDown = () => {
                 count -= 1;
                 if (count === 0) {
                     callback();
                 }
             };
             for (let i = 0; i < PEERS_COUNT; i++) {
-                let peer = new LocalPeer(`ws://${server}`);
+                const peer = new LocalPeer(`ws://${server}`);
                 waitOtherPeer(peer, countDown);
                 peers.push(peer);
             }
+            // tslint:disable-next-line:promise-must-complete
             await new Promise((resolve, reject) => {
                 callback = resolve;
             });
-            let serverStatus = await fetchServerStatus();
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length >= 10);
         });
 
         for (let i = 0; i < PEERS_COUNT; i++) {
             it(`receive message from peer[${i}]`, ((testIndex: number) => async () => {
                 assert(peers.length === PEERS_COUNT);
-                let testPeer = peers[testIndex];
-                let promises = Promise.all(peers.filter(x => x !== testPeer).map(x => new Promise((resolve, reject) => {
-                    let subscriber = x.onBroadcastReceived.subscribe(() => {
+                const testPeer = peers[testIndex];
+                const promises = Promise.all(peers.filter(x => x !== testPeer).map(x => new Promise((resolve, reject) => {
+                    const subscriber = x.onBroadcastReceived.subscribe(() => {
                         subscriber.unsubscribe();
                         resolve();
                     });
                 })));
-                testPeer.broadcast("ping");
+                testPeer.broadcast('ping');
                 await promises;
             })(i));
         }
 
         after(async () => {
-            for (let x of peers) {
+            for (const x of peers) {
                 x.disconnect();
             }
             await new Promise(
-                (resolve, reject) => setTimeout(resolve, 1 * 1000),
+                (resolve, reject) => setTimeout(resolve, 1 * 1000)
             );
-            let serverStatus = await fetchServerStatus();
+            const serverStatus = await fetchServerStatus();
             assert(serverStatus.clients.length === 0);
         });
     });
 });
 
-xdescribe("Layer connection", () => {
-    describe("When given a signaling server running and any peer standbying,", () => {
-        describe("peer on level 1 layer", () => {
+xdescribe('Layer connection', () => {
+    describe('When given a signaling server running and any peer standbying,', () => {
+        describe('peer on level 1 layer', () => {
             let peer: LocalPeer<{}>;
-            let otherPeers: Array<LocalPeer<{}>>;
+            let otherPeers: LocalPeer<{}>[];
             before(async () => {
                 otherPeers = initPeers();
                 await new Promise(
-                    (resolve, reject) => setTimeout(resolve, 0.5 * 1000),
+                    (resolve, reject) => setTimeout(resolve, 0.5 * 1000)
                 );
-                let serverStatus = await fetchServerStatus();
+                const serverStatus = await fetchServerStatus();
                 assert(serverStatus.clients.length === 10);
 
                 peer = new LocalPeer(`ws://${server}`);
             });
-            it("connect to a root server", async () => {
-                let serverStatus = await fetchServerStatus();
+            it('connect to a root server', async () => {
+                const serverStatus = await fetchServerStatus();
                 assert(
                     serverStatus.clients
                         .map((x: any) => x.id)
-                        .some((x: string) => x === peer.id),
+                        .some((x: string) => x === peer.id)
                 );
             });
-            it("connect to any level 1 layer's peer", () => {
+            it('connect to any level 1 layer\'s peer', () => {
                 assert(otherPeers.some(x => x.debug.hasPeer(peer.id)));
             });
-            it("standby for connection from any level layer's peer", () => {
+            it('standby for connection from any level layer\'s peer', () => {
                 assert(false);
             });
         });
@@ -237,7 +239,7 @@ xdescribe("Layer connection", () => {
 });
 
 function initPeers() {
-    let peers: Array<LocalPeer<{}>> = [];
+    const peers: LocalPeer<{}>[] = [];
     for (let i = 0; i < 10; i++) {
         peers.push(new LocalPeer(`ws://${server}`));
     }
@@ -255,9 +257,9 @@ async function fetchServerStatus() {
 }
 
 function waitOtherPeer<T>(peer: LocalPeer<T>, callback: () => void) {
-    let subscriber = peer.onConnected.subscribe(obj => {
-        if (obj.peerType === "upstream"
-            && obj.remotePeer.id === "00000000-0000-0000-0000-000000000000") {
+    const subscriber = peer.onConnected.subscribe(obj => {
+        if (obj.peerType === 'upstream'
+            && obj.remotePeer.id === '00000000-0000-0000-0000-000000000000') {
             return;
         }
         subscriber.unsubscribe();

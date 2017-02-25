@@ -1,10 +1,10 @@
-import * as http from "http";
-import * as p2pCommunication from "p2pcommunication";
-import { Query } from "../query";
+import * as http from 'http';
+import * as p2pCommunication from 'p2pcommunication';
+import { Query } from '../query';
 
 export default class RootServer<T extends { id: string }> {
     private server: p2pCommunication.RootServer<ReadonlyArray<Query<T>>>;
-    private eventQueue: Array<Query<T>> = [];
+    private eventQueue: Query<T>[] = [];
 
     constructor(httpServer: http.Server) {
         this.server = new p2pCommunication.RootServer(httpServer);
@@ -14,10 +14,10 @@ export default class RootServer<T extends { id: string }> {
     }
 
     pushAll(queries: ReadonlyArray<Query<T>>) {
-        for (let query of queries) {
+        for (const query of queries) {
             this.eventQueue.push(query);
         }
-        for (let client of this.server.remoteClients) {
+        for (const client of this.server.remoteClients) {
             client.broadcast(queries);
         }
     }
