@@ -2,7 +2,13 @@ const webpack = require("webpack");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const failPlugin = require("webpack-fail-plugin");
 const uglifySaveLicense = require("uglify-save-license");
-const electronVersion = require("./package.json").devDependencies.electron.slice(1);
+const electronVersion = require("./package.json")
+    .devDependencies
+    .electron
+    .slice(1)
+    .split(".")
+    .slice(0, 2)
+    .join(".");
 
 const isProduction = process.env.NODE_ENV === "production";
 

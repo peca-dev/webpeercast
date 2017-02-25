@@ -6,7 +6,7 @@
   "bugs": "https://github.com/progre/webpeercast/issues",
   "dependencies": {
     "babel-polyfill": "^6.23.0",
-    "rxjs": "^5.1.1"
+    "rxjs": "^5.2.0"
   },
   "devDependencies": {
     "@types/webrtc": "0.0.21",
@@ -19,9 +19,9 @@
     "mocha": "^3.2.0",
     "power-assert": "^1.4.2",
     "source-map-support": "^0.4.11",
-    "ts-loader": "^2.0.0",
+    "ts-loader": "^2.0.1",
     "tslint": "^4.4.2",
-    "typescript": "^2.1.6",
+    "typescript": "2.1",
     "typings": "^2.1.0",
     "uglify-save-license": "^0.4.1",
     "webpack": "^2.2.1",
