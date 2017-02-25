@@ -1,7 +1,7 @@
-import RemoteClient from "./remoteclient";
-import RootServer from "./rootserver";
+import RemoteClient from './RemoteClient';
+import RootServer from './RootServer';
 
 export {
     RemoteClient,
-    RootServer,
+    RootServer
 }
