@@ -12,31 +12,31 @@ before_install:
   - sudo apt-get update
   - sudo apt-get install -y wine1.6
 install:
-  - pushd local_modules/p2pcommunication-common && npm install && popd
-  - pushd local_modules/p2pcommunication && npm install && popd
-  - pushd local_modules/p2pcommunication-client && npm install && popd
-  - pushd local_modules/p2pdatasharing && npm install && popd
-  - pushd local_modules/p2pdatasharing-client && npm install && popd
-  - pushd sub_projects/pcypproxy-server && npm install && popd
-  - pushd sub_projects/pcypproxy && npm install && popd
+  - pushd local_modules/p2pcommunication-common && yarn && yarn link && popd
+  - pushd local_modules/p2pcommunication && yarn && yarn link && popd
+  - pushd local_modules/p2pcommunication-client && yarn && yarn link && popd
+  - pushd local_modules/p2pdatasharing && yarn && yarn link && popd
+  - pushd local_modules/p2pdatasharing-client && yarn && yarn link && popd
+  - pushd sub_projects/pcypproxy-server && yarn && popd
+  - pushd sub_projects/pcypproxy && yarn && popd
 before_script:
-  - pushd local_modules/p2pcommunication-common && npm run build && popd
-  - pushd local_modules/p2pcommunication && npm run build && popd
-  - pushd local_modules/p2pcommunication-client && npm run build && popd
-  - pushd local_modules/p2pdatasharing && npm run build && popd
-  - pushd local_modules/p2pdatasharing-client && npm run build && popd
-  - pushd sub_projects/pcypproxy-server && npm run build && popd
-  - pushd sub_projects/pcypproxy && npm run build && popd
+  - pushd local_modules/p2pcommunication-common && yarn run build && popd
+  - pushd local_modules/p2pcommunication && yarn run build && popd
+  - pushd local_modules/p2pcommunication-client && yarn run build && popd
+  - pushd local_modules/p2pdatasharing && yarn run build && popd
+  - pushd local_modules/p2pdatasharing-client && yarn run build && popd
+  - pushd sub_projects/pcypproxy-server && yarn run build && popd
+  - pushd sub_projects/pcypproxy && yarn run build && popd
 script:
   - pushd local_modules/p2pcommunication
-  - npm run test-server&
+  - yarn run test-server&
   - popd
   - pushd local_modules/p2pcommunication-client
   - npm test
   - popd
   - killall node
   - pushd local_modules/p2pdatasharing
-  - npm run test-server&
+  - yarn run test-server&
   - popd
   - pushd local_modules/p2pdatasharing-client
   - npm test
@@ -46,7 +46,7 @@ script:
   - docker build -t progre/pcypproxy-server .
   - popd
   - pushd sub_projects/pcypproxy
-  - npm run package
+  - yarn run package
   - popd
 deploy:
   provider: releases
