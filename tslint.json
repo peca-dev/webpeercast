@@ -19,6 +19,10 @@
                 "function-regex": "^[a-z][\\w\\d]+$"
             }
         ],
+        "interface-name": [
+            true,
+            "never-prefix"
+        ],
         "linebreak-style": [
             false
         ],

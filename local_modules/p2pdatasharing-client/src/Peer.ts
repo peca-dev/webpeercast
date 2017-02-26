@@ -1,7 +1,7 @@
 import { LocalPeer } from 'p2pcommunication-client';
 import * as Rx from 'rxjs';
 import * as description from '../';
-import { Query } from './query';
+import { Query } from './Query';
 
 // キューを保持して、必要があれば送ったりする
 export default class Peer<T extends { id: string }> implements description.Peer<T> {
