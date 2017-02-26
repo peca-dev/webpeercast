@@ -1,5 +1,5 @@
 import * as http from 'http';
-import { Query } from './src/query';
+import { Query } from './src/Query';
 
 export declare class RootServer<T extends { id: string }> {
     constructor(httpServer: http.Server);
