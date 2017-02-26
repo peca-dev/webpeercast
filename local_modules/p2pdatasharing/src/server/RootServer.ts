@@ -1,6 +1,6 @@
 import * as http from 'http';
 import * as p2pCommunication from 'p2pcommunication';
-import { Query } from '../query';
+import { Query } from '../Query';
 
 export default class RootServer<T extends { id: string }> {
     private server: p2pCommunication.RootServer<ReadonlyArray<Query<T>>>;
