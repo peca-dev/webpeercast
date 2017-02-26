@@ -18,6 +18,6 @@
   "devDependencies": {
     "tslint": "^4.4.2",
     "tslint-microsoft-contrib": "^4.0.0",
-    "typescript": "^2.2.1"
+    "typescript": "2.1"
   }
 }
