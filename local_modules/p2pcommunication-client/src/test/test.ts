@@ -48,9 +48,11 @@ describe('Connection', () => {
     context('between many peers on one layer', () => {
         const peers = <LocalPeer<{}>[]>[];
 
-        before(async () => {
+        before(function () {
             // tslint:disable-next-line:no-invalid-this
             this.timeout(5 * 1000);
+        });
+        before(async () => {
             for (let i = 0; i < 10; i++) {
                 peers.push(new LocalPeer(`ws://${server}`));
             }
@@ -153,9 +155,11 @@ describe('Sharing', () => {
 
         const peers = <LocalPeer<{}>[]>[];
 
-        before(async () => {
+        before(function () {
             // tslint:disable-next-line:no-invalid-this
             this.timeout(5 * 1000);
+        });
+        before(async () => {
             let count = PEERS_COUNT;
             let callback: Function;
             const countDown = () => {
