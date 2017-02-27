@@ -8,11 +8,8 @@ const server = '127.0.0.1:8080';
 // ルートサーバーから送った情報を任意のタイミングでAから取得できる
 // Bから送った情報を任意のタイミングでAから取得できる
 
-describe('Peer', () => {
-    before(function () {
-        // tslint:disable-next-line:no-invalid-this
-        this.timeout(10 * 1000);
-    });
+describe('Peer', function () {
+    this.timeout(10 * 1000);
 
     describe('when data spawn from server', () => {
         const testData = [{ id: '1', this: 'this', is: 'is', test: 'test', data: 12345678 }];

@@ -45,13 +45,11 @@ describe('Connection', () => {
         });
     });
 
-    context('between many peers on one layer', () => {
+    context('between many peers on one layer', function () {
+        this.timeout(5 * 1000);
+
         const peers = <LocalPeer<{}>[]>[];
 
-        before(function () {
-            // tslint:disable-next-line:no-invalid-this
-            this.timeout(5 * 1000);
-        });
         before(async () => {
             for (let i = 0; i < 10; i++) {
                 peers.push(new LocalPeer(`ws://${server}`));
@@ -150,15 +148,12 @@ describe('Sharing', () => {
         });
     });
 
-    context('between many peers', () => {
+    context('between many peers', function () {
+        this.timeout(5 * 1000);
         const PEERS_COUNT = 15;
 
         const peers = <LocalPeer<{}>[]>[];
 
-        before(function () {
-            // tslint:disable-next-line:no-invalid-this
-            this.timeout(5 * 1000);
-        });
         before(async () => {
             let count = PEERS_COUNT;
             let callback: Function;
