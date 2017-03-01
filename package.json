@@ -1,23 +1,21 @@
 {
   "name": "webpeercast",
-  "version": "0.0.0",
   "description": "P2P broadcasting for everyone.",
-  "main": "index.js",
-  "scripts": {
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/progre/webpeercast.git"
-  },
+  "version": "0.0.0",
   "author": "progre",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/progre/webpeercast/issues"
   },
-  "homepage": "https://github.com/progre/webpeercast#readme",
   "devDependencies": {
-    "tslint": "^4.4.2",
-    "tslint-microsoft-contrib": "^4.0.0",
+    "tslint": "^4.5.1",
+    "tslint-config-airbnb": "^1.0.0",
     "typescript": "2.1"
+  },
+  "homepage": "https://github.com/progre/webpeercast#readme",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/progre/webpeercast.git"
   }
 }
