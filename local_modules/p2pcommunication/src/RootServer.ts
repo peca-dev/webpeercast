@@ -53,7 +53,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     });
   }
 
-  broadcast(payload: any) {
+  broadcast(payload: T) {
     const remotePeers = this.wsServer
       .connections
       .map(x => this.clients.get(x) !);

@@ -12,7 +12,7 @@ export default class Peer<T extends { id: string }> implements description.Peer<
 
   constructor(url: string) {
     this.p2pPeer = new LocalPeer(url);
-    this.p2pPeer.onBroadcastReceived.subscribe(data => {
+    this.p2pPeer.onBroadcastReceived.subscribe((data) => {
       this.eventQueue.push(
         ...(data.map(x => ({
           type: x.type,
