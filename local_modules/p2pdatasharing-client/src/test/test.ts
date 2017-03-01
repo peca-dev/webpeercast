@@ -9,6 +9,7 @@ const server = '127.0.0.1:8080';
 // Bから送った情報を任意のタイミングでAから取得できる
 
 describe('Peer', function () {
+  // tslint:disable-next-line:no-invalid-this
   this.timeout(10 * 1000);
 
   describe('when data spawn from server', () => {

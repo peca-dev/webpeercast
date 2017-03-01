@@ -9,6 +9,7 @@
             false
         ],
         "member-access": false,
+        "mocha-no-side-effect-code": false,
         "missing-jsdoc": false,
         "no-any": false,
         "no-default-export": false,

@@ -46,6 +46,7 @@ describe('Connection', () => {
   });
 
   context('between many peers on one layer', function () {
+    // tslint:disable-next-line:no-invalid-this
     this.timeout(5 * 1000);
 
     const peers = <LocalPeer<{}>[]>[];
@@ -149,6 +150,7 @@ describe('Sharing', () => {
   });
 
   context('between many peers', function () {
+    // tslint:disable-next-line:no-invalid-this
     this.timeout(5 * 1000);
     const PEERS_COUNT = 15;
 
