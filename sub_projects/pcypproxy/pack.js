@@ -13,7 +13,7 @@ mkdir("tmp").catch(errorHandler)
     .then(() => exec("cp ../../LICENSE tmp/dest/").then(printStdout))
     .then(() => exec("cp package.json tmp/dest/").then(printStdout))
     .then(() => exec("cp README*.md tmp/dest/").then(printStdout))
-    .then(() => exec("npm install --production", { cwd: "tmp/dest" }).then(printStdout))
+    .then(() => exec("yarn install --production", { cwd: "tmp/dest" }).then(printStdout))
     .then(() => execPackageAndZip(electronVersion, "tmp", "dest", "darwin", "x64", "src/res/icon.icns"))
     .then(() => execPackageAndZip(electronVersion, "tmp", "dest", "win32", "ia32", "src/res/icon_256.ico"))
     .then(() => execPackageAndZip(electronVersion, "tmp", "dest", "linux", "x64", null));
