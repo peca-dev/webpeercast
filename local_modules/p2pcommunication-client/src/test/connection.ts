@@ -8,8 +8,6 @@ describe('Connection', () => {
 
     before(async () => {
       await initPeers(peers, 2);
-      const serverStatus = await fetchServerStatus();
-      assert(serverStatus.clients.length === 2);
     });
 
     it('connects to server', async () => {
@@ -32,8 +30,6 @@ describe('Connection', () => {
 
     before(async () => {
       await initPeers(peers, 10);
-      const serverStatus = await fetchServerStatus();
-      assert(serverStatus.clients.length === 10);
     });
 
     it('connects to server', async () => {
