@@ -65,7 +65,7 @@ export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Dow
     throw new Error('Not implemented yet.');
   }
 
-  requestOfferTo(to: string, peerType: PeerType) {
+  requestOffer(to: string, peerType: PeerType) {
     throw new Error('Not implemented yet.');
   }
 

@@ -81,19 +81,16 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       this.startToConnectOtherPeer(connection, remoteClient);
       return;
     }
-    if (this.maxClients <= clients.length) {
-      logger.debug('Add downstream');
-      provideConnection(this.randomOne(clients), false, remoteClient);
-      setTimeout(() => connection.close(), 5 * 1000); // Disconnect when p2p connected
-      return;
-    }
+    logger.debug('Add downstream');
+    provideConnection(remoteClient, 'toDownstreamOf', this.randomOne(clients));
+    setTimeout(() => connection.close(), 5 * 1000); // Disconnect when p2p connected
   }
 
   private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient<T>) {
     this.wsServer.connections
       .filter(x => x !== connection)
       .map(x => this.clients.get(x) !)
-      .map(otherClient => provideConnection(otherClient, true, client)
+      .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)
         .catch(e => logger.error(e)));
   }
 

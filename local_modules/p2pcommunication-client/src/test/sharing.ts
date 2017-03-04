@@ -1,59 +1,44 @@
 import * as assert from 'power-assert';
 import LocalPeer from '../LocalPeer';
-import { fetchServerStatus, server, waitOtherPeer } from './utils';
+import { closeAll, fetchServerStatus, initPeers } from './utils';
 
 describe('Sharing', () => {
   context('between two peers', () => {
-    let a: LocalPeer<string>;
-    let b: LocalPeer<string>;
+    const peers = <LocalPeer<string>[]>[];
 
     before(async () => {
-      a = new LocalPeer(`ws://${server}`);
-      b = new LocalPeer(`ws://${server}`);
-      await new Promise((resolve, reject) => {
-        let count = 2;
-        const countDown = () => {
-          count -= 1;
-          if (count === 0) {
-            resolve();
-          }
-        };
-        waitOtherPeer(a, countDown);
-        waitOtherPeer(b, countDown);
-      });
+      await initPeers(peers, 2);
       const serverStatus = await fetchServerStatus();
       assert(serverStatus.clients.length === 2);
+    });
+
+    before(async () => {
+      initPeers(peers, 2);
     });
 
     it('with one message does', async () => {
       const messageDataA = 'message-data-a';
       const receiveA = await new Promise<string>((resolve) => {
-        const subscription = b.onBroadcastReceived.subscribe((data) => {
+        const subscription = peers[1].onBroadcastReceived.subscribe((data) => {
           subscription.unsubscribe();
           resolve(data);
         });
-        a.broadcast(messageDataA);
+        peers[0].broadcast(messageDataA);
       });
       assert(receiveA === messageDataA);
       const messageDataB = 'message-data-b';
       const receiveB = await new Promise<string>((resolve) => {
-        const subscription = a.onBroadcastReceived.subscribe((data) => {
+        const subscription = peers[0].onBroadcastReceived.subscribe((data) => {
           subscription.unsubscribe();
           resolve(data);
         });
-        b.broadcast(messageDataB);
+        peers[1].broadcast(messageDataB);
       });
       assert(receiveB === messageDataB);
     });
 
     after(async () => {
-      a.disconnect();
-      b.disconnect();
-      await new Promise(
-        (resolve, reject) => setTimeout(resolve, 1 * 1000),
-      );
-      const serverStatus = await fetchServerStatus();
-      assert(serverStatus.clients.length === 0);
+      closeAll(peers);
     });
   });
 
@@ -65,25 +50,7 @@ describe('Sharing', () => {
     const peers = <LocalPeer<{}>[]>[];
 
     before(async () => {
-      let count = PEERS_COUNT;
-      let callback: Function;
-      const countDown = () => {
-        count -= 1;
-        if (count === 0) {
-          callback();
-        }
-      };
-      for (let i = 0; i < PEERS_COUNT; i += 1) {
-        const peer = new LocalPeer(`ws://${server}`);
-        waitOtherPeer(peer, countDown);
-        peers.push(peer);
-      }
-      // tslint:disable-next-line:promise-must-complete
-      await new Promise((resolve, reject) => {
-        callback = resolve;
-      });
-      const serverStatus = await fetchServerStatus();
-      assert(serverStatus.clients.length >= 10);
+      await initPeers(peers, PEERS_COUNT);
     });
 
     for (let i = 0; i < PEERS_COUNT; i += 1) {
@@ -104,14 +71,7 @@ describe('Sharing', () => {
     }
 
     after(async () => {
-      for (const x of peers) {
-        x.disconnect();
-      }
-      await new Promise(
-        (resolve, reject) => setTimeout(resolve, 1 * 1000),
-      );
-      const serverStatus = await fetchServerStatus();
-      assert(serverStatus.clients.length === 0);
+      closeAll(peers);
     });
   });
 });

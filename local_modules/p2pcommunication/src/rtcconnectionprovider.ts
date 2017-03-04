@@ -4,44 +4,48 @@ import RemoteClient from './RemoteClient';
 const logger = getLogger(__filename);
 
 export function provideConnection<T>(
-  server: RemoteClient<T>,
-  isOtherStream: boolean,
-  client: RemoteClient<T>,
+  offerer: RemoteClient<T>,
+  stream: 'toOtherStreamOf' | 'toDownstreamOf',
+  answerer: RemoteClient<T>,
 ) {
   return new Promise((resolve, reject) => {
     const subscriptions = <Rx.Subscription[]>[];
-    subscriptions.push(server.onOffering.subscribe(
+    subscriptions.push(offerer.onOffering.subscribe(
       (payload: { to: string, offer: {} }) => {
-        if (payload.to !== client.id) {
+        if (payload.to !== answerer.id) {
           return;
         }
-        client.signalOffer(server.id, isOtherStream ? 'otherStream' : 'upstream', payload.offer);
+        answerer.signalOffer(
+          offerer.id,
+          stream === 'toOtherStreamOf' ? 'otherStream' : 'downstream',
+          payload.offer,
+        );
       },
     ));
-    subscriptions.push(server.onIceCandidateEmitting.subscribe(
+    subscriptions.push(offerer.onIceCandidateEmitting.subscribe(
       (payload: { to: string, iceCandidate: {} }) => {
-        if (payload.to !== client.id) {
+        if (payload.to !== answerer.id) {
           return;
         }
         logger.debug('Send ice to client.');
-        client.signalIceCandidate(server.id, payload.iceCandidate);
+        answerer.signalIceCandidate(offerer.id, payload.iceCandidate);
       },
     ));
-    subscriptions.push(client.onAnswering.subscribe(
+    subscriptions.push(answerer.onAnswering.subscribe(
       (payload: { to: string, answer: {} }) => {
-        if (payload.to !== server.id) {
+        if (payload.to !== offerer.id) {
           return;
         }
-        server.signalAnswer(client.id, payload.answer);
+        offerer.signalAnswer(answerer.id, payload.answer);
       },
     ));
-    subscriptions.push(client.onIceCandidateEmitting.subscribe(
+    subscriptions.push(answerer.onIceCandidateEmitting.subscribe(
       (payload: { to: string, iceCandidate: {} }) => {
-        if (payload.to !== server.id) {
+        if (payload.to !== offerer.id) {
           return;
         }
         logger.debug('Send ice to server.');
-        server.signalIceCandidate(client.id, payload.iceCandidate);
+        offerer.signalIceCandidate(answerer.id, payload.iceCandidate);
       },
     ));
     // He don't check connection completed. It should do client.
@@ -54,6 +58,6 @@ export function provideConnection<T>(
       },
       3 * 1000,
     );
-    server.requestOfferTo(client.id, isOtherStream ? 'otherStream' : 'downstream');
+    offerer.requestOffer(answerer.id, stream === 'toOtherStreamOf' ? 'otherStream' : 'upstream');
   });
 }

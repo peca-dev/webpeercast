@@ -27,7 +27,7 @@ export interface Downstream<T> extends RemotePeer<T> {
   onAnswering: Subscribable<AnsweringData>;
   onIceCandidateEmitting: Subscribable<IceCandidateEmittingData>;
 
-  requestOfferTo(to: string, peerType: PeerType): void;
+  requestOffer(to: string, peerType: PeerType): void;
   signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit): void;
   signalAnswer(from: string, answer: RTCSessionDescriptionInit): void;
   signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit): void;

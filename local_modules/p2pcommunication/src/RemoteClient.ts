@@ -70,7 +70,7 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Dow
     throw new Error('Not implemented.');
   }
 
-  requestOfferTo(to: string, peerType: PeerType) {
+  requestOffer(to: string, peerType: PeerType) {
     this.connection.send(JSON.stringify({
       type: 'makeRTCOffer',
       payload: { to, peerType },
