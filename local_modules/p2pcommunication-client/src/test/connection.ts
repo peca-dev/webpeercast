@@ -1,6 +1,7 @@
 import * as assert from 'power-assert';
 import LocalPeer from '../LocalPeer';
 import { closeAll, fetchServerStatus, initPeers, waitPeersCount } from './utils';
+const ROOT_SERVER_ID = '00000000-0000-0000-0000-000000000000';
 
 describe('Connection', () => {
   context('between two peers', () => {
@@ -15,6 +16,9 @@ describe('Connection', () => {
       assert(serverStatus.clients.length === 2);
       assert(peers[0].debug.hasPeer(peers[1].id));
       assert(peers[1].debug.hasPeer(peers[0].id));
+      assert(peers.every(x => Array.from(x.debug.getUpstreams()).every(
+        y => y.id === ROOT_SERVER_ID,
+      )));
     });
 
     after(async () => {
@@ -40,6 +44,9 @@ describe('Connection', () => {
           .filter(y => y.id !== x.id)
           .every(y => y.debug.hasPeer(x.id)),
       ));
+      assert(peers.every(x => Array.from(x.debug.getUpstreams()).every(
+        y => y.id === ROOT_SERVER_ID,
+      )));
     });
 
     after(async () => {
@@ -55,6 +62,12 @@ describe('Connection', () => {
     const serverStatus1 = await fetchServerStatus();
     assert(serverStatus1.clients.length === 11);
     await waitPeersCount(10);
+    assert(peers.some(x => Array.from(x.debug.getUpstreams()).some(
+      y => y.id !== ROOT_SERVER_ID,
+    )));
+    assert(peers.some(x => Array.from(x.debug.getUpstreams()).some(
+      y => y.id === ROOT_SERVER_ID,
+    )));
     await closeAll(peers);
   });
 });

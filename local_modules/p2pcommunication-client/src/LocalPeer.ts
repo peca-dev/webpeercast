@@ -34,6 +34,9 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
       }
       return false;
     },
+    getUpstreams: () => {
+      return this.upstreams;
+    },
   };
 
   onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T> }>();
@@ -83,6 +86,9 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     peerType: PeerType,
     upstream: Upstream<T>,
   ) {
+    if (peerType === 'downstream') {
+      throw new Error('Assertion error.');
+    }
     const peerConnection = new RTCPeerConnection();
     const dataChannel = await createDataChannel(
       peerConnection,
