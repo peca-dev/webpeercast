@@ -33,40 +33,35 @@ describe('Sharing', () => {
       assert(receiveB === messageDataB);
     });
 
-    for (let i = 0; i < PEERS_COUNT; i += 1) {
-      it(`receive message from peer[${i}]`, ((testIndex: number) => async () => {
-        assert(peers.length === PEERS_COUNT);
-        const testPeer = peers[testIndex];
-        await testPing(testPeer, peers.filter(x => x !== testPeer));
-      })(i));
-    }
-
     after(async () => {
       await closeAll(peers);
     });
   });
 
-  context('between 10 peers', function () {
-    // tslint:disable-next-line:no-invalid-this
-    this.timeout(5 * 1000);
-    const PEERS_COUNT = 10;
+  [2, 3, 10].forEach((peersCount) => {
+    context(`between ${peersCount} peers`, function () {
+      // tslint:disable-next-line:no-invalid-this
+      this.timeout(5 * 1000);
 
-    const peers = <LocalPeer<{}>[]>[];
+      const peers = <LocalPeer<{}>[]>[];
 
-    before(async () => {
-      await initPeers(peers, PEERS_COUNT);
-    });
+      before(async () => {
+        await initPeers(peers, peersCount);
+      });
 
-    for (let i = 0; i < PEERS_COUNT; i += 1) {
-      it(`receive message from peer[${i}]`, ((testIndex: number) => async () => {
-        assert(peers.length === PEERS_COUNT);
-        const testPeer = peers[testIndex];
-        await testPing(testPeer, peers.filter(x => x !== testPeer));
-      })(i));
-    }
+      [...Array(peersCount).keys()].forEach((index) => {
+        console.debug('def', index);
+        it(`receive message from peer[${index}]`, async () => {
+          console.debug('run', index);
+          assert(peers.length === peersCount);
+          const testPeer = peers[index];
+          await testPing(testPeer, peers.filter(x => x !== testPeer));
+        });
+      });
 
-    after(async () => {
-      await closeAll(peers);
+      after(async () => {
+        await closeAll(peers);
+      });
     });
   });
 
@@ -148,7 +143,6 @@ function testPing(source: LocalPeer<string>, targets: LocalPeer<string>[]) {
       }))
       .subscribe(
       () => {
-        console.debug('resolve');
         resolve();
       },
       reject,
