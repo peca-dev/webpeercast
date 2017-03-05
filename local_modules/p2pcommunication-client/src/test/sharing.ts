@@ -38,10 +38,10 @@ describe('Sharing', () => {
     });
   });
 
-  [2, 3, 10].forEach((peersCount) => {
+  [2, 3, 10, 15].forEach((peersCount) => {
     context(`between ${peersCount} peers`, function () {
       // tslint:disable-next-line:no-invalid-this
-      this.timeout(5 * 1000);
+      this.timeout(9 * 1000);
 
       const peers = <LocalPeer<{}>[]>[];
 
@@ -49,13 +49,31 @@ describe('Sharing', () => {
         await initPeers(peers, peersCount);
       });
 
+      if (peersCount <= 10) {
+        it('has one upstream', () => {
+          for (const peer of peers) {
+            assert(peer.debug.getUpstreams().size === 1);
+          }
+        });
+
+        it('has otherStreams', () => {
+          for (const peer of peers) {
+            assert(peer.debug.getOtherStreams().size === peersCount - 1);
+          }
+        });
+
+        it('has no downstream', () => {
+          for (const peer of peers) {
+            assert(peer.debug.getDownstreams().size === 0);
+          }
+        });
+      }
+
       [...Array(peersCount).keys()].forEach((index) => {
-        console.debug('def', index);
-        it(`receive message from peer[${index}]`, async () => {
-          console.debug('run', index);
+        it(`receive message from peer[${index}]`, () => {
           assert(peers.length === peersCount);
           const testPeer = peers[index];
-          await testPing(testPeer, peers.filter(x => x !== testPeer));
+          return testPing(testPeer, peers.filter(x => x !== testPeer));
         });
       });
 
@@ -65,46 +83,10 @@ describe('Sharing', () => {
     });
   });
 
-  // context('between many peers', function () {
-  //   // tslint:disable-next-line:no-invalid-this
-  //   this.timeout(5 * 1000);
-  //   const PEERS_COUNT = 15;
-
-  //   const peers = <LocalPeer<{}>[]>[];
-
-  //   before(async () => {
-  //     await initPeers(peers, PEERS_COUNT);
-  //   });
-
-  //   for (let i = 0; i < PEERS_COUNT; i += 1) {
-  //     it(`receive message from peer[${i}]`, ((testIndex: number) => async () => {
-  //       // assert(peers.length === PEERS_COUNT);
-  //       // const testPeer = peers[testIndex];
-  //       // const promises = Promise.all(
-  //       //   peers.filter(x => x !== testPeer).map(x => new Promise((resolve, reject) => {
-  //       //     const subscriber = x.onBroadcastReceived.subscribe(() => {
-  //       //       subscriber.unsubscribe();
-  //       //       resolve();
-  //       //     });
-  //       //   })),
-  //       // );
-  //       // testPeer.broadcast('ping');
-  //       // await promises;
-  //       assert(peers.length === PEERS_COUNT);
-  //       const testPeer = peers[testIndex];
-  //       await testPing(testPeer, peers.filter(x => x !== testPeer));
-  //     })(i));
-  //   }
-
-  //   after(async () => {
-  //     await closeAll(peers);
-  //   });
-  // });
-
   // context('between many many peers', function () {
   //   // tslint:disable-next-line:no-invalid-this
   //   this.timeout(5 * 1000);
-  //   const PEERS_COUNT = 50;
+  //   const PEERS_COUNT = 19;
 
   //   const peers = <LocalPeer<{}>[]>[];
 
@@ -128,25 +110,44 @@ describe('Sharing', () => {
 
 function testPing(source: LocalPeer<string>, targets: LocalPeer<string>[]) {
   return new Promise((resolve, reject) => {
+    const subscriptions: Rx.Subscription[] = [];
+    const unsubscribeAll = () => {
+      for (const subscription of subscriptions) {
+        subscription.unsubscribe();
+      }
+    };
+    const success = () => {
+      unsubscribeAll();
+      reject = () => { /* NOP */ };
+      resolve();
+      resolve = () => { /* NOP */ };
+    };
+    const fail = () => {
+      unsubscribeAll();
+      resolve = () => { /* NOP */ };
+      reject();
+      reject = () => { /* NOP */ };
+    };
+    const data = `${Date.now()}`;
     Rx.Observable
       .zip(...targets.map((target) => {
         const subject = new Rx.Subject();
-        const subscription = target.onBroadcastReceived
+        subscriptions.push(target.onBroadcastReceived
           .subscribe((x) => {
-            subscription.unsubscribe();
-            subject.next(x);
-            target.onBroadcastReceived.subscribe(() => {
-              assert.fail(NaN, NaN, 'Duplicated');
-            });
-          });
+            if (subject.next != null) {
+              assert(x === data);
+              subject.next(x);
+              subject.next = <any>null;
+              return;
+            }
+            fail();
+          }));
         return subject;
       }))
-      .subscribe(
-      () => {
-        resolve();
-      },
-      reject,
-    );
-    source.broadcast('ping');
+      .subscribe({
+        next: success,
+        error: fail,
+      });
+    source.broadcast(data);
   });
 }

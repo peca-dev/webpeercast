@@ -91,7 +91,7 @@ function waitMessage(observable: Subscribable<{ from: string }>, from: string) {
     const timer = setTimeout(
       () => {
         subscription.unsubscribe();
-        reject(new Error('Timeout.'));
+        reject(new Error(`Timeout message from: ${from}.`));
       },
       3 * 1000,
     );
@@ -112,7 +112,7 @@ function waitEvent<T extends Event>(eventTarget: EventTarget, event: string, fun
     const timer = setTimeout(
       () => {
         eventTarget.removeEventListener(event, listener);
-        reject(new Error('Timeout.'));
+        reject(new Error(`Timeout event: ${event}.`));
       },
       3 * 1000,
     );

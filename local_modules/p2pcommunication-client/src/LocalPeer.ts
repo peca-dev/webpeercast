@@ -37,6 +37,12 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     getUpstreams: () => {
       return this.upstreams;
     },
+    getOtherStreams: () => {
+      return this.otherStreams;
+    },
+    getDownstreams: () => {
+      return this.downstreams;
+    },
   };
 
   onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T> }>();
@@ -54,7 +60,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     }
   }
 
-  broadcast(data: any) {
+  broadcast(data: T) {
     broadcastTo(data, this.upstreams);
     broadcastTo(data, this.otherStreams);
     broadcastTo(data, this.downstreams);

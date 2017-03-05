@@ -24,7 +24,7 @@ export default class RemoteRootServer<T> implements Upstream<T> {
       const timer = setTimeout(
         () => {
           socket.onmessage = <any>null;
-          reject(new Error('Timeout.'));
+          reject(new Error('Timeout connecting to RemoteRootServer.'));
         },
         3 * 1000,
       );
