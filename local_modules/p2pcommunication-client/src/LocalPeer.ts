@@ -104,6 +104,10 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     offer: RTCSessionDescriptionInit,
     upstream: Upstream<T>,
   ) {
+    if (peerType === 'downstream' && !this.canAppendDownstream()) {
+      console.error('CONNECTION LIMIT EXCEEDED.');
+      return;
+    }
     const peerConnection = new RTCPeerConnection();
     const dataChannel = await fetchDataChannel(
       peerConnection,
@@ -184,6 +188,13 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     });
     this.downstreams.add(downstream);
     this.onConnected.next({ peerType: 'downstream', remotePeer: downstream });
+  }
+
+  private canAppendDownstream() {
+    // TODO: count with connectproviders
+    const LIMIT = 1; // TODO: limit is dirty condition. It should uses network bandwidth.
+    console.debug(this.id + ' ' + this.downstreams.size);
+    return this.downstreams.size < LIMIT;
   }
 }
 
