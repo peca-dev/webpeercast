@@ -38,7 +38,7 @@ describe('Sharing', () => {
     });
   });
 
-  [2, 3, 10, 15].forEach((peersCount) => {
+  [2, 3, 10, 15, 20, 25].forEach((peersCount) => {
     context(`between ${peersCount} peers`, function () {
       // tslint:disable-next-line:no-invalid-this
       this.timeout(9 * 1000);
@@ -82,30 +82,6 @@ describe('Sharing', () => {
       });
     });
   });
-
-  // context('between many many peers', function () {
-  //   // tslint:disable-next-line:no-invalid-this
-  //   this.timeout(5 * 1000);
-  //   const PEERS_COUNT = 19;
-
-  //   const peers = <LocalPeer<{}>[]>[];
-
-  //   before(async () => {
-  //     await initPeers(peers, PEERS_COUNT);
-  //   });
-
-  //   for (let i = 0; i < PEERS_COUNT; i += 1) {
-  //     it(`receive message from peer[${i}]`, ((testIndex: number) => async () => {
-  //       assert(peers.length === PEERS_COUNT);
-  //       const testPeer = peers[testIndex];
-  //       await testPing(testPeer, peers.filter(x => x !== testPeer));
-  //     })(i));
-  //   }
-
-  //   after(async () => {
-  //     await closeAll(peers);
-  //   });
-  // });
 });
 
 function testPing(source: LocalPeer<string>, targets: LocalPeer<string>[]) {

@@ -29,6 +29,8 @@ describe('Connection', () => {
   context('between many peers on one layer', function () {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(5 * 1000);
+    // tslint:disable-next-line:no-invalid-this
+    this.retries(3);
 
     const peers = <LocalPeer<{}>[]>[];
 
