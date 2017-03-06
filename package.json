@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "tslint": "^4.5.1",
-    "tslint-config-airbnb": "^1.0.0",
+    "tslint-config-airbnb": "^1.1.1",
     "typescript": "2.1"
   },
   "homepage": "https://github.com/progre/webpeercast#readme",
