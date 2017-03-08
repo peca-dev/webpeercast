@@ -36,8 +36,6 @@ export async function initPeers(peers: LocalPeer<{}>[], numPeers: number) {
       waitOtherPeer(peer, countDown);
     }
   });
-  const serverStatus2 = await fetchServerStatus();
-  assert(serverStatus2.clients.length === numPeers);
 }
 
 export async function closeAll(peers: LocalPeer<{}>[]) {

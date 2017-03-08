@@ -35,7 +35,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       // to accept it.
       autoAcceptConnections: false,
     });
-    this.wsServer.on('request', (request) => {
+    this.wsServer.on('request', async (request) => {
       try {
         if (!originIsAllowed(request.origin)) {
           // Make sure we only accept requests from an allowed origin
@@ -44,7 +44,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
           return;
         }
 
-        this.acceptNewConnection(
+        await this.acceptNewConnection(
           request.accept(undefined, request.origin),
         );
       } catch (e) {
@@ -62,28 +62,28 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     }
   }
 
-  private acceptNewConnection(connection: WebSocketConnection) {
+  private async acceptNewConnection(connection: WebSocketConnection) {
     logger.debug('Connection count:', this.wsServer.connections.length);
     const remoteClient = new RemoteClient(connection);
     remoteClient.onBroadcasting.subscribe((payload) => {
       // NOP
     });
-    this.clients.set(connection, remoteClient);
-    this.onConnected.next(remoteClient);
     logger.info((new Date()) + ' Connection accepted.');
 
     const clients = this.remoteClientsWithoutConnection(connection);
+    if (clients.length >= this.maxClients) {
+      logger.debug('Add downstream');
+      await provideConnection(remoteClient, 'toDownstreamOf', this.randomOne(clients));
+      connection.close();
+      return;
+    }
+    this.clients.set(connection, remoteClient);
+    this.onConnected.next(remoteClient);
     if (clients.length < 1) {
       return;
     }
-    if (1 <= clients.length && clients.length < this.maxClients) {
-      logger.debug('Add otherStream');
-      this.startToConnectOtherPeer(connection, remoteClient);
-      return;
-    }
-    logger.debug('Add downstream');
-    provideConnection(remoteClient, 'toDownstreamOf', this.randomOne(clients));
-    setTimeout(() => connection.close(), 5 * 1000); // Disconnect when p2p connected
+    logger.debug('Add otherStream');
+    this.startToConnectOtherPeer(connection, remoteClient);
   }
 
   private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient<T>) {

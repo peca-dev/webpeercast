@@ -151,6 +151,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
   }
 
   private addUpstream(upstream: Upstream<T>) {
+    console.debug(`${upstream.id} --> ${this.id}`);
     upstream.onOfferRequesting.subscribe(safe(async (data: OfferRequestData) => {
       await this.createNewConnection(data.to, data.peerType, upstream);
     }));

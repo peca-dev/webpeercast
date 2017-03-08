@@ -35,6 +35,7 @@ function createDebugJSON(
   return JSON.stringify({
     clients: wsServer.connections
       .map(x => clients.get(x) !)
+      .filter(x => x != null)
       .map(x => ({ id: x.id })),
   });
 }

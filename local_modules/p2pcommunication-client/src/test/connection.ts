@@ -1,6 +1,6 @@
 import * as assert from 'power-assert';
 import LocalPeer from '../LocalPeer';
-import { closeAll, fetchServerStatus, initPeers, waitPeersCount } from './utils';
+import { closeAll, fetchServerStatus, initPeers } from './utils';
 const ROOT_SERVER_ID = '00000000-0000-0000-0000-000000000000';
 
 describe('Connection', () => {
@@ -60,16 +60,18 @@ describe('Connection', () => {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(9 * 1000);
     const peers = <LocalPeer<{}>[]>[];
-    await initPeers(peers, 11);
-    const serverStatus1 = await fetchServerStatus();
-    assert(serverStatus1.clients.length === 11);
-    await waitPeersCount(10);
-    assert(peers.some(x => Array.from(x.debug.getUpstreams()).some(
-      y => y.id !== ROOT_SERVER_ID,
-    )));
-    assert(peers.some(x => Array.from(x.debug.getUpstreams()).some(
-      y => y.id === ROOT_SERVER_ID,
-    )));
-    await closeAll(peers);
+    try {
+      await initPeers(peers, 11);
+      const serverStatus1 = await fetchServerStatus();
+      assert(serverStatus1.clients.length === 10);
+      assert(peers.some(x => Array.from(x.debug.getUpstreams()).some(
+        y => y.id !== ROOT_SERVER_ID,
+      )));
+      assert(peers.some(x => Array.from(x.debug.getUpstreams()).some(
+        y => y.id === ROOT_SERVER_ID,
+      )));
+    } finally {
+      await closeAll(peers);
+    }
   });
 });
