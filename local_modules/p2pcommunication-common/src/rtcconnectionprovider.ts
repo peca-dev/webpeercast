@@ -1,17 +1,19 @@
-import { getLogger } from 'log4js';
-import * as Rx from 'rxjs';
-import RemoteClient from './RemoteClient';
-const logger = getLogger(__filename);
+import * as createDebug from 'debug';
+import { AnonymousSubscription } from 'rxjs/Subscription';
+import { SignalingPeer } from '../';
 
-export function provideConnection<T>(
-  offerer: RemoteClient<T>,
+declare const __filename: string;
+const debug = createDebug(__filename);
+
+export function provideConnection(
+  offerer: SignalingPeer,
   stream: 'toOtherStreamOf' | 'toDownstreamOf',
-  answerer: RemoteClient<T>,
+  answerer: SignalingPeer,
 ) {
   return new Promise((resolve, reject) => {
-    const subscriptions = <Rx.Subscription[]>[];
+    const subscriptions = <AnonymousSubscription[]>[];
     subscriptions.push(offerer.onOffering.subscribe(
-      (payload: { to: string, offer: {} }) => {
+      (payload: { to: string, offer: RTCSessionDescriptionInit }) => {
         if (payload.to !== answerer.id) {
           return;
         }
@@ -23,16 +25,16 @@ export function provideConnection<T>(
       },
     ));
     subscriptions.push(offerer.onIceCandidateEmitting.subscribe(
-      (payload: { to: string, iceCandidate: {} }) => {
+      (payload: { to: string, iceCandidate: RTCIceCandidateInit }) => {
         if (payload.to !== answerer.id) {
           return;
         }
-        logger.debug('Send ice to client.');
+        debug('Send ice to client.');
         answerer.signalIceCandidate(offerer.id, payload.iceCandidate);
       },
     ));
     subscriptions.push(answerer.onAnswering.subscribe(
-      (payload: { to: string, answer: {} }) => {
+      (payload: { to: string, answer: RTCSessionDescriptionInit }) => {
         if (payload.to !== offerer.id) {
           return;
         }
@@ -40,11 +42,11 @@ export function provideConnection<T>(
       },
     ));
     subscriptions.push(answerer.onIceCandidateEmitting.subscribe(
-      (payload: { to: string, iceCandidate: {} }) => {
+      (payload: { to: string, iceCandidate: RTCIceCandidateInit }) => {
         if (payload.to !== offerer.id) {
           return;
         }
-        logger.debug('Send ice to server.');
+        debug('Send ice to server.');
         offerer.signalIceCandidate(answerer.id, payload.iceCandidate);
       },
     ));

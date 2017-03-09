@@ -1,5 +1,6 @@
 import * as http from 'http';
 import { getLogger } from 'log4js';
+import { provideConnection } from 'p2pcommunication-common';
 import * as Rx from 'rxjs';
 import {
   connection as WebSocketConnection,
@@ -7,7 +8,6 @@ import {
 } from 'websocket';
 import * as declaration from '../index';
 import RemoteClient from './RemoteClient';
-import { provideConnection } from './rtcconnectionprovider';
 const logger = getLogger(__filename);
 
 export default class RootServer<T> implements declaration.RootServer<T> {
@@ -73,7 +73,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     const clients = this.remoteClientsWithoutConnection(connection);
     if (clients.length >= this.maxClients) {
       logger.debug('Add downstream');
-      await provideConnection(remoteClient, 'toDownstreamOf', this.randomOne(clients));
+      await provideConnection(remoteClient, 'toDownstreamOf', this.selectOne(clients));
       connection.close();
       return;
     }
@@ -102,7 +102,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       .filter(x => x != null);
   }
 
-  private randomOne<T>(array: T[]): T {
+  private selectOne<T>(array: T[]): T {
     this.selectTarget += 1;
     if (this.selectTarget >= array.length) {
       this.selectTarget = 0;

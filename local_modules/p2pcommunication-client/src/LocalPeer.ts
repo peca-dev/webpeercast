@@ -2,6 +2,7 @@ import {
   Downstream,
   OfferRequestData,
   PeerType,
+  provideConnection,
   RemotePeer,
   SignalingOfferData,
   Upstream,
@@ -23,7 +24,8 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
   private url: string | null;
   private upstreams = new Set<RemotePeer<T>>();
   private otherStreams = new Set<RemotePeer<T>>();
-  private downstreams = new Set<RemotePeer<T>>();
+  private downstreams = new Set<Downstream<T>>();
+  private selectTarget = -1;
 
   debug = {
     hasPeer: (id: string | null) => {
@@ -101,7 +103,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
       to,
       upstream,
     );
-    this.addNewConnection(to, peerConnection, dataChannel, peerType);
+    await this.addNewConnection(to, peerConnection, dataChannel, peerType);
   }
 
   private async fetchNewOtherConnection(
@@ -110,10 +112,6 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     offer: RTCSessionDescriptionInit,
     upstream: Upstream<T>,
   ) {
-    if (peerType === 'downstream' && !this.canAppendDownstream()) {
-      console.error('CONNECTION LIMIT EXCEEDED.');
-      return;
-    }
     const peerConnection = new RTCPeerConnection();
     const dataChannel = await fetchDataChannel(
       peerConnection,
@@ -121,10 +119,10 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
       offer,
       upstream,
     );
-    this.addNewConnection(from, peerConnection, dataChannel, peerType);
+    await this.addNewConnection(from, peerConnection, dataChannel, peerType);
   }
 
-  private addNewConnection(
+  private async addNewConnection(
     id: string,
     peerConnection: RTCPeerConnection,
     dataChannel: RTCDataChannel,
@@ -143,7 +141,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
         this.addNewOtherStream(peer);
         break;
       case 'downstream':
-        this.addNewDownstream(peer);
+        await this.addNewDownstream(peer);
         break;
       default:
         throw new Error(`Unsupported peerType: ${peerType}`);
@@ -184,7 +182,12 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     this.onConnected.next({ peerType: 'otherStream', remotePeer: otherStream });
   }
 
-  private addNewDownstream(downstream: Downstream<T>) {
+  private async addNewDownstream(downstream: Downstream<T>) {
+    if (!this.canAppendDownstream()) {
+      const item = this.selectOne([...this.downstreams]);
+      await provideConnection(downstream, 'toDownstreamOf', item);
+      return;
+    }
     downstream.onClosed.subscribe(safe(async () => {
       this.downstreams.delete(downstream);
     }));
@@ -202,6 +205,14 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     const LIMIT = 1; // TODO: limit is dirty condition. It should uses network bandwidth.
     console.debug(this.id + ' ' + this.downstreams.size);
     return this.downstreams.size < LIMIT;
+  }
+
+  private selectOne<T>(array: T[]): T {
+    this.selectTarget += 1;
+    if (this.selectTarget >= array.length) {
+      this.selectTarget = 0;
+    }
+    return array[this.selectTarget];
   }
 }
 
