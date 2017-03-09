@@ -2,9 +2,9 @@ import { Subscribable } from 'rxjs/Observable';
 export { Subscribable }
 
 export function provideConnection(
-  offerer: SignalingPeer,
+  offerer: RemoteSignalingPeer,
   stream: 'toOtherStreamOf' | 'toDownstreamOf',
-  answerer: SignalingPeer,
+  answerer: RemoteSignalingPeer,
 ): Promise<void>;
 
 export interface RemotePeer<T> {
@@ -28,10 +28,10 @@ export interface Upstream<T> extends RemotePeer<T> {
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidateInit): void;
 }
 
-export interface Downstream<T> extends RemotePeer<T>, SignalingPeer {
+export interface Downstream<T> extends RemotePeer<T>, RemoteSignalingPeer {
 }
 
-export interface SignalingPeer {
+export interface RemoteSignalingPeer {
   readonly id: string;
 
   onOffering: Subscribable<OfferingData>;

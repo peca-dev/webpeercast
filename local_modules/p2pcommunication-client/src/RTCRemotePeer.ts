@@ -1,3 +1,4 @@
+import * as debugStatic from 'debug';
 import {
   AnsweringData,
   Downstream,
@@ -12,6 +13,10 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import * as Rx from 'rxjs';
+
+declare const __filename: string;
+debugStatic.enable(__filename);
+const debug = debugStatic(__filename);
 
 export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
   onClosed = new Rx.Subject();
@@ -29,15 +34,40 @@ export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Dow
     private peerConnection: RTCPeerConnection,
     private dataChannel: RTCDataChannel,
   ) {
-    dataChannel.addEventListener('message', (e: MessageEvent) => {
-      if (e.type !== 'message') {
-        throw new Error(`Unsupported message type: ${e.type}`);
+    dataChannel.addEventListener('message', (message: MessageEvent) => {
+      try {
+        switch (message.type) {
+          case 'message':
+            const obj = JSON.parse(message.data);
+            switch (obj.type) {
+              case 'makeRTCOffer':
+                this.onOfferRequesting.next(obj.payload);
+                break;
+              case 'receiveRTCOffer': // TODO: choose different names the climb and the desent
+                this.onOffering.next(obj.payload);
+                this.onSignalingOffer.next(obj.payload);
+                break;
+              case 'receiveRTCAnswer':
+                this.onAnswering.next(obj.payload);
+                this.onSignalingAnswer.next(obj.payload);
+                break;
+              case 'receiveIceCandidate':
+                this.onIceCandidateEmitting.next(obj.payload);
+                this.onSignalingIceCandidate.next(obj.payload);
+                break;
+              case 'broadcast':
+                this.onBroadcasting.next(obj.payload);
+                break;
+              default:
+                throw new Error('Unsupported data type: ' + obj.type);
+            }
+            break;
+          default:
+            throw new Error('Unsupported message type: ' + message.type);
+        }
+      } catch (e) {
+        debug(e);
       }
-      const data = JSON.parse(e.data);
-      if (data.type !== 'broadcast') {
-        throw new Error(`Unsupported data type: ${e.type}`);
-      }
-      this.onBroadcasting.next(data.payload);
     });
     dataChannel.addEventListener('error', (e: ErrorEvent) => {
       console.error(e);
@@ -54,31 +84,52 @@ export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Dow
   }
 
   offerTo(to: string, offer: RTCSessionDescriptionInit) {
-    throw new Error('Not implemented yet.');
+    this.dataChannel.send(JSON.stringify({
+      type: 'receiveRTCOffer',
+      payload: { to, offer },
+    }));
   }
 
   answerTo(to: string, answer: RTCSessionDescriptionInit) {
-    throw new Error('Not implemented yet.');
+    this.dataChannel.send(JSON.stringify({
+      type: 'receiveRTCAnswer',
+      payload: { to, answer },
+    }));
   }
 
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate) {
-    throw new Error('Not implemented yet.');
+    this.dataChannel.send(JSON.stringify({
+      type: 'receiveIceCandidate',
+      payload: { to, iceCandidate },
+    }));
   }
 
   requestOffer(to: string, peerType: PeerType) {
-    throw new Error('Not implemented yet.');
+    this.dataChannel.send(JSON.stringify({
+      type: 'makeRTCOffer',
+      payload: { to, peerType },
+    }));
   }
 
   signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit) {
-    throw new Error('Not implemented yet.');
+    this.dataChannel.send(JSON.stringify({
+      type: 'receiveRTCOffer',
+      payload: { from, peerType, offer },
+    }));
   }
 
   signalAnswer(from: string, answer: RTCSessionDescriptionInit) {
-    throw new Error('Not implemented yet.');
+    this.dataChannel.send(JSON.stringify({
+      type: 'receiveRTCAnswer',
+      payload: { from, answer },
+    }));
   }
 
   signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit) {
-    throw new Error('Not implemented yet.');
+    this.dataChannel.send(JSON.stringify({
+      type: 'receiveIceCandidate',
+      payload: { from, iceCandidate },
+    }));
   }
 
   broadcast(payload: T) {

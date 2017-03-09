@@ -1,14 +1,14 @@
 import * as createDebug from 'debug';
 import { AnonymousSubscription } from 'rxjs/Subscription';
-import { SignalingPeer } from '../';
+import { RemoteSignalingPeer } from '../';
 
 declare const __filename: string;
 const debug = createDebug(__filename);
 
 export function provideConnection(
-  offerer: SignalingPeer,
+  offerer: RemoteSignalingPeer,
   stream: 'toOtherStreamOf' | 'toDownstreamOf',
-  answerer: SignalingPeer,
+  answerer: RemoteSignalingPeer,
 ) {
   return new Promise((resolve, reject) => {
     const subscriptions = <AnonymousSubscription[]>[];

@@ -6,10 +6,12 @@
   "bugs": "https://github.com/progre/webpeercast/issues",
   "dependencies": {
     "babel-polyfill": "^6.23.0",
+    "debug": "^2.6.1",
     "rxjs": "^5.2.0",
     "webrtc-adapter": "^3.1.6"
   },
   "devDependencies": {
+    "@types/debug": "^0.0.29",
     "@types/isomorphic-fetch": "0.0.32",
     "@types/webrtc": "^0.0.21",
     "babel-core": "^6.23.1",
