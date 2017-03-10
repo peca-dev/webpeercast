@@ -149,7 +149,6 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
   }
 
   private addUpstream(upstream: Upstream<T>) {
-    console.debug(`${upstream.id} --> ${this.id}`);
     upstream.onOfferRequesting.subscribe(safe(async (data: OfferRequestData) => {
       await this.createNewConnection(data.to, data.peerType, upstream);
     }));
@@ -203,7 +202,6 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
   private canAppendDownstream() {
     // TODO: count with connectproviders
     const LIMIT = 1; // TODO: limit is dirty condition. It should uses network bandwidth.
-    console.debug(this.id + ' ' + this.downstreams.size);
     return this.downstreams.size < LIMIT;
   }
 
