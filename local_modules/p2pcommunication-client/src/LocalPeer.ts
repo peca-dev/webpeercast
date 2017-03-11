@@ -11,8 +11,8 @@ import * as Rx from 'rxjs';
 import * as declaration from '../index';
 import { printError, safe } from './printerror';
 import RemoteRootServer from './RemoteRootServer';
+import RemoteRTCPeer from './RemoteRTCPeer';
 import { createDataChannel, fetchDataChannel } from './rtcconnector';
-import RTCRemotePeer from './RTCRemotePeer';
 
 /**
  * It does nothing when it's disconnected with a downstream.
@@ -128,7 +128,7 @@ export default class LocalPeer<T> implements declaration.LocalPeer<T> {
     dataChannel: RTCDataChannel,
     peerType: PeerType,
   ) {
-    const peer = new RTCRemotePeer<T>(
+    const peer = new RemoteRTCPeer<T>(
       id,
       peerConnection,
       dataChannel,

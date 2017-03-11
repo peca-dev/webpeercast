@@ -18,7 +18,7 @@ declare const __filename: string;
 debugStatic.enable(__filename);
 const debug = debugStatic(__filename);
 
-export default class RTCRemotePeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
+export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
   onClosed = new Rx.Subject();
   onOfferRequesting = new Rx.Subject<OfferRequestData>();
   onSignalingOffer = new Rx.Subject<SignalingOfferData>();
