@@ -38,7 +38,7 @@ describe('Sharing', () => {
     });
   });
 
-  [2, 3, 10, 15, 20, 25].forEach((peersCount) => {
+  [2, 3, 10, 15, 20].forEach((peersCount) => {
     context(`between ${peersCount} peers`, function () {
       // tslint:disable-next-line:no-invalid-this
       this.timeout(9 * 1000);

@@ -1,9 +1,8 @@
-import * as createDebug from 'debug';
+import * as debugStatic from 'debug';
 import { AnonymousSubscription } from 'rxjs/Subscription';
 import { RemoteSignalingPeer } from '../';
 
-declare const __filename: string;
-const debug = createDebug(__filename);
+const debug = debugStatic('p2pcommunication-common:rtcconnectionprovider');
 
 export function provideConnection(
   offerer: RemoteSignalingPeer,
