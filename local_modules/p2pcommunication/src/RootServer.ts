@@ -15,6 +15,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
   private clients = new WeakMap<WebSocketConnection, RemoteClient<T>>();
   private readonly maxClients = 10;
   private selectTarget = -1;
+  readonly id = '00000000-0000-0000-0000-000000000000';
 
   onConnected = new Rx.Subject<RemoteClient<T>>();
 

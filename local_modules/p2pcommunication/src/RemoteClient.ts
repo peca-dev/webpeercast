@@ -1,4 +1,4 @@
-import { getLogger } from 'log4js';
+import * as debugStatic from 'debug';
 import {
   AnsweringData,
   Downstream,
@@ -10,7 +10,8 @@ import * as Rx from 'rxjs';
 import * as uuid from 'uuid';
 import { connection as WebSocketConnection } from 'websocket';
 import * as declaration from '../index';
-const logger = getLogger(__filename);
+
+const debug = debugStatic('p2pcommunication:RemoteClient');
 
 export default class RemoteClient<T> implements declaration.RemoteClient<T>, Downstream<T> {
   readonly id = uuid.v4();
@@ -22,7 +23,7 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Dow
   onBroadcasting = new Rx.Subject<T>();
 
   constructor(private connection: WebSocketConnection) {
-    logger.debug('new peer', this.id);
+    debug('new peer', this.id);
     connection.send(JSON.stringify({
       type: 'id',
       payload: this.id,
@@ -31,7 +32,7 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Dow
       try {
         switch (message.type) {
           case 'utf8':
-            logger.debug('Received Message: ' + message.utf8Data);
+            debug('Received Message: ' + message.utf8Data);
             const obj = JSON.parse(message.utf8Data!);
             switch (obj.type) {
               case 'receiveRTCOffer':
@@ -51,13 +52,13 @@ export default class RemoteClient<T> implements declaration.RemoteClient<T>, Dow
             }
             break;
           case 'binary':
-            logger.info('Received Binary Message of ' + message.binaryData!.length + ' bytes');
+            debug('Received Binary Message of ' + message.binaryData!.length + ' bytes');
             throw new Error('Unsupported data type.');
           default:
             throw new Error('Unsupported message type: ' + message.type);
         }
       } catch (e) {
-        logger.error(e.stack || e);
+        console.error(e.stack || e);
       }
     });
     connection.on('close', (reasonCode, description) => {
