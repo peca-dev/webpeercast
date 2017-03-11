@@ -17,8 +17,6 @@ export default class RootServer<T extends { id: string }> {
     for (const query of queries) {
       this.eventQueue.push(query);
     }
-    for (const client of this.server.remoteClients) {
-      client.broadcast(queries);
-    }
+    this.server.broadcast(queries);
   }
 }

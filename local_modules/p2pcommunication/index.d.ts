@@ -9,5 +9,6 @@ export declare class RootServer<T> {
   onConnected: Rx.Observable<RemoteClient<T>>;
 
   constructor(httpServer: http.Server);
-  get remoteClients(): ReadonlyArray<RemoteClient<T>>;
+
+  broadcast(payload: T): void;
 }

@@ -19,13 +19,6 @@ export default class RootServer<T> implements declaration.RootServer<T> {
 
   onConnected = new Rx.Subject<RemoteClientPeer<T>>();
 
-  get remoteClients() {
-    return this.wsServer
-      .connections
-      .map(x => this.clients.get(x) !)
-      .filter(x => x != null);
-  }
-
   constructor(private httpServer: http.Server) {
     this.wsServer = new WebSocketServer({
       httpServer: this.httpServer,
@@ -57,7 +50,8 @@ export default class RootServer<T> implements declaration.RootServer<T> {
   broadcast(payload: T) {
     const remotePeers = this.wsServer
       .connections
-      .map(x => this.clients.get(x) !);
+      .map(x => this.clients.get(x) !)
+      .filter(x => x != null);
     for (const remotePeer of remotePeers) {
       remotePeer.broadcast(payload);
     }
