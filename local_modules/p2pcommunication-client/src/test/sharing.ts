@@ -1,12 +1,12 @@
 import * as assert from 'power-assert';
 import * as Rx from 'rxjs';
-import LocalPeer from '../LocalPeer';
+import ClientLocalPeer from '../ClientLocalPeer';
 import { closeAll, initPeers } from './utils';
 
 describe('Sharing', () => {
   context('between two peers', () => {
     const PEERS_COUNT = 2;
-    const peers = <LocalPeer<string>[]>[];
+    const peers = <ClientLocalPeer<string>[]>[];
 
     before(async () => {
       await initPeers(peers, PEERS_COUNT);
@@ -43,7 +43,7 @@ describe('Sharing', () => {
       // tslint:disable-next-line:no-invalid-this
       this.timeout(9 * 1000);
 
-      const peers = <LocalPeer<{}>[]>[];
+      const peers = <ClientLocalPeer<{}>[]>[];
 
       before(async () => {
         await initPeers(peers, peersCount);
@@ -84,7 +84,7 @@ describe('Sharing', () => {
   });
 });
 
-function testPing(source: LocalPeer<string>, targets: LocalPeer<string>[]) {
+function testPing(source: ClientLocalPeer<string>, targets: ClientLocalPeer<string>[]) {
   return new Promise((resolve, reject) => {
     const subscriptions: Rx.Subscription[] = [];
     const unsubscribeAll = () => {

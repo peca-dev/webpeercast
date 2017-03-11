@@ -1,5 +1,2 @@
-import LocalPeer from './LocalPeer';
-
-export {
-  LocalPeer,
-}
+import ClientLocalPeer from './ClientLocalPeer';
+export { ClientLocalPeer as LocalPeer }

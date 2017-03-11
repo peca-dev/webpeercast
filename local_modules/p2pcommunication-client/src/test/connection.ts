@@ -1,11 +1,11 @@
 import * as assert from 'power-assert';
-import LocalPeer from '../LocalPeer';
+import ClientLocalPeer from '../ClientLocalPeer';
 import { closeAll, fetchServerStatus, initPeers } from './utils';
 const ROOT_SERVER_ID = '00000000-0000-0000-0000-000000000000';
 
 describe('Connection', () => {
   context('between two peers', () => {
-    const peers = <LocalPeer<{}>[]>[];
+    const peers = <ClientLocalPeer<{}>[]>[];
 
     before(async () => {
       await initPeers(peers, 2);
@@ -32,7 +32,7 @@ describe('Connection', () => {
     // tslint:disable-next-line:no-invalid-this
     this.retries(3);
 
-    const peers = <LocalPeer<{}>[]>[];
+    const peers = <ClientLocalPeer<{}>[]>[];
 
     before(async () => {
       await initPeers(peers, 10);
@@ -59,7 +59,7 @@ describe('Connection', () => {
   it('limit 10', async function () {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(9 * 1000);
-    const peers = <LocalPeer<{}>[]>[];
+    const peers = <ClientLocalPeer<{}>[]>[];
     try {
       await initPeers(peers, 11);
       const serverStatus1 = await fetchServerStatus();

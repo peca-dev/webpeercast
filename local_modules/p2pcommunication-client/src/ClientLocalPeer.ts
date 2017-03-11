@@ -18,7 +18,7 @@ import { createDataChannel, fetchDataChannel } from './rtcconnector';
  * It does nothing when it's disconnected with a downstream.
  * It connects to upstream when it's disconnected with a upstream.
  */
-export default class LocalPeer<T> implements declaration.LocalPeer<T> {
+export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
   /** Decide by root server */
   id: string | null;
   private url: string | null;

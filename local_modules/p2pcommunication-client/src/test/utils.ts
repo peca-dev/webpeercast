@@ -1,9 +1,9 @@
 import * as assert from 'power-assert';
-import LocalPeer from '../LocalPeer';
+import ClientLocalPeer from '../ClientLocalPeer';
 
 export const server = '127.0.0.1:8080';
 
-export function waitOtherPeer<T>(peer: LocalPeer<T>, callback: () => void) {
+export function waitOtherPeer<T>(peer: ClientLocalPeer<T>, callback: () => void) {
   const subscriber = peer.onConnected.subscribe((obj) => {
     if (obj.peerType === 'upstream'
       && obj.remotePeer.id === '00000000-0000-0000-0000-000000000000') {
@@ -18,11 +18,11 @@ export async function fetchServerStatus() {
   return JSON.parse(await (await fetch(`http://${server}`)).text());
 }
 
-export async function initPeers(peers: LocalPeer<{}>[], numPeers: number) {
+export async function initPeers(peers: ClientLocalPeer<{}>[], numPeers: number) {
   const serverStatus1 = await fetchServerStatus();
   assert(serverStatus1.clients.length === 0);
   for (let i = 0; i < numPeers; i += 1) {
-    peers.push(new LocalPeer(`ws://${server}`));
+    peers.push(new ClientLocalPeer(`ws://${server}`));
   }
   await new Promise((resolve, reject) => {
     let count = peers.length;
@@ -38,7 +38,7 @@ export async function initPeers(peers: LocalPeer<{}>[], numPeers: number) {
   });
 }
 
-export async function closeAll(peers: LocalPeer<{}>[]) {
+export async function closeAll(peers: ClientLocalPeer<{}>[]) {
   for (const x of peers) {
     x.disconnect();
   }
