@@ -1,3 +1,4 @@
+import { Subject } from 'rxjs';
 import { Subscribable } from 'rxjs/Observable';
 export { Subscribable }
 
@@ -6,6 +7,17 @@ export function provideConnection(
   stream: 'toOtherStreamOf' | 'toDownstreamOf',
   answerer: RemoteSignalingPeer,
 ): Promise<void>;
+
+export declare class LocalPeer<T> {
+  upstreams: Set<Upstream<T>>;
+  otherStreams: Set<RemotePeer<T>>;
+  downstreams: Set<Downstream<T>>;
+
+  onConnected: Subject<RemotePeer<T>>;
+  onBroadcastReceived: Subject<T>;
+
+  broadcast(payload: T): void;
+}
 
 export interface RemotePeer<T> {
   readonly id: string;

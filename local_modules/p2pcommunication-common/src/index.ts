@@ -1,2 +1,3 @@
+import LocalPeer from './LocalPeer';
 import { provideConnection } from './rtcconnectionprovider';
-export { provideConnection };
+export { LocalPeer, provideConnection };

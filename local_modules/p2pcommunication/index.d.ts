@@ -1,12 +1,12 @@
 import * as http from 'http';
-import * as Rx from 'rxjs';
+import { Subscribable } from 'rxjs/Observable';
 
 export declare class RemoteClient<T> {
   broadcast(payload: T): void
 }
 
 export declare class RootServer<T> {
-  onConnected: Rx.Observable<RemoteClient<T>>;
+  onConnected: Subscribable<RemoteClient<T>>;
 
   constructor(httpServer: http.Server);
 
