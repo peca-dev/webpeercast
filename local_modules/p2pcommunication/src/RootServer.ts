@@ -7,17 +7,17 @@ import {
   server as WebSocketServer,
 } from 'websocket';
 import * as declaration from '../index';
-import RemoteClient from './RemoteClient';
+import RemoteClientPeer from './RemoteClientPeer';
 const logger = getLogger(__filename);
 
 export default class RootServer<T> implements declaration.RootServer<T> {
   private wsServer: WebSocketServer;
-  private clients = new WeakMap<WebSocketConnection, RemoteClient<T>>();
+  private clients = new WeakMap<WebSocketConnection, RemoteClientPeer<T>>();
   private readonly maxClients = 10;
   private selectTarget = -1;
   readonly id = '00000000-0000-0000-0000-000000000000';
 
-  onConnected = new Rx.Subject<RemoteClient<T>>();
+  onConnected = new Rx.Subject<RemoteClientPeer<T>>();
 
   get remoteClients() {
     return this.wsServer
@@ -65,7 +65,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
 
   private async acceptNewConnection(connection: WebSocketConnection) {
     logger.debug('Connection count:', this.wsServer.connections.length);
-    const remoteClient = new RemoteClient(connection);
+    const remoteClient = new RemoteClientPeer(connection);
     remoteClient.onBroadcasting.subscribe((payload) => {
       // NOP
     });
@@ -87,7 +87,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     this.startToConnectOtherPeer(connection, remoteClient);
   }
 
-  private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClient<T>) {
+  private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClientPeer<T>) {
     this.wsServer.connections
       .filter(x => x !== connection)
       .map(x => this.clients.get(x) !)

@@ -13,7 +13,7 @@ import * as declaration from '../index';
 
 const debug = debugStatic('p2pcommunication:RemoteClient');
 
-export default class RemoteClient<T> implements declaration.RemoteClient<T>, Downstream<T> {
+export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>, Downstream<T> {
   readonly id = uuid.v4();
 
   onClosed = new Rx.Subject<{}>();
