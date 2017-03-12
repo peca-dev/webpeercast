@@ -73,20 +73,20 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       return;
     }
     const url = this.url;
-    (async () => {
-      try {
-        this.id = null;
-        const { id, upstream } = await RemoteRootServer.fetch<T>(url);
+    try {
+      this.id = null;
+      const upstream = new RemoteRootServer(new WebSocket(url));
+      upstream.onIdCreated.subscribe((id) => {
         this.id = id;
-        this.addUpstream(upstream);
-      } catch (e) {
-        printError(e);
-        setTimeout(
-          () => this.startConnectToServer(),
-          3 * 1000,
-        );
-      }
-    })();
+      });
+      this.addUpstream(upstream);
+    } catch (e) {
+      printError(e);
+      setTimeout(
+        () => this.startConnectToServer(),
+        3 * 1000,
+      );
+    }
   }
 
   private async createNewConnection(

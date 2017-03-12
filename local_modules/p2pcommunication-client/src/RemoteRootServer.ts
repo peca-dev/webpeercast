@@ -12,41 +12,20 @@ export default class RemoteRootServer<T> implements Upstream<T> {
   readonly id = '00000000-0000-0000-0000-000000000000';
 
   onClosed = new Rx.Subject();
+  onIdCreated = new Rx.Subject<string>();
   onOfferRequesting = new Rx.Subject<OfferRequestData>();
   onSignalingOffer = new Rx.Subject<SignalingOfferData>();
   onSignalingAnswer = new Rx.Subject<SignalingAnswerData>();
   onSignalingIceCandidate = new Rx.Subject<SignalingIceCandidateData>();
   onBroadcasting = new Rx.Subject<T>();
 
-  static fetch<T>(url: string) {
-    return new Promise<{ id: string, upstream: RemoteRootServer<T> }>((resolve, reject) => {
-      const socket = new WebSocket(url);
-      const timer = setTimeout(
-        () => {
-          socket.onmessage = <any>null;
-          reject(new Error('Timeout connecting to RemoteRootServer.'));
-        },
-        3 * 1000,
-      );
-      socket.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        switch (data.type) {
-          case 'id':
-            clearTimeout(timer);
-            socket.onmessage = <any>null;
-            resolve({ id: data.payload, upstream: new RemoteRootServer(socket) });
-            break;
-          default:
-            throw new Error('Unsupported data type: ' + data.type);
-        }
-      };
-    });
-  }
-
   constructor(public socket: WebSocket) {
     this.socket.addEventListener('message', safe(async (e: MessageEvent) => {
       const data = JSON.parse(e.data);
       switch (data.type) {
+        case 'id':
+          this.onIdCreated.next(data.payload);
+          break;
         case 'makeRTCOffer':
           this.onOfferRequesting.next(data.payload);
           break;
