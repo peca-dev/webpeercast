@@ -1,7 +1,6 @@
 import * as debugStatic from 'debug';
 import * as http from 'http';
-import { Downstream, provideConnection } from 'p2pcommunication-common';
-import * as Rx from 'rxjs';
+import { LocalPeer, provideConnection } from 'p2pcommunication-common';
 import {
   connection as WebSocketConnection,
   server as WebSocketServer,
@@ -12,13 +11,13 @@ import RemoteClientPeer from './RemoteClientPeer';
 const debug = debugStatic('p2pcommunication:RootServer');
 
 export default class RootServer<T> implements declaration.RootServer<T> {
+  private readonly localPeer = new LocalPeer<T>();
   private wsServer: WebSocketServer;
-  private downstreams = new Set<Downstream<T>>();
   private readonly maxClients = 10;
   private selectTarget = -1;
   readonly id = '00000000-0000-0000-0000-000000000000';
 
-  onConnected = new Rx.Subject<RemoteClientPeer<T>>();
+  onConnected = this.localPeer.onConnected;
 
   constructor(private httpServer: http.Server) {
     this.wsServer = new WebSocketServer({
@@ -48,11 +47,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     });
   }
 
-  broadcast(payload: T) {
-    for (const remotePeer of this.downstreams) {
-      remotePeer.broadcast(payload);
-    }
-  }
+  broadcast = (payload: T) => this.localPeer.broadcast(payload);
 
   private async acceptNewConnection(connection: WebSocketConnection) {
     debug('Connection count:', this.wsServer.connections.length);
@@ -73,10 +68,10 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       console.error(err);
     });
     connection.addListener('close', (code, desc) => {
-      this.downstreams.delete(remoteClient);
+      this.localPeer.downstreams.delete(remoteClient);
     });
-    this.downstreams.add(remoteClient);
-    this.onConnected.next(remoteClient);
+    this.localPeer.downstreams.add(remoteClient);
+    this.onConnected.next({ peerType: 'downstream', remotePeer: remoteClient });
     if (clients.length < 1) {
       return;
     }
@@ -85,7 +80,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
   }
 
   private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClientPeer<T>) {
-    [...this.downstreams]
+    [...this.localPeer.downstreams]
       .filter(x => x !== client)
       .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)
         .catch(e => console.error(e)),
@@ -93,7 +88,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
   }
 
   private remoteClientsWithoutConnection(connection: WebSocketConnection) {
-    return (<RemoteClientPeer<{}>[]>[...this.downstreams])
+    return (<RemoteClientPeer<{}>[]>[...this.localPeer.downstreams])
       .filter(x => x.connection !== connection)
       .filter(x => x != null);
   }

@@ -17,7 +17,7 @@ async function main() {
     if (DEBUG) {
       response.setHeader('Access-Control-Allow-Origin', '*');
       response.writeHead(200);
-      response.end(createDebugJSON((<any>server).downstreams));
+      response.end(createDebugJSON((<any>server).localPeer.downstreams));
       return;
     }
     debug((new Date()) + ' Received request for ' + request.url);

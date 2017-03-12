@@ -1,5 +1,6 @@
 import * as assert from 'power-assert';
 import * as Rx from 'rxjs';
+import { ISubscription } from 'rxjs/Subscription';
 import ClientLocalPeer from '../ClientLocalPeer';
 import { closeAll, initPeers } from './utils';
 
@@ -38,10 +39,10 @@ describe('Sharing', () => {
     });
   });
 
-  [2, 3, 10, 15, 20].forEach((peersCount) => {
+  [2, 3, 10, 15, 18, 20].forEach((peersCount) => {
     context(`between ${peersCount} peers`, function () {
       // tslint:disable-next-line:no-invalid-this
-      this.timeout(9 * 1000);
+      this.timeout(8 * 1000);
 
       const peers = <ClientLocalPeer<{}>[]>[];
 
@@ -86,7 +87,7 @@ describe('Sharing', () => {
 
 function testPing(source: ClientLocalPeer<string>, targets: ClientLocalPeer<string>[]) {
   return new Promise((resolve, reject) => {
-    const subscriptions: Rx.Subscription[] = [];
+    const subscriptions: ISubscription[] = [];
     const unsubscribeAll = () => {
       for (const subscription of subscriptions) {
         subscription.unsubscribe();
@@ -94,14 +95,18 @@ function testPing(source: ClientLocalPeer<string>, targets: ClientLocalPeer<stri
     };
     const success = () => {
       unsubscribeAll();
+      // tslint:disable-next-line:no-param-reassign
       reject = () => { /* NOP */ };
       resolve();
+      // tslint:disable-next-line:no-param-reassign
       resolve = () => { /* NOP */ };
     };
     const fail = () => {
       unsubscribeAll();
+      // tslint:disable-next-line:no-param-reassign
       resolve = () => { /* NOP */ };
       reject();
+      // tslint:disable-next-line:no-param-reassign
       reject = () => { /* NOP */ };
     };
     const data = `${Date.now()}`;
@@ -117,7 +122,8 @@ function testPing(source: ClientLocalPeer<string>, targets: ClientLocalPeer<stri
               return;
             }
             fail();
-          }));
+          }),
+        );
         return subject;
       }))
       .subscribe({
