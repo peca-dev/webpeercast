@@ -17,7 +17,7 @@ const debug = debugStatic('p2pcommunication:server');
 async function main() {
   let server: RootServer<{}>;
   const httpServer = http.createServer((request, response) => {
-    if (debug) {
+    if (DEBUG) {
       response.setHeader('Access-Control-Allow-Origin', '*');
       response.writeHead(200);
       response.end(createDebugJSON((<any>server).wsServer, (<any>server).clients));
