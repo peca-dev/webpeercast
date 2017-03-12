@@ -1,5 +1,5 @@
+import * as debugStatic from 'debug';
 import * as http from 'http';
-import { getLogger } from 'log4js';
 import { provideConnection } from 'p2pcommunication-common';
 import * as Rx from 'rxjs';
 import {
@@ -8,7 +8,8 @@ import {
 } from 'websocket';
 import * as declaration from '../index';
 import RemoteClientPeer from './RemoteClientPeer';
-const logger = getLogger(__filename);
+
+const debug = debugStatic('p2pcommunication:RootServer');
 
 export default class RootServer<T> implements declaration.RootServer<T> {
   private wsServer: WebSocketServer;
@@ -34,7 +35,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
         if (!originIsAllowed(request.origin)) {
           // Make sure we only accept requests from an allowed origin
           request.reject();
-          logger.info((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
+          debug((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
           return;
         }
 
@@ -42,7 +43,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
           request.accept(undefined, request.origin),
         );
       } catch (e) {
-        logger.error(e.stack || e);
+        console.error(e.stack || e);
       }
     });
   }
@@ -58,16 +59,16 @@ export default class RootServer<T> implements declaration.RootServer<T> {
   }
 
   private async acceptNewConnection(connection: WebSocketConnection) {
-    logger.debug('Connection count:', this.wsServer.connections.length);
+    debug('Connection count:', this.wsServer.connections.length);
     const remoteClient = new RemoteClientPeer(connection);
     remoteClient.onBroadcasting.subscribe((payload) => {
       // NOP
     });
-    logger.info((new Date()) + ' Connection accepted.');
+    debug((new Date()) + ' Connection accepted.');
 
     const clients = this.remoteClientsWithoutConnection(connection);
     if (clients.length >= this.maxClients) {
-      logger.debug('Add downstream');
+      debug('Add downstream');
       await provideConnection(remoteClient, 'toDownstreamOf', this.selectOne(clients));
       connection.close();
       return;
@@ -77,7 +78,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     if (clients.length < 1) {
       return;
     }
-    logger.debug('Add otherStream');
+    debug('Add otherStream');
     this.startToConnectOtherPeer(connection, remoteClient);
   }
 
@@ -86,7 +87,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       .filter(x => x !== connection)
       .map(x => this.clients.get(x) !)
       .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)
-        .catch(e => logger.error(e)));
+        .catch(e => console.error(e)));
   }
 
   private remoteClientsWithoutConnection(connection: WebSocketConnection) {
