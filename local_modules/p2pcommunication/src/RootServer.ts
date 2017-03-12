@@ -1,6 +1,6 @@
 import * as debugStatic from 'debug';
 import * as http from 'http';
-import { provideConnection } from 'p2pcommunication-common';
+import { Downstream, provideConnection } from 'p2pcommunication-common';
 import * as Rx from 'rxjs';
 import {
   connection as WebSocketConnection,
@@ -13,7 +13,7 @@ const debug = debugStatic('p2pcommunication:RootServer');
 
 export default class RootServer<T> implements declaration.RootServer<T> {
   private wsServer: WebSocketServer;
-  private clients = new WeakMap<WebSocketConnection, RemoteClientPeer<T>>();
+  private downstreams = new Set<Downstream<T>>();
   private readonly maxClients = 10;
   private selectTarget = -1;
   readonly id = '00000000-0000-0000-0000-000000000000';
@@ -49,11 +49,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
   }
 
   broadcast(payload: T) {
-    const remotePeers = this.wsServer
-      .connections
-      .map(x => this.clients.get(x) !)
-      .filter(x => x != null);
-    for (const remotePeer of remotePeers) {
+    for (const remotePeer of this.downstreams) {
       remotePeer.broadcast(payload);
     }
   }
@@ -73,7 +69,13 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       connection.close();
       return;
     }
-    this.clients.set(connection, remoteClient);
+    connection.addListener('error', (err) => {
+      console.error(err);
+    });
+    connection.addListener('close', (code, desc) => {
+      this.downstreams.delete(remoteClient);
+    });
+    this.downstreams.add(remoteClient);
     this.onConnected.next(remoteClient);
     if (clients.length < 1) {
       return;
@@ -83,18 +85,16 @@ export default class RootServer<T> implements declaration.RootServer<T> {
   }
 
   private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClientPeer<T>) {
-    this.wsServer.connections
-      .filter(x => x !== connection)
-      .map(x => this.clients.get(x) !)
+    [...this.downstreams]
+      .filter(x => x !== client)
       .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)
-        .catch(e => console.error(e)));
+        .catch(e => console.error(e)),
+    );
   }
 
   private remoteClientsWithoutConnection(connection: WebSocketConnection) {
-    return this.wsServer
-      .connections
-      .filter(x => x !== connection)
-      .map(x => this.clients.get(x) !)
+    return (<RemoteClientPeer<{}>[]>[...this.downstreams])
+      .filter(x => x.connection !== connection)
       .filter(x => x != null);
   }
 

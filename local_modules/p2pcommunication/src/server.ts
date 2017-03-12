@@ -6,10 +6,7 @@ if (DEBUG) {
 }
 
 import * as http from 'http';
-import {
-  connection as WebSocketConnection,
-  server as WebSocketServer,
-} from 'websocket';
+import { Downstream } from 'p2pcommunication-common';
 import RootServer from './RootServer';
 
 const debug = debugStatic('p2pcommunication:server');
@@ -20,7 +17,7 @@ async function main() {
     if (DEBUG) {
       response.setHeader('Access-Control-Allow-Origin', '*');
       response.writeHead(200);
-      response.end(createDebugJSON((<any>server).wsServer, (<any>server).clients));
+      response.end(createDebugJSON((<any>server).downstreams));
       return;
     }
     debug((new Date()) + ' Received request for ' + request.url);
@@ -34,14 +31,10 @@ async function main() {
 }
 
 function createDebugJSON(
-  wsServer: WebSocketServer,
-  clients: WeakMap<WebSocketConnection, { id: string }>,
+  downstreams: Set<Downstream<{ id: string }>>,
 ) {
   return JSON.stringify({
-    clients: wsServer.connections
-      .map(x => clients.get(x) !)
-      .filter(x => x != null)
-      .map(x => ({ id: x.id })),
+    clients: [...downstreams].map(x => ({ id: x.id })),
   });
 }
 

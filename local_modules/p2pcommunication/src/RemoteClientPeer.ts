@@ -22,7 +22,7 @@ export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>,
   onIceCandidateEmitting = new Rx.Subject<IceCandidateEmittingData>();
   onBroadcasting = new Rx.Subject<T>();
 
-  constructor(private connection: WebSocketConnection) {
+  constructor(public connection: WebSocketConnection) {
     debug('new peer', this.id);
     connection.send(JSON.stringify({
       type: 'id',
@@ -32,7 +32,6 @@ export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>,
       try {
         switch (message.type) {
           case 'utf8':
-            debug('Received Message: ' + message.utf8Data);
             const obj = JSON.parse(message.utf8Data!);
             switch (obj.type) {
               case 'receiveRTCOffer':
