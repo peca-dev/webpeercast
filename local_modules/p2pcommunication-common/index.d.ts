@@ -16,6 +16,9 @@ export declare class LocalPeer<T> {
   onConnected: Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;
   onBroadcastReceived: Subject<T>;
 
+  constructor(downstreamsLimit: number);
+
+  addNewDownstream(downstream: Downstream<T>): Promise<void>;
   broadcast(payload: T): void;
 }
 

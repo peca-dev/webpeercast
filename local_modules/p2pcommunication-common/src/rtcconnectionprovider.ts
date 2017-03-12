@@ -9,7 +9,7 @@ export function provideConnection(
   stream: 'toOtherStreamOf' | 'toDownstreamOf',
   answerer: RemoteSignalingPeer,
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const subscriptions = <AnonymousSubscription[]>[];
     subscriptions.push(offerer.onOffering.subscribe(
       (payload: { to: string, offer: RTCSessionDescriptionInit }) => {

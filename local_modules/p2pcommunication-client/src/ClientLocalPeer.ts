@@ -1,9 +1,7 @@
 import {
-  Downstream,
   LocalPeer,
   OfferRequestData,
   PeerType,
-  provideConnection,
   RemotePeer,
   SignalingOfferData,
   Upstream,
@@ -19,11 +17,10 @@ import { createDataChannel, fetchDataChannel } from './rtcconnector';
  * It connects to upstream when it's disconnected with a upstream.
  */
 export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
-  readonly localPeer = new LocalPeer<T>();
+  readonly localPeer = new LocalPeer<T>(1);
   /** Decide by root server */
   id: string | null;
   private url: string | null;
-  private selectTarget = -1;
 
   debug = {
     hasPeer: (id: string | null) => {
@@ -137,7 +134,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
         this.addNewOtherStream(peer);
         break;
       case 'downstream':
-        await this.addNewDownstream(peer);
+        await this.localPeer.addNewDownstream(peer);
         break;
       default:
         throw new Error(`Unsupported peerType: ${peerType}`);
@@ -175,38 +172,6 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     });
     this.localPeer.otherStreams.add(otherStream);
     this.onConnected.next({ peerType: 'otherStream', remotePeer: otherStream });
-  }
-
-  private async addNewDownstream(downstream: Downstream<T>) {
-    if (!this.canAppendDownstream()) {
-      const item = this.selectOne([...this.localPeer.downstreams]);
-      await provideConnection(downstream, 'toDownstreamOf', item);
-      return;
-    }
-    downstream.onClosed.subscribe(safe(async () => {
-      this.localPeer.downstreams.delete(downstream);
-    }));
-    downstream.onBroadcasting.subscribe((data) => {
-      this.onBroadcastReceived.next(data);
-      broadcastTo(data, this.localPeer.upstreams);
-      broadcastTo(data, this.localPeer.otherStreams);
-    });
-    this.localPeer.downstreams.add(downstream);
-    this.onConnected.next({ peerType: 'downstream', remotePeer: downstream });
-  }
-
-  private canAppendDownstream() {
-    // TODO: count with connectproviders
-    const LIMIT = 1; // TODO: limit is dirty condition. It should uses network bandwidth.
-    return this.localPeer.downstreams.size < LIMIT;
-  }
-
-  private selectOne<T>(array: T[]): T {
-    this.selectTarget += 1;
-    if (this.selectTarget >= array.length) {
-      this.selectTarget = 0;
-    }
-    return array[this.selectTarget];
   }
 }
 
