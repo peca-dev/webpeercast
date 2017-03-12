@@ -131,7 +131,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
         this.addUpstream(peer);
         break;
       case 'otherStream':
-        this.addNewOtherStream(peer);
+        this.localPeer.addNewOtherStream(peer);
         break;
       case 'downstream':
         await this.localPeer.addNewDownstream(peer);
@@ -162,17 +162,6 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     this.onConnected.next({ peerType: 'upstream', remotePeer: upstream });
   }
 
-  private addNewOtherStream(otherStream: RemotePeer<T>) {
-    otherStream.onClosed.subscribe(safe(async () => {
-      this.localPeer.otherStreams.delete(otherStream);
-    }));
-    otherStream.onBroadcasting.subscribe((data) => {
-      this.onBroadcastReceived.next(data);
-      broadcastTo(data, this.localPeer.downstreams);
-    });
-    this.localPeer.otherStreams.add(otherStream);
-    this.onConnected.next({ peerType: 'otherStream', remotePeer: otherStream });
-  }
 }
 
 function broadcastTo(data: any, streams: Set<RemotePeer<any>>) {

@@ -18,6 +18,7 @@ export declare class LocalPeer<T> {
 
   constructor(downstreamsLimit: number);
 
+  addNewOtherStream(otherStream: RemotePeer<T>): void;
   addNewDownstream(downstream: Downstream<T>): Promise<void>;
   broadcast(payload: T): void;
 }
