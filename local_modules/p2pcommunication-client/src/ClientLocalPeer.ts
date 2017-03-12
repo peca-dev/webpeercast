@@ -1,5 +1,6 @@
 import {
   Downstream,
+  LocalPeer,
   OfferRequestData,
   PeerType,
   provideConnection,
@@ -7,7 +8,6 @@ import {
   SignalingOfferData,
   Upstream,
 } from 'p2pcommunication-common';
-import * as Rx from 'rxjs';
 import * as declaration from '../index';
 import { printError, safe } from './printerror';
 import RemoteRootServer from './RemoteRootServer';
@@ -19,17 +19,15 @@ import { createDataChannel, fetchDataChannel } from './rtcconnector';
  * It connects to upstream when it's disconnected with a upstream.
  */
 export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
+  readonly localPeer = new LocalPeer<T>();
   /** Decide by root server */
   id: string | null;
   private url: string | null;
-  private upstreams = new Set<RemotePeer<T>>();
-  private otherStreams = new Set<RemotePeer<T>>();
-  private downstreams = new Set<Downstream<T>>();
   private selectTarget = -1;
 
   debug = {
     hasPeer: (id: string | null) => {
-      for (const conn of this.otherStreams) {
+      for (const conn of this.localPeer.otherStreams) {
         if (conn.id === id) {
           return true;
         }
@@ -37,18 +35,18 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       return false;
     },
     getUpstreams: () => {
-      return this.upstreams;
+      return this.localPeer.upstreams;
     },
     getOtherStreams: () => {
-      return this.otherStreams;
+      return this.localPeer.otherStreams;
     },
     getDownstreams: () => {
-      return this.downstreams;
+      return this.localPeer.downstreams;
     },
   };
 
-  onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T> }>();
-  onBroadcastReceived = new Rx.Subject<T>();
+  onConnected = this.localPeer.onConnected;
+  onBroadcastReceived = this.localPeer.onBroadcastReceived;
 
   constructor(url: string) {
     this.url = url;
@@ -57,16 +55,14 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
 
   disconnect() {
     this.url = null;
-    for (const peer of Array.from(this.upstreams).concat(Array.from(this.otherStreams))) {
+    const peers = (<RemotePeer<{}>[]>[...this.localPeer.upstreams])
+      .concat([...this.localPeer.otherStreams]);
+    for (const peer of peers) {
       peer.disconnect();
     }
   }
 
-  broadcast(data: T) {
-    broadcastTo(data, this.upstreams);
-    broadcastTo(data, this.otherStreams);
-    broadcastTo(data, this.downstreams);
-  }
+  broadcast = (payload: T) => this.localPeer.broadcast(payload);
 
   private startConnectToServer() {
     if (this.url == null) {
@@ -156,53 +152,53 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       await this.fetchNewOtherConnection(data.from, data.peerType, data.offer, upstream);
     }));
     upstream.onClosed.subscribe(safe(async () => {
-      this.upstreams.delete(upstream);
-      if (this.upstreams.size <= 0) {
+      this.localPeer.upstreams.delete(upstream);
+      if (this.localPeer.upstreams.size <= 0) {
         this.startConnectToServer();
       }
     }));
     upstream.onBroadcasting.subscribe((data) => {
       this.onBroadcastReceived.next(data);
-      broadcastTo(data, this.downstreams);
+      broadcastTo(data, this.localPeer.downstreams);
     });
-    this.upstreams.add(upstream);
+    this.localPeer.upstreams.add(upstream);
     this.onConnected.next({ peerType: 'upstream', remotePeer: upstream });
   }
 
   private addNewOtherStream(otherStream: RemotePeer<T>) {
     otherStream.onClosed.subscribe(safe(async () => {
-      this.otherStreams.delete(otherStream);
+      this.localPeer.otherStreams.delete(otherStream);
     }));
     otherStream.onBroadcasting.subscribe((data) => {
       this.onBroadcastReceived.next(data);
-      broadcastTo(data, this.downstreams);
+      broadcastTo(data, this.localPeer.downstreams);
     });
-    this.otherStreams.add(otherStream);
+    this.localPeer.otherStreams.add(otherStream);
     this.onConnected.next({ peerType: 'otherStream', remotePeer: otherStream });
   }
 
   private async addNewDownstream(downstream: Downstream<T>) {
     if (!this.canAppendDownstream()) {
-      const item = this.selectOne([...this.downstreams]);
+      const item = this.selectOne([...this.localPeer.downstreams]);
       await provideConnection(downstream, 'toDownstreamOf', item);
       return;
     }
     downstream.onClosed.subscribe(safe(async () => {
-      this.downstreams.delete(downstream);
+      this.localPeer.downstreams.delete(downstream);
     }));
     downstream.onBroadcasting.subscribe((data) => {
       this.onBroadcastReceived.next(data);
-      broadcastTo(data, this.upstreams);
-      broadcastTo(data, this.otherStreams);
+      broadcastTo(data, this.localPeer.upstreams);
+      broadcastTo(data, this.localPeer.otherStreams);
     });
-    this.downstreams.add(downstream);
+    this.localPeer.downstreams.add(downstream);
     this.onConnected.next({ peerType: 'downstream', remotePeer: downstream });
   }
 
   private canAppendDownstream() {
     // TODO: count with connectproviders
     const LIMIT = 1; // TODO: limit is dirty condition. It should uses network bandwidth.
-    return this.downstreams.size < LIMIT;
+    return this.localPeer.downstreams.size < LIMIT;
   }
 
   private selectOne<T>(array: T[]): T {

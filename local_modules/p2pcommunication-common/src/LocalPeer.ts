@@ -1,6 +1,7 @@
 import * as Rx from 'rxjs';
 import {
   Downstream,
+  PeerType,
   RemotePeer,
   Upstream,
 } from '../';
@@ -10,7 +11,7 @@ export default class LocalPeer<T> {
   otherStreams = new Set<RemotePeer<T>>();
   downstreams = new Set<Downstream<T>>();
 
-  onConnected = new Rx.Subject<RemotePeer<T>>();
+  onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>();
   onBroadcastReceived = new Rx.Subject<T>();
 
   broadcast(payload: T) {

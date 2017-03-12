@@ -13,7 +13,7 @@ export declare class LocalPeer<T> {
   otherStreams: Set<RemotePeer<T>>;
   downstreams: Set<Downstream<T>>;
 
-  onConnected: Subject<RemotePeer<T>>;
+  onConnected: Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;
   onBroadcastReceived: Subject<T>;
 
   broadcast(payload: T): void;
