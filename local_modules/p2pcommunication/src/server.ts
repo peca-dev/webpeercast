@@ -1,13 +1,18 @@
 try { require('source-map-support').install(); } catch (e) { /* empty */ }
+const DEBUG = process.env.NODE_ENV === 'development';
+import * as debugStatic from 'debug';
+if (DEBUG) {
+  debugStatic.enable('p2pcommunication:*');
+}
+
 import * as http from 'http';
-import { getLogger } from 'log4js';
 import {
   connection as WebSocketConnection,
   server as WebSocketServer,
 } from 'websocket';
 import RootServer from './RootServer';
-const logger = getLogger(__filename);
-const debug = process.env.NODE_ENV === 'development';
+
+const debug = debugStatic('p2pcommunication:server');
 
 async function main() {
   let server: RootServer<{}>;
@@ -18,13 +23,13 @@ async function main() {
       response.end(createDebugJSON((<any>server).wsServer, (<any>server).clients));
       return;
     }
-    logger.info((new Date()) + ' Received request for ' + request.url);
+    debug((new Date()) + ' Received request for ' + request.url);
     response.writeHead(404);
     response.end();
   });
   server = new RootServer(httpServer);
   httpServer.listen(8080, () => {
-    logger.info((new Date()) + ' Server is listening on port 8080');
+    debug((new Date()) + ' Server is listening on port 8080');
   });
 }
 
