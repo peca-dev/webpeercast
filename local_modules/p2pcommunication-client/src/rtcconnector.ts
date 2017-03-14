@@ -6,7 +6,7 @@ import {
 import { AnonymousSubscription } from 'rxjs/Subscription';
 import { safe } from './printerror';
 
-export function createDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream<{}>) {
+export function offerDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream<{}>) {
   return exchangeIceCandidate(pc, to, upstream, async () => {
     let dataChannel: RTCDataChannel | null = null;
     await waitEvent(pc, 'negotiationneeded', () => {
@@ -30,7 +30,7 @@ async function exchangeOfferWithAnswer(
   await pc.setRemoteDescription(payload.answer);
 }
 
-export function fetchDataChannel(
+export function answerDataChannel(
   pc: RTCPeerConnection,
   from: string,
   offer: RTCSessionDescriptionInit,

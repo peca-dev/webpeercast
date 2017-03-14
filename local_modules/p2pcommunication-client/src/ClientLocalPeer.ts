@@ -10,7 +10,7 @@ import * as declaration from '../index';
 import { printError, safe } from './printerror';
 import RemoteRootServer from './RemoteRootServer';
 import RemoteRTCPeer from './RemoteRTCPeer';
-import { createDataChannel, fetchDataChannel } from './rtcconnector';
+import { offerDataChannel, answerDataChannel } from './rtcconnector';
 
 /**
  * It does nothing when it's disconnected with a downstream.
@@ -82,7 +82,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     }
   }
 
-  private async createNewConnection(
+  private async offerNewConnection(
     to: string,
     peerType: PeerType,
     upstream: Upstream<T>,
@@ -91,7 +91,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       throw new Error('Assertion error.');
     }
     const peerConnection = new RTCPeerConnection();
-    const dataChannel = await createDataChannel(
+    const dataChannel = await offerDataChannel(
       peerConnection,
       to,
       upstream,
@@ -99,14 +99,14 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     await this.addNewConnection(to, peerConnection, dataChannel, peerType);
   }
 
-  private async fetchNewOtherConnection(
+  private async answerNewConnection(
     from: string,
     peerType: PeerType,
     offer: RTCSessionDescriptionInit,
     upstream: Upstream<T>,
   ) {
     const peerConnection = new RTCPeerConnection();
-    const dataChannel = await fetchDataChannel(
+    const dataChannel = await answerDataChannel(
       peerConnection,
       from,
       offer,
@@ -143,10 +143,10 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
 
   private addUpstream(upstream: Upstream<T>) {
     upstream.onOfferRequesting.subscribe(safe(async (data: OfferRequestData) => {
-      await this.createNewConnection(data.to, data.peerType, upstream);
+      await this.offerNewConnection(data.to, data.peerType, upstream);
     }));
     upstream.onSignalingOffer.subscribe(safe(async (data: SignalingOfferData) => {
-      await this.fetchNewOtherConnection(data.from, data.peerType, data.offer, upstream);
+      await this.answerNewConnection(data.from, data.peerType, data.offer, upstream);
     }));
     upstream.onClosed.subscribe(safe(async () => {
       this.localPeer.upstreams.delete(upstream);
