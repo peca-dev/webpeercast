@@ -37,10 +37,10 @@ export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>,
               case 'offerToRelaying':
                 this.onOffering.next(obj.payload);
                 break;
-              case 'receiveRTCAnswer':
+              case 'answerToRelaying':
                 this.onAnswering.next(obj.payload);
                 break;
-              case 'receiveIceCandidate':
+              case 'emitIceCandidateToRelayling':
                 this.onIceCandidateEmitting.next(obj.payload);
                 break;
               case 'broadcast':
@@ -86,14 +86,14 @@ export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>,
 
   signalAnswer(from: string, answer: {}) {
     this.connection.send(JSON.stringify({
-      type: 'receiveRTCAnswer',
+      type: 'answerToRelayed',
       payload: { from, answer },
     }));
   }
 
   signalIceCandidate(from: string, iceCandidate: {}) {
     this.connection.send(JSON.stringify({
-      type: 'receiveIceCandidate',
+      type: 'emitIceCandidateToRelayed',
       payload: { from, iceCandidate },
     }));
   }

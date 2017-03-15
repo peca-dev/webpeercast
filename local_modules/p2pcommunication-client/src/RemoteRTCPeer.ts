@@ -49,12 +49,16 @@ export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Dow
               case 'offerToRelayed':
                 this.onOffering.next(obj.payload);
                 break;
-              case 'receiveRTCAnswer':
+              case 'answerToRelaying':
                 this.onAnswering.next(obj.payload);
+                break;
+              case 'answerToRelayed':
                 this.onSignalingAnswer.next(obj.payload);
                 break;
-              case 'receiveIceCandidate':
+              case 'emitIceCandidateToRelayling':
                 this.onIceCandidateEmitting.next(obj.payload);
+                break;
+              case 'emitIceCandidateToRelayed':
                 this.onSignalingIceCandidate.next(obj.payload);
                 break;
               case 'broadcast':
@@ -94,14 +98,14 @@ export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Dow
 
   answerTo(to: string, answer: RTCSessionDescriptionInit) {
     this.dataChannel.send(JSON.stringify({
-      type: 'receiveRTCAnswer',
+      type: 'answerToRelaying',
       payload: { to, answer },
     }));
   }
 
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate) {
     this.dataChannel.send(JSON.stringify({
-      type: 'receiveIceCandidate',
+      type: 'emitIceCandidateToRelayling',
       payload: { to, iceCandidate },
     }));
   }
@@ -122,14 +126,14 @@ export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Dow
 
   signalAnswer(from: string, answer: RTCSessionDescriptionInit) {
     this.dataChannel.send(JSON.stringify({
-      type: 'receiveRTCAnswer',
+      type: 'answerToRelayed',
       payload: { from, answer },
     }));
   }
 
   signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit) {
     this.dataChannel.send(JSON.stringify({
-      type: 'receiveIceCandidate',
+      type: 'emitIceCandidateToRelayed',
       payload: { from, iceCandidate },
     }));
   }

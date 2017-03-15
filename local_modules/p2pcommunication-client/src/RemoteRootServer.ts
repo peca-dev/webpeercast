@@ -32,10 +32,10 @@ export default class RemoteRootServer<T> implements Upstream<T> {
         case 'offerToRelayed':
           this.onSignalingOffer.next(data.payload);
           break;
-        case 'receiveRTCAnswer':
+        case 'answerToRelayed':
           this.onSignalingAnswer.next(data.payload);
           break;
-        case 'receiveIceCandidate':
+        case 'emitIceCandidateToRelayed':
           this.onSignalingIceCandidate.next(data.payload);
           break;
         case 'broadcast':
@@ -61,14 +61,14 @@ export default class RemoteRootServer<T> implements Upstream<T> {
 
   answerTo(to: string, answer: RTCSessionDescriptionInit) {
     this.socket.send(JSON.stringify({
-      type: 'receiveRTCAnswer',
+      type: 'answerToRelaying',
       payload: { to, answer },
     }));
   }
 
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate) {
     this.socket.send(JSON.stringify({
-      type: 'receiveIceCandidate',
+      type: 'emitIceCandidateToRelayling',
       payload: { to, iceCandidate },
     }));
   }
