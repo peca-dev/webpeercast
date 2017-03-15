@@ -40,12 +40,14 @@ export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Dow
           case 'message':
             const obj = JSON.parse(message.data);
             switch (obj.type) {
-              case 'makeRTCOffer':
+              case 'requestOffer':
                 this.onOfferRequesting.next(obj.payload);
                 break;
-              case 'receiveRTCOffer': // TODO: choose different names the climb and the desent
-                this.onOffering.next(obj.payload);
+              case 'offerToRelaying':
                 this.onSignalingOffer.next(obj.payload);
+                break;
+              case 'offerToRelayed':
+                this.onOffering.next(obj.payload);
                 break;
               case 'receiveRTCAnswer':
                 this.onAnswering.next(obj.payload);
@@ -85,7 +87,7 @@ export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Dow
 
   offerTo(to: string, offer: RTCSessionDescriptionInit) {
     this.dataChannel.send(JSON.stringify({
-      type: 'receiveRTCOffer',
+      type: 'offerToRelaying',
       payload: { to, offer },
     }));
   }
@@ -106,14 +108,14 @@ export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Dow
 
   requestOffer(to: string, peerType: PeerType) {
     this.dataChannel.send(JSON.stringify({
-      type: 'makeRTCOffer',
+      type: 'requestOffer',
       payload: { to, peerType },
     }));
   }
 
   signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit) {
     this.dataChannel.send(JSON.stringify({
-      type: 'receiveRTCOffer',
+      type: 'offerToRelayed',
       payload: { from, peerType, offer },
     }));
   }

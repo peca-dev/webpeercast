@@ -34,7 +34,7 @@ export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>,
           case 'utf8':
             const obj = JSON.parse(message.utf8Data!);
             switch (obj.type) {
-              case 'receiveRTCOffer':
+              case 'offerToRelaying':
                 this.onOffering.next(obj.payload);
                 break;
               case 'receiveRTCAnswer':
@@ -72,14 +72,14 @@ export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>,
 
   requestOffer(to: string, peerType: PeerType) {
     this.connection.send(JSON.stringify({
-      type: 'makeRTCOffer',
+      type: 'requestOffer',
       payload: { to, peerType },
     }));
   }
 
   signalOffer(from: string, peerType: PeerType, offer: {}) {
     this.connection.send(JSON.stringify({
-      type: 'receiveRTCOffer',
+      type: 'offerToRelayed',
       payload: { from, peerType, offer },
     }));
   }

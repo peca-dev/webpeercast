@@ -26,10 +26,10 @@ export default class RemoteRootServer<T> implements Upstream<T> {
         case 'id':
           this.onIdCreated.next(data.payload);
           break;
-        case 'makeRTCOffer':
+        case 'requestOffer':
           this.onOfferRequesting.next(data.payload);
           break;
-        case 'receiveRTCOffer':
+        case 'offerToRelayed':
           this.onSignalingOffer.next(data.payload);
           break;
         case 'receiveRTCAnswer':
@@ -54,7 +54,7 @@ export default class RemoteRootServer<T> implements Upstream<T> {
 
   offerTo(to: string, offer: RTCSessionDescriptionInit) {
     this.socket.send(JSON.stringify({
-      type: 'receiveRTCOffer',
+      type: 'offerToRelaying',
       payload: { to, offer },
     }));
   }
