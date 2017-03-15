@@ -12,10 +12,11 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import * as Rx from 'rxjs';
-import RTCDataChannelConnection from './RTCDataChannelConnection';
+import { Connection } from './connection';
 
 export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
   onClosed: Rx.Observable<ErrorEvent>;
+  onIdCreated = new Rx.Subject<string>();
   onOfferRequesting = new Rx.Subject<OfferRequestData>();
   onSignalingOffer = new Rx.Subject<SignalingOfferData>();
   onSignalingAnswer = new Rx.Subject<SignalingAnswerData>();
@@ -24,24 +25,25 @@ export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Dow
   onAnswering = new Rx.Subject<AnsweringData>();
   onIceCandidateEmitting = new Rx.Subject<IceCandidateEmittingData>();
   onBroadcasting = new Rx.Subject<T>();
-  private readonly connection: RTCDataChannelConnection;
 
   constructor(
     public readonly id: string,
-    peerConnection: RTCPeerConnection,
-    dataChannel: RTCDataChannel,
+    private readonly connection: Connection,
   ) {
-    this.connection = new RTCDataChannelConnection(peerConnection, dataChannel);
     this.connection.message.subscribe(({ type, payload }) => {
+      // TODO: Filter trusted message each connection source
       switch (type) {
+        case 'id':
+          this.onIdCreated.next(payload);
+          break;
         case 'requestOffer':
           this.onOfferRequesting.next(payload);
           break;
         case 'offerToRelaying':
-          this.onSignalingOffer.next(payload);
+          this.onOffering.next(payload);
           break;
         case 'offerToRelayed':
-          this.onOffering.next(payload);
+          this.onSignalingOffer.next(payload);
           break;
         case 'answerToRelaying':
           this.onAnswering.next(payload);

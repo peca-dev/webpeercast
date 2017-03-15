@@ -6,12 +6,13 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import * as Rx from 'rxjs';
-import { printError, safe } from './printerror';
+import { printError } from './printerror';
+import WebSocketConnection from './WebSocketConnection';
 
 export default class RemoteRootServer<T> implements Upstream<T> {
   readonly id = '00000000-0000-0000-0000-000000000000';
 
-  onClosed = new Rx.Subject();
+  onClosed: Rx.Observable<ErrorEvent>;
   onIdCreated = new Rx.Subject<string>();
   onOfferRequesting = new Rx.Subject<OfferRequestData>();
   onSignalingOffer = new Rx.Subject<SignalingOfferData>();
@@ -19,65 +20,52 @@ export default class RemoteRootServer<T> implements Upstream<T> {
   onSignalingIceCandidate = new Rx.Subject<SignalingIceCandidateData>();
   onBroadcasting = new Rx.Subject<T>();
 
-  constructor(public socket: WebSocket) {
-    this.socket.addEventListener('message', safe(async (e: MessageEvent) => {
-      const data = JSON.parse(e.data);
-      switch (data.type) {
+  constructor(private readonly connection: WebSocketConnection) {
+    this.connection.message.subscribe(({ type, payload }) => {
+      switch (type) {
         case 'id':
-          this.onIdCreated.next(data.payload);
+          this.onIdCreated.next(payload);
           break;
         case 'requestOffer':
-          this.onOfferRequesting.next(data.payload);
+          this.onOfferRequesting.next(payload);
           break;
         case 'offerToRelayed':
-          this.onSignalingOffer.next(data.payload);
+          this.onSignalingOffer.next(payload);
           break;
         case 'answerToRelayed':
-          this.onSignalingAnswer.next(data.payload);
+          this.onSignalingAnswer.next(payload);
           break;
         case 'emitIceCandidateToRelayed':
-          this.onSignalingIceCandidate.next(data.payload);
+          this.onSignalingIceCandidate.next(payload);
           break;
         case 'broadcast':
-          this.onBroadcasting.next(data.payload);
+          this.onBroadcasting.next(payload);
           break;
         default:
-          throw new Error(`Unsupported data type: ${data}`);
+          throw new Error(`Unsupported data type: ${type}`);
       }
-    }));
-    this.socket.addEventListener('error', printError);
-    this.socket.addEventListener('close', (e) => {
-      this.onClosed.next();
-      this.onClosed.complete();
     });
+    this.connection.error.subscribe(printError);
+    this.onClosed = this.connection.closed;
   }
 
   offerTo(to: string, offer: RTCSessionDescriptionInit) {
-    this.socket.send(JSON.stringify({
-      type: 'offerToRelaying',
-      payload: { to, offer },
-    }));
+    this.connection.send('offerToRelaying', { to, offer });
   }
 
   answerTo(to: string, answer: RTCSessionDescriptionInit) {
-    this.socket.send(JSON.stringify({
-      type: 'answerToRelaying',
-      payload: { to, answer },
-    }));
+    this.connection.send('answerToRelaying', { to, answer });
   }
 
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate) {
-    this.socket.send(JSON.stringify({
-      type: 'emitIceCandidateToRelayling',
-      payload: { to, iceCandidate },
-    }));
+    this.connection.send('emitIceCandidateToRelayling', { to, iceCandidate });
   }
 
   broadcast(payload: T) {
-    this.socket.send(JSON.stringify({ type: 'broadcast', payload }));
+    this.connection.send('broadcast', payload);
   }
 
   disconnect() {
-    this.socket.close();
+    this.connection.close();
   }
 }

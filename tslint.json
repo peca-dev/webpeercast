@@ -8,6 +8,10 @@
         "linebreak-style": [
             false
         ],
+        "interface-name": [
+            true,
+            "never-prefix"
+        ],
         "member-access": false,
         "mocha-no-side-effect-code": false,
         "missing-jsdoc": false,

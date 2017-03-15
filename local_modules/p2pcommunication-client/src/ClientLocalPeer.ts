@@ -10,7 +10,9 @@ import * as declaration from '../index';
 import { printError, safe } from './printerror';
 import RemoteRootServer from './RemoteRootServer';
 import RemoteRTCPeer from './RemoteRTCPeer';
-import { offerDataChannel, answerDataChannel } from './rtcconnector';
+import { answerDataChannel, offerDataChannel } from './rtcconnector';
+import RTCDataChannelConnection from './RTCDataChannelConnection';
+import WebSocketConnection from './WebSocketConnection';
 
 /**
  * It does nothing when it's disconnected with a downstream.
@@ -68,7 +70,9 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     const url = this.url;
     try {
       this.id = null;
-      const upstream = new RemoteRootServer(new WebSocket(url));
+      const upstream = new RemoteRootServer(
+        new WebSocketConnection(new WebSocket(url)),
+      );
       upstream.onIdCreated.subscribe((id) => {
         this.id = id;
       });
@@ -123,8 +127,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
   ) {
     const peer = new RemoteRTCPeer<T>(
       id,
-      peerConnection,
-      dataChannel,
+      new RTCDataChannelConnection(peerConnection, dataChannel),
     );
     switch (peerType) {
       case 'upstream':
@@ -161,7 +164,6 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     this.localPeer.upstreams.add(upstream);
     this.onConnected.next({ peerType: 'upstream', remotePeer: upstream });
   }
-
 }
 
 function broadcastTo(data: any, streams: Set<RemotePeer<any>>) {

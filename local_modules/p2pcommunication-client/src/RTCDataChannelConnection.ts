@@ -1,9 +1,7 @@
-import * as debugStatic from 'debug';
 import { Observable, Subject } from 'rxjs';
+import { Connection } from './connection';
 
-const debug = debugStatic('p2pcommunication-client:RTCDataChannelConnection');
-
-export default class RTCDataChannelConnection {
+export default class RTCDataChannelConnection implements Connection {
   readonly message = new Subject<{ type: string, payload: any }>();
   readonly error: Observable<ErrorEvent>;
   readonly closed: Observable<ErrorEvent>;
@@ -12,23 +10,23 @@ export default class RTCDataChannelConnection {
     private readonly peerConnection: RTCPeerConnection,
     private readonly dataChannel: RTCDataChannel,
   ) {
-    dataChannel.addEventListener('message', (message: MessageEvent) => {
+    this.dataChannel.addEventListener('message', (e: MessageEvent) => {
       try {
-        switch (message.type) {
+        switch (e.type) {
           case 'message':
-            this.message.next(JSON.parse(message.data));
+            this.message.next(JSON.parse(e.data));
             break;
           default:
-            throw new Error('Unsupported message type: ' + message.type);
+            throw new Error('Unsupported message type: ' + e.type);
         }
       } catch (e) {
-        debug(e);
+        console.error(e);
       }
     });
-    this.error = Observable.fromEvent<ErrorEvent>(dataChannel, 'error');
-    this.closed = Observable.fromEvent<Event>(dataChannel, 'close');
-    this.closed.subscribe(e => {
-      peerConnection.close();
+    this.error = Observable.fromEvent<ErrorEvent>(this.dataChannel, 'error');
+    this.closed = Observable.fromEvent<Event>(this.dataChannel, 'close').first();
+    this.closed.subscribe((e) => {
+      this.peerConnection.close();
     });
   }
 
