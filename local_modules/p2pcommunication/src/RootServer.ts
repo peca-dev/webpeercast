@@ -60,15 +60,19 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     });
     debug((new Date()) + ' Connection accepted.');
 
-    const clients = this.remoteClientsWithoutConnection(connection);
-    if (clients.length >= this.maxClients) {
+    const clientCount = this.localPeer.downstreams.size;
+    if (clientCount >= this.maxClients) {
       debug('Add downstream');
-      await provideConnection(remoteClient, 'toDownstreamOf', this.selectOne(clients));
+      await provideConnection(
+        remoteClient,
+        'toDownstreamOf',
+        this.selectOne([...this.localPeer.downstreams]),
+      );
       connection.close();
       return;
     }
     this.localPeer.addNewDownstream(remoteClient);
-    if (clients.length < 1) {
+    if (clientCount < 1) {
       return;
     }
     debug('Add otherStream');
@@ -83,11 +87,11 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     );
   }
 
-  private remoteClientsWithoutConnection(connection: WebSocketConnection) {
-    return (<RemoteClientPeer<{}>[]>[...this.localPeer.downstreams])
-      .filter(x => x.connection !== connection)
-      .filter(x => x != null);
-  }
+  // private remoteClientsWithoutConnection(connection: WebSocketConnection) {
+  //   return (<RemoteClientPeer<{}>[]>[...this.localPeer.downstreams])
+  //     .filter(x => x.connection !== connection)
+  //     .filter(x => x != null);
+  // }
 
   private selectOne<T>(array: T[]): T {
     this.selectTarget += 1;

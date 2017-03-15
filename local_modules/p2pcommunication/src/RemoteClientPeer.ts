@@ -10,11 +10,13 @@ import * as Rx from 'rxjs';
 import * as uuid from 'uuid';
 import { connection as WebSocketConnection } from 'websocket';
 import * as declaration from '../index';
+import ServerWebSocketConnection from './ServerWebSocketConnection';
 
 const debug = debugStatic('p2pcommunication:RemoteClient');
 
 export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>, Downstream<T> {
   readonly id = uuid.v4();
+  private readonly connection: ServerWebSocketConnection;
 
   onClosed = new Rx.Subject<{}>();
   onOffering = new Rx.Subject<OfferingData>();
@@ -22,86 +24,52 @@ export default class RemoteClientPeer<T> implements declaration.RemoteClient<T>,
   onIceCandidateEmitting = new Rx.Subject<IceCandidateEmittingData>();
   onBroadcasting = new Rx.Subject<T>();
 
-  constructor(public connection: WebSocketConnection) {
+  constructor(connection: WebSocketConnection) {
+    this.connection = new ServerWebSocketConnection(connection);
     debug('new peer', this.id);
-    connection.send(JSON.stringify({
-      type: 'id',
-      payload: this.id,
-    }));
-    connection.on('message', (message) => {
-      try {
-        switch (message.type) {
-          case 'utf8':
-            const obj = JSON.parse(message.utf8Data!);
-            switch (obj.type) {
-              case 'offerToRelaying':
-                this.onOffering.next(obj.payload);
-                break;
-              case 'answerToRelaying':
-                this.onAnswering.next(obj.payload);
-                break;
-              case 'emitIceCandidateToRelayling':
-                this.onIceCandidateEmitting.next(obj.payload);
-                break;
-              case 'broadcast':
-                this.onBroadcasting.next(obj.payload);
-                break;
-              default:
-                throw new Error('Unsupported data type: ' + obj.type);
-            }
-            break;
-          case 'binary':
-            debug('Received Binary Message of ' + message.binaryData!.length + ' bytes');
-            throw new Error('Unsupported data type.');
-          default:
-            throw new Error('Unsupported message type: ' + message.type);
-        }
-      } catch (e) {
-        console.error(e.stack || e);
+    this.connection.send('id', this.id);
+    this.connection.message.subscribe(({type, payload}) => {
+      switch (type) {
+        case 'offerToRelaying':
+          this.onOffering.next(payload);
+          break;
+        case 'answerToRelaying':
+          this.onAnswering.next(payload);
+          break;
+        case 'emitIceCandidateToRelayling':
+          this.onIceCandidateEmitting.next(payload);
+          break;
+        case 'broadcast':
+          this.onBroadcasting.next(payload);
+          break;
+        default:
+          throw new Error('Unsupported data type: ' + type);
       }
     });
-    connection.on('close', (reasonCode, description) => {
-      this.onClosed.next({ reasonCode, description });
-      this.onClosed.complete();
-    });
+    this.onClosed = this.connection.closed;
   }
 
   disconnect() {
-    throw new Error('Not implemented.');
+    this.connection.close();
   }
 
   requestOffer(to: string, peerType: PeerType) {
-    this.connection.send(JSON.stringify({
-      type: 'requestOffer',
-      payload: { to, peerType },
-    }));
+    this.connection.send('requestOffer', { to, peerType });
   }
 
   signalOffer(from: string, peerType: PeerType, offer: {}) {
-    this.connection.send(JSON.stringify({
-      type: 'offerToRelayed',
-      payload: { from, peerType, offer },
-    }));
+    this.connection.send('offerToRelayed', { from, peerType, offer });
   }
 
   signalAnswer(from: string, answer: {}) {
-    this.connection.send(JSON.stringify({
-      type: 'answerToRelayed',
-      payload: { from, answer },
-    }));
+    this.connection.send('answerToRelayed', { from, answer });
   }
 
   signalIceCandidate(from: string, iceCandidate: {}) {
-    this.connection.send(JSON.stringify({
-      type: 'emitIceCandidateToRelayed',
-      payload: { from, iceCandidate },
-    }));
+    this.connection.send('emitIceCandidateToRelayed', { from, iceCandidate });
   }
 
   broadcast(payload: T) {
-    this.connection.send(JSON.stringify({
-      type: 'broadcast',
-      payload,
-    }));
+    this.connection.send('broadcast', payload);
   }
 }

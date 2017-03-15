@@ -61,8 +61,8 @@ export interface RemoteSignalingPeer {
 
 export interface Connection {
   readonly message: Subscribable<{ type: string, payload: any }>;
-  readonly error: Subscribable<ErrorEvent>;
-  readonly closed: Subscribable<ErrorEvent>;
+  readonly error: Subscribable<Error>;
+  readonly closed: Subscribable<{}>;
 
   close(): void;
   send(type: string, payload: {}): void;

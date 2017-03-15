@@ -3,8 +3,8 @@ import { Observable, Subject } from 'rxjs';
 
 export default class ClientWebSocketConnection implements Connection {
   readonly message = new Subject<{ type: string, payload: any }>();
-  readonly error: Observable<ErrorEvent>;
-  readonly closed: Observable<ErrorEvent>;
+  readonly error = new Subject<Error>();
+  readonly closed: Observable<{}>;
 
   constructor(private readonly socket: WebSocket) {
     this.socket.addEventListener('message', (e: MessageEvent) => {
@@ -20,7 +20,9 @@ export default class ClientWebSocketConnection implements Connection {
         console.error(e);
       }
     });
-    this.error = Observable.fromEvent<ErrorEvent>(this.socket, 'error');
+    this.socket.addEventListener('error', (e) => {
+      this.error.next(e.error);
+    });
     this.closed = Observable.fromEvent<Event>(this.socket, 'close').first();
   }
 
