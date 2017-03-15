@@ -1,8 +1,8 @@
 import {
   SignalingIceCandidateData,
-  Subscribable,
   Upstream,
 } from 'p2pcommunication-common';
+import { Subscribable } from 'rxjs/Observable';
 import { AnonymousSubscription } from 'rxjs/Subscription';
 import { safe } from './printerror';
 

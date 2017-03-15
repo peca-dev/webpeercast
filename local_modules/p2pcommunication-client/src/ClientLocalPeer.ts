@@ -7,11 +7,11 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import * as declaration from '../index';
+import ClientWebSocketConnection from './ClientWebSocketConnection';
 import { printError, safe } from './printerror';
 import RemoteRTCPeer from './RemoteRTCPeer';
 import { answerDataChannel, offerDataChannel } from './rtcconnector';
 import RTCDataChannelConnection from './RTCDataChannelConnection';
-import WebSocketConnection from './WebSocketConnection';
 
 /**
  * It does nothing when it's disconnected with a downstream.
@@ -71,7 +71,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       this.id = null;
       const upstream = new RemoteRTCPeer(
         '00000000-0000-0000-0000-000000000000',
-        new WebSocketConnection(new WebSocket(url)),
+        new ClientWebSocketConnection(new WebSocket(url)),
       );
       upstream.onIdCreated.subscribe((id) => {
         this.id = id;

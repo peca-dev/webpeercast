@@ -1,7 +1,7 @@
+import { Connection } from 'p2pcommunication-common';
 import { Observable, Subject } from 'rxjs';
-import { Connection } from './connection';
 
-export default class WebSocketConnection implements Connection {
+export default class ClientWebSocketConnection implements Connection {
   readonly message = new Subject<{ type: string, payload: any }>();
   readonly error: Observable<ErrorEvent>;
   readonly closed: Observable<ErrorEvent>;

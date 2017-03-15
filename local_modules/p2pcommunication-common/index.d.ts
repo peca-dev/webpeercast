@@ -1,6 +1,5 @@
 import { Subject } from 'rxjs';
 import { Subscribable } from 'rxjs/Observable';
-export { Subscribable }
 
 export function provideConnection(
   offerer: RemoteSignalingPeer,
@@ -58,6 +57,15 @@ export interface RemoteSignalingPeer {
   signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit): void;
   signalAnswer(from: string, answer: RTCSessionDescriptionInit): void;
   signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit): void;
+}
+
+export interface Connection {
+  readonly message: Subscribable<{ type: string, payload: any }>;
+  readonly error: Subscribable<ErrorEvent>;
+  readonly closed: Subscribable<ErrorEvent>;
+
+  close(): void;
+  send(type: string, payload: {}): void;
 }
 
 export type PeerType = "upstream" | "otherStream" | "downstream";

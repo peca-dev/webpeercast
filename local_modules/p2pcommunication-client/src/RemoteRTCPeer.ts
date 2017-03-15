@@ -1,5 +1,6 @@
 import {
   AnsweringData,
+  Connection,
   Downstream,
   IceCandidateEmittingData,
   OfferingData,
@@ -12,10 +13,10 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import * as Rx from 'rxjs';
-import { Connection } from './connection';
+import { Subscribable } from 'rxjs/Observable';
 
 export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
-  onClosed: Rx.Observable<ErrorEvent>;
+  onClosed: Subscribable<ErrorEvent>;
   onIdCreated = new Rx.Subject<string>();
   onOfferRequesting = new Rx.Subject<OfferRequestData>();
   onSignalingOffer = new Rx.Subject<SignalingOfferData>();
