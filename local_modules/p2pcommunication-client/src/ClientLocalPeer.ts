@@ -8,7 +8,6 @@ import {
 } from 'p2pcommunication-common';
 import * as declaration from '../index';
 import { printError, safe } from './printerror';
-import RemoteRootServer from './RemoteRootServer';
 import RemoteRTCPeer from './RemoteRTCPeer';
 import { answerDataChannel, offerDataChannel } from './rtcconnector';
 import RTCDataChannelConnection from './RTCDataChannelConnection';
@@ -70,7 +69,8 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     const url = this.url;
     try {
       this.id = null;
-      const upstream = new RemoteRootServer(
+      const upstream = new RemoteRTCPeer(
+        '00000000-0000-0000-0000-000000000000',
         new WebSocketConnection(new WebSocket(url)),
       );
       upstream.onIdCreated.subscribe((id) => {
