@@ -1,4 +1,3 @@
-import * as debugStatic from 'debug';
 import {
   AnsweringData,
   Downstream,
@@ -13,13 +12,10 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import * as Rx from 'rxjs';
-
-declare const __filename: string;
-debugStatic.enable(__filename);
-const debug = debugStatic(__filename);
+import RTCDataChannelConnection from './RTCDataChannelConnection';
 
 export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
-  onClosed = new Rx.Subject();
+  onClosed: Rx.Observable<ErrorEvent>;
   onOfferRequesting = new Rx.Subject<OfferRequestData>();
   onSignalingOffer = new Rx.Subject<SignalingOfferData>();
   onSignalingAnswer = new Rx.Subject<SignalingAnswerData>();
@@ -28,117 +24,81 @@ export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Dow
   onAnswering = new Rx.Subject<AnsweringData>();
   onIceCandidateEmitting = new Rx.Subject<IceCandidateEmittingData>();
   onBroadcasting = new Rx.Subject<T>();
+  private readonly connection: RTCDataChannelConnection;
 
   constructor(
     public readonly id: string,
-    private peerConnection: RTCPeerConnection,
-    private dataChannel: RTCDataChannel,
+    peerConnection: RTCPeerConnection,
+    dataChannel: RTCDataChannel,
   ) {
-    dataChannel.addEventListener('message', (message: MessageEvent) => {
-      try {
-        switch (message.type) {
-          case 'message':
-            const obj = JSON.parse(message.data);
-            switch (obj.type) {
-              case 'requestOffer':
-                this.onOfferRequesting.next(obj.payload);
-                break;
-              case 'offerToRelaying':
-                this.onSignalingOffer.next(obj.payload);
-                break;
-              case 'offerToRelayed':
-                this.onOffering.next(obj.payload);
-                break;
-              case 'answerToRelaying':
-                this.onAnswering.next(obj.payload);
-                break;
-              case 'answerToRelayed':
-                this.onSignalingAnswer.next(obj.payload);
-                break;
-              case 'emitIceCandidateToRelayling':
-                this.onIceCandidateEmitting.next(obj.payload);
-                break;
-              case 'emitIceCandidateToRelayed':
-                this.onSignalingIceCandidate.next(obj.payload);
-                break;
-              case 'broadcast':
-                this.onBroadcasting.next(obj.payload);
-                break;
-              default:
-                throw new Error('Unsupported data type: ' + obj.type);
-            }
-            break;
-          default:
-            throw new Error('Unsupported message type: ' + message.type);
-        }
-      } catch (e) {
-        debug(e);
+    this.connection = new RTCDataChannelConnection(peerConnection, dataChannel);
+    this.connection.message.subscribe(({ type, payload }) => {
+      switch (type) {
+        case 'requestOffer':
+          this.onOfferRequesting.next(payload);
+          break;
+        case 'offerToRelaying':
+          this.onSignalingOffer.next(payload);
+          break;
+        case 'offerToRelayed':
+          this.onOffering.next(payload);
+          break;
+        case 'answerToRelaying':
+          this.onAnswering.next(payload);
+          break;
+        case 'answerToRelayed':
+          this.onSignalingAnswer.next(payload);
+          break;
+        case 'emitIceCandidateToRelayling':
+          this.onIceCandidateEmitting.next(payload);
+          break;
+        case 'emitIceCandidateToRelayed':
+          this.onSignalingIceCandidate.next(payload);
+          break;
+        case 'broadcast':
+          this.onBroadcasting.next(payload);
+          break;
+        default:
+          throw new Error('Unsupported data type: ' + type);
       }
     });
-    dataChannel.addEventListener('error', (e: ErrorEvent) => {
-      console.error(e);
-    });
-    dataChannel.addEventListener('close', (e: Event) => {
-      this.onClosed.next();
-      this.onClosed.complete();
-    });
+    this.connection.error.subscribe(console.error);
+    this.onClosed = this.connection.closed;
   }
 
   disconnect() {
-    this.dataChannel.close();
-    this.peerConnection.close();
+    this.connection.close();
   }
 
   offerTo(to: string, offer: RTCSessionDescriptionInit) {
-    this.dataChannel.send(JSON.stringify({
-      type: 'offerToRelaying',
-      payload: { to, offer },
-    }));
+    this.connection.send('offerToRelaying', { to, offer });
   }
 
   answerTo(to: string, answer: RTCSessionDescriptionInit) {
-    this.dataChannel.send(JSON.stringify({
-      type: 'answerToRelaying',
-      payload: { to, answer },
-    }));
+    this.connection.send('answerToRelaying', { to, answer });
   }
 
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate) {
-    this.dataChannel.send(JSON.stringify({
-      type: 'emitIceCandidateToRelayling',
-      payload: { to, iceCandidate },
-    }));
+    this.connection.send('emitIceCandidateToRelayling', { to, iceCandidate });
   }
 
   requestOffer(to: string, peerType: PeerType) {
-    this.dataChannel.send(JSON.stringify({
-      type: 'requestOffer',
-      payload: { to, peerType },
-    }));
+    this.connection.send('requestOffer', { to, peerType });
   }
 
   signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit) {
-    this.dataChannel.send(JSON.stringify({
-      type: 'offerToRelayed',
-      payload: { from, peerType, offer },
-    }));
+    this.connection.send('offerToRelayed', { from, peerType, offer });
   }
 
   signalAnswer(from: string, answer: RTCSessionDescriptionInit) {
-    this.dataChannel.send(JSON.stringify({
-      type: 'answerToRelayed',
-      payload: { from, answer },
-    }));
+    this.connection.send('answerToRelayed', { from, answer });
   }
 
   signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit) {
-    this.dataChannel.send(JSON.stringify({
-      type: 'emitIceCandidateToRelayed',
-      payload: { from, iceCandidate },
-    }));
+    this.connection.send('emitIceCandidateToRelayed', { from, iceCandidate });
   }
 
   broadcast(payload: T) {
-    this.dataChannel.send(JSON.stringify({ type: 'broadcast', payload }));
+    this.connection.send('broadcast', payload);
   }
 }
