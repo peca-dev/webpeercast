@@ -76,6 +76,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       upstream.onIdCreated.subscribe((id) => {
         this.id = id;
       });
+      this.setUpstreamEventsTo(upstream);
       this.addUpstream(upstream);
     } catch (e) {
       printError(e);
