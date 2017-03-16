@@ -2,18 +2,18 @@ import { Subject } from 'rxjs';
 import { Subscribable } from 'rxjs/Observable';
 
 export function provideConnection(
-  offerer: RemoteSignalingPeer,
+  offerer: Downstream<{}>,
   stream: 'toOtherStreamOf' | 'toDownstreamOf',
-  answerer: RemoteSignalingPeer,
+  answerer: Downstream<{}>,
 ): Promise<void>;
 
 export declare class LocalPeer<T> {
-  upstreams: Set<Upstream<T>>;
-  otherStreams: Set<RemotePeer<T>>;
-  downstreams: Set<Downstream<T>>;
+  readonly upstreams: Set<Upstream<T>>;
+  readonly otherStreams: Set<RemotePeer<T>>;
+  readonly downstreams: Set<Downstream<T>>;
 
-  onConnected: Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;
-  onBroadcastReceived: Subject<T>;
+  readonly onConnected: Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;
+  readonly onBroadcastReceived: Subject<T>;
 
   constructor(downstreamsLimit: number);
 
@@ -22,36 +22,60 @@ export declare class LocalPeer<T> {
   broadcast(payload: T): void;
 }
 
-export interface RemotePeer<T> {
-  readonly id: string;
+export declare class RemotePeer<T> {
+  readonly onClosed: Subscribable<ErrorEvent>;
+  readonly onIdCreated: Subscribable<string>;
+  readonly onOfferRequesting: Subscribable<OfferRequestData>;
+  readonly onSignalingOffer: Subscribable<SignalingOfferData>;
+  readonly onSignalingAnswer: Subscribable<SignalingAnswerData>;
+  readonly onSignalingIceCandidate: Subscribable<SignalingIceCandidateData>;
+  readonly onOffering: Subscribable<OfferingData>;
+  readonly onAnswering: Subscribable<AnsweringData>;
+  readonly onIceCandidateEmitting: Subscribable<IceCandidateEmittingData>;
+  readonly onBroadcasting: Subscribable<T>;
 
-  onClosed: Subscribable<{}>;
-  onBroadcasting: Subscribable<T>;
+  constructor(
+    public readonly id: string,
+    connection: Connection,
+  );
 
   disconnect(): void;
+
+  offerTo(to: string, offer: RTCSessionDescriptionInit): void;
+  answerTo(to: string, answer: RTCSessionDescriptionInit): void;
+  emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate): void;
+  requestOffer(to: string, peerType: PeerType): void;
+  signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit): void;
+  signalAnswer(from: string, answer: RTCSessionDescriptionInit): void;
+  signalIceCandidate(from: string, iceCandidate: RTCIceCandidateInit): void;
+  broadcast(payload: T): void;
+}
+
+export interface Broadcastable<T> {
+  readonly onBroadcasting: Subscribable<T>;
+
   broadcast(payload: T);
 }
 
-export interface Upstream<T> extends RemotePeer<T> {
-  onOfferRequesting: Subscribable<OfferRequestData>;
-  onSignalingOffer: Subscribable<SignalingOfferData>;
-  onSignalingAnswer: Subscribable<SignalingAnswerData>;
-  onSignalingIceCandidate: Subscribable<SignalingIceCandidateData>;
+export interface Upstream<T> extends Broadcastable<T> {
+  readonly id: string;
+
+  readonly onOfferRequesting: Subscribable<OfferRequestData>;
+  readonly onSignalingOffer: Subscribable<SignalingOfferData>;
+  readonly onSignalingAnswer: Subscribable<SignalingAnswerData>;
+  readonly onSignalingIceCandidate: Subscribable<SignalingIceCandidateData>;
 
   offerTo(to: string, offer: RTCSessionDescriptionInit): void;
   answerTo(to: string, answer: RTCSessionDescriptionInit): void;
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidateInit): void;
 }
 
-export interface Downstream<T> extends RemotePeer<T>, RemoteSignalingPeer {
-}
-
-export interface RemoteSignalingPeer {
+export interface Downstream<T> extends Broadcastable<T> {
   readonly id: string;
 
-  onOffering: Subscribable<OfferingData>;
-  onAnswering: Subscribable<AnsweringData>;
-  onIceCandidateEmitting: Subscribable<IceCandidateEmittingData>;
+  readonly onOffering: Subscribable<OfferingData>;
+  readonly onAnswering: Subscribable<AnsweringData>;
+  readonly onIceCandidateEmitting: Subscribable<IceCandidateEmittingData>;
 
   requestOffer(to: string, peerType: PeerType): void;
   signalOffer(from: string, peerType: PeerType, offer: RTCSessionDescriptionInit): void;

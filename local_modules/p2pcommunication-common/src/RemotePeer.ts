@@ -1,3 +1,5 @@
+import * as Rx from 'rxjs';
+import { Subscribable } from 'rxjs/Observable';
 import {
   AnsweringData,
   Connection,
@@ -6,26 +8,26 @@ import {
   OfferingData,
   OfferRequestData,
   PeerType,
-  RemotePeer,
+  RemotePeer as IRemotePeer,
   SignalingAnswerData,
   SignalingIceCandidateData,
   SignalingOfferData,
   Upstream,
-} from 'p2pcommunication-common';
-import * as Rx from 'rxjs';
-import { Subscribable } from 'rxjs/Observable';
+} from '../';
 
-export default class RemoteRTCPeer<T> implements RemotePeer<T>, Upstream<T>, Downstream<T> {
-  onClosed: Subscribable<ErrorEvent>;
-  onIdCreated = new Rx.Subject<string>();
-  onOfferRequesting = new Rx.Subject<OfferRequestData>();
-  onSignalingOffer = new Rx.Subject<SignalingOfferData>();
-  onSignalingAnswer = new Rx.Subject<SignalingAnswerData>();
-  onSignalingIceCandidate = new Rx.Subject<SignalingIceCandidateData>();
-  onOffering = new Rx.Subject<OfferingData>();
-  onAnswering = new Rx.Subject<AnsweringData>();
-  onIceCandidateEmitting = new Rx.Subject<IceCandidateEmittingData>();
-  onBroadcasting = new Rx.Subject<T>();
+export default class RemotePeer<T>
+  implements IRemotePeer<T>, Upstream<T>, Downstream<T> {
+
+  readonly onClosed: Subscribable<ErrorEvent>;
+  readonly onIdCreated = new Rx.Subject<string>();
+  readonly onOfferRequesting = new Rx.Subject<OfferRequestData>();
+  readonly onSignalingOffer = new Rx.Subject<SignalingOfferData>();
+  readonly onSignalingAnswer = new Rx.Subject<SignalingAnswerData>();
+  readonly onSignalingIceCandidate = new Rx.Subject<SignalingIceCandidateData>();
+  readonly onOffering = new Rx.Subject<OfferingData>();
+  readonly onAnswering = new Rx.Subject<AnsweringData>();
+  readonly onIceCandidateEmitting = new Rx.Subject<IceCandidateEmittingData>();
+  readonly onBroadcasting = new Rx.Subject<T>();
 
   constructor(
     public readonly id: string,

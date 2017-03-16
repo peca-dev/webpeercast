@@ -1,4 +1,5 @@
 import {
+  Broadcastable,
   LocalPeer,
   OfferRequestData,
   PeerType,
@@ -9,7 +10,6 @@ import {
 import * as declaration from '../index';
 import ClientWebSocketConnection from './ClientWebSocketConnection';
 import { printError, safe } from './printerror';
-import RemoteRTCPeer from './RemoteRTCPeer';
 import { answerDataChannel, offerDataChannel } from './rtcconnector';
 import RTCDataChannelConnection from './RTCDataChannelConnection';
 
@@ -69,7 +69,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     const url = this.url;
     try {
       this.id = null;
-      const upstream = new RemoteRTCPeer(
+      const upstream = new RemotePeer(
         '00000000-0000-0000-0000-000000000000',
         new ClientWebSocketConnection(new WebSocket(url)),
       );
@@ -125,7 +125,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     dataChannel: RTCDataChannel,
     peerType: PeerType,
   ) {
-    const peer = new RemoteRTCPeer<T>(
+    const peer = new RemotePeer<T>(
       id,
       new RTCDataChannelConnection(peerConnection, dataChannel),
     );
@@ -144,7 +144,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     }
   }
 
-  private addUpstream(upstream: Upstream<T>) {
+  private addUpstream(upstream: RemotePeer<T>) {
     upstream.onOfferRequesting.subscribe(safe(async (data: OfferRequestData) => {
       await this.offerNewConnection(data.to, data.peerType, upstream);
     }));
@@ -166,7 +166,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
   }
 }
 
-function broadcastTo(data: any, streams: Set<RemotePeer<any>>) {
+function broadcastTo<T>(data: T, streams: Set<Broadcastable<T>>) {
   for (const peer of streams) {
     peer.broadcast(data);
   }

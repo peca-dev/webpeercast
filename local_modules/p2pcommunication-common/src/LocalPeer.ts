@@ -1,5 +1,6 @@
 import * as Rx from 'rxjs';
 import {
+  Broadcastable,
   Downstream,
   LocalPeer as ILocalPeer,
   PeerType,
@@ -14,8 +15,8 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
   readonly downstreams = new Set<Downstream<T>>();
   private downstreamSelectTarget = -1;
 
-  onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>();
-  onBroadcastReceived = new Rx.Subject<T>();
+  readonly onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>();
+  readonly onBroadcastReceived = new Rx.Subject<T>();
 
   constructor(private readonly downstreamsLimit: number) {
   }
@@ -32,7 +33,7 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
     this.onConnected.next({ peerType: 'otherStream', remotePeer: otherStream });
   }
 
-  addNewDownstream(downstream: Downstream<T>) {
+  addNewDownstream(downstream: RemotePeer<T>) {
     if (!this.canAppendDownstream()) {
       const item = this.selectOne([...this.downstreams]);
       return provideConnection(downstream, 'toDownstreamOf', item);
@@ -70,7 +71,7 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
   }
 }
 
-function broadcastToStreams(data: {}, streams: Set<RemotePeer<{}>>) {
+function broadcastToStreams(data: {}, streams: Set<Broadcastable<{}>>) {
   for (const peer of streams) {
     peer.broadcast(data);
   }

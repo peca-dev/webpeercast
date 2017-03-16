@@ -1,12 +1,13 @@
 import * as debugStatic from 'debug';
 import * as http from 'http';
-import { LocalPeer, provideConnection } from 'p2pcommunication-common';
+import { Downstream, LocalPeer, provideConnection, RemotePeer } from 'p2pcommunication-common';
+import * as uuid from 'uuid';
 import {
   connection as WebSocketConnection,
   server as WebSocketServer,
 } from 'websocket';
 import * as declaration from '../index';
-import RemoteClientPeer from './RemoteClientPeer';
+import ServerWebSocketConnection from './ServerWebSocketConnection';
 
 const debug = debugStatic('p2pcommunication:RootServer');
 
@@ -54,7 +55,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       console.error(err);
     });
     debug('Connection count:', this.wsServer.connections.length);
-    const remoteClient = new RemoteClientPeer(connection);
+    const remoteClient = new RemotePeer<T>(uuid.v4(), new ServerWebSocketConnection(connection));
     remoteClient.onBroadcasting.subscribe((payload) => {
       // NOP
     });
@@ -79,7 +80,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     this.startToConnectOtherPeer(connection, remoteClient);
   }
 
-  private startToConnectOtherPeer(connection: WebSocketConnection, client: RemoteClientPeer<T>) {
+  private startToConnectOtherPeer(connection: WebSocketConnection, client: Downstream<T>) {
     [...this.localPeer.downstreams]
       .filter(x => x !== client)
       .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)

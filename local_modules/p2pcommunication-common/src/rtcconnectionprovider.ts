@@ -1,13 +1,13 @@
 import * as debugStatic from 'debug';
 import { AnonymousSubscription } from 'rxjs/Subscription';
-import { RemoteSignalingPeer } from '../';
+import { Downstream } from '../';
 
 const debug = debugStatic('p2pcommunication-common:rtcconnectionprovider');
 
 export function provideConnection(
-  offerer: RemoteSignalingPeer,
+  offerer: Downstream<{}>,
   stream: 'toOtherStreamOf' | 'toDownstreamOf',
-  answerer: RemoteSignalingPeer,
+  answerer: Downstream<{}>,
 ) {
   return new Promise<void>((resolve, reject) => {
     const subscriptions = <AnonymousSubscription[]>[];
