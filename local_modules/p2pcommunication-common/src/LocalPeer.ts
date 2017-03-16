@@ -21,7 +21,7 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
   constructor(private readonly downstreamsLimit: number) {
   }
 
-  addNewOtherStream(otherStream: RemotePeer<T>) {
+  setOtherStreamEventsTo(otherStream: RemotePeer<T>) {
     otherStream.onClosed.subscribe(() => {
       this.otherStreams.delete(otherStream);
     });
@@ -29,6 +29,9 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
       this.onBroadcastReceived.next(data);
       broadcastToStreams(data, this.downstreams);
     });
+  }
+
+  addNewOtherStream(otherStream: RemotePeer<T>) {
     this.otherStreams.add(otherStream);
     this.onConnected.next({ peerType: 'otherStream', remotePeer: otherStream });
   }
