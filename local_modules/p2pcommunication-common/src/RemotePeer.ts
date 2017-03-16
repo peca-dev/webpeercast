@@ -1,5 +1,4 @@
 import * as Rx from 'rxjs';
-import { Subscribable } from 'rxjs/Observable';
 import {
   AnsweringData,
   Connection,
@@ -18,7 +17,7 @@ import {
 export default class RemotePeer<T>
   implements IRemotePeer<T>, Upstream<T>, Downstream<T> {
 
-  readonly onClosed: Subscribable<ErrorEvent>;
+  readonly onClosed: Rx.Observable<ErrorEvent>;
   readonly onIdCreated = new Rx.Subject<string>();
   readonly onOfferRequesting = new Rx.Subject<OfferRequestData>();
   readonly onSignalingOffer = new Rx.Subject<SignalingOfferData>();
@@ -68,7 +67,7 @@ export default class RemotePeer<T>
       }
     });
     this.connection.error.subscribe(console.error);
-    this.onClosed = this.connection.closed;
+    this.onClosed = <Rx.Observable<ErrorEvent>>this.connection.closed;
   }
 
   disconnect() {
