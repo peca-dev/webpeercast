@@ -3,6 +3,7 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import { Observable, Subscribable } from 'rxjs/Observable';
+import { ISubscription } from 'rxjs/Subscription';
 import { AnonymousSubscription } from 'rxjs/Subscription';
 import { safe } from './printerror';
 
@@ -62,26 +63,26 @@ async function exchangeIceCandidate<T>(
   upstream: Upstream<{}>,
   func: () => Promise<T>,
 ) {
-  const iceCandidateListener = (e: RTCPeerConnectionIceEvent) => {
-    if (e.candidate == null) {
-      return;
-    }
-    upstream.emitIceCandidateTo(to, e.candidate);
-  };
-  pc.addEventListener('icecandidate', iceCandidateListener);
-  const subscription = upstream.onSignalingIceCandidate
-    .subscribe(safe(async (payload: SignalingIceCandidateData) => {
-      if (payload.from !== to) {
-        return;
-      }
-      pc.addIceCandidate(payload.iceCandidate);
-      subscription.unsubscribe();
+  const subscriptions: ISubscription[] = [];
+  subscriptions.push(Observable.fromEventPattern<RTCPeerConnectionIceEvent>(
+    (handler: any) => { pc.onicecandidate = handler; },
+    () => { pc.onicecandidate = <any>null; },
+  )
+    .filter(e => e.candidate != null)
+    .subscribe((e) => {
+      upstream.emitIceCandidateTo(to, e.candidate!);
     }));
+  subscriptions.push(upstream.onSignalingIceCandidate
+    .filter(payload => payload.from === to)
+    .subscribe(safe(async (payload: SignalingIceCandidateData) => {
+      await pc.addIceCandidate(payload.iceCandidate);
+    })));
   try {
     return await func();
   } finally {
-    pc.removeEventListener('icecandidate', iceCandidateListener);
-    subscription.unsubscribe();
+    for (const subscription of subscriptions) {
+      subscription.unsubscribe();
+    }
   }
 }
 
