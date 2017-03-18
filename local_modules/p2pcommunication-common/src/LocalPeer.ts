@@ -3,6 +3,7 @@ import {
   Broadcastable,
   Downstream,
   LocalPeer as ILocalPeer,
+  OtherStream,
   PeerType,
   RemotePeer,
   Upstream,
@@ -11,7 +12,7 @@ import { provideConnection } from './rtcconnectionprovider';
 
 export default class LocalPeer<T> implements ILocalPeer<T> {
   readonly upstreams = new Set<Upstream<T>>();
-  readonly otherStreams = new Set<RemotePeer<T>>();
+  readonly otherStreams = new Set<OtherStream<T>>();
   readonly downstreams = new Set<Downstream<T>>();
   private downstreamSelectTarget = -1;
 

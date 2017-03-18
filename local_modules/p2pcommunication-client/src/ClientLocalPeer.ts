@@ -2,6 +2,7 @@ import {
   Broadcastable,
   LocalPeer,
   OfferRequestData,
+  OtherStream,
   PeerType,
   RemotePeer,
   SignalingOfferData,
@@ -53,7 +54,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
 
   disconnect() {
     this.url = null;
-    const peers = (<RemotePeer<{}>[]>[...this.localPeer.upstreams])
+    const peers = (<(Upstream<T> | OtherStream<T>)[]>[...this.localPeer.upstreams])
       .concat([...this.localPeer.otherStreams]);
     for (const peer of peers) {
       peer.disconnect();

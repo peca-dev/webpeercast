@@ -9,7 +9,7 @@ export function provideConnection(
 
 export declare class LocalPeer<T> {
   readonly upstreams: Set<Upstream<T>>;
-  readonly otherStreams: Set<RemotePeer<T>>;
+  readonly otherStreams: Set<OtherStream<T>>;
   readonly downstreams: Set<Downstream<T>>;
 
   readonly onConnected: Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;
@@ -53,14 +53,15 @@ export declare class RemotePeer<T> {
 }
 
 export interface Broadcastable<T> {
+  readonly id: string;
+
   readonly onBroadcasting: Observable<T>;
 
+  disconnect(): void;
   broadcast(payload: T);
 }
 
 export interface Upstream<T> extends Broadcastable<T> {
-  readonly id: string;
-
   readonly onOfferRequesting: Observable<OfferRequestData>;
   readonly onSignalingOffer: Observable<SignalingOfferData>;
   readonly onSignalingAnswer: Observable<SignalingAnswerData>;
@@ -71,9 +72,10 @@ export interface Upstream<T> extends Broadcastable<T> {
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidateInit): void;
 }
 
-export interface Downstream<T> extends Broadcastable<T> {
-  readonly id: string;
+export interface OtherStream<T> extends Broadcastable<T> {
+}
 
+export interface Downstream<T> extends Broadcastable<T> {
   readonly onOffering: Observable<OfferingData>;
   readonly onAnswering: Observable<AnsweringData>;
   readonly onIceCandidateEmitting: Observable<IceCandidateEmittingData>;
