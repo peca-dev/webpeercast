@@ -2,7 +2,7 @@ import {
   SignalingIceCandidateData,
   Upstream,
 } from 'p2pcommunication-common';
-import { Subscribable } from 'rxjs/Observable';
+import { Observable, Subscribable } from 'rxjs/Observable';
 import { AnonymousSubscription } from 'rxjs/Subscription';
 import { safe } from './printerror';
 
@@ -108,20 +108,8 @@ function waitMessage(observable: Subscribable<{ from: string }>, from: string) {
 
 function waitEvent<T extends Event>(eventTarget: EventTarget, event: string, func?: Function) {
   return new Promise<T>((resolve, reject) => {
-    let listener: (event: T) => Promise<void>;
-    const timer = setTimeout(
-      () => {
-        eventTarget.removeEventListener(event, listener);
-        reject(new Error(`Timeout event: ${event}.`));
-      },
-      3 * 1000,
-    );
-    listener = safe(async (e: T) => {
-      clearTimeout(timer);
-      eventTarget.removeEventListener(event, listener);
-      resolve(e);
-    });
-    eventTarget.addEventListener(event, listener);
+    Observable.fromEvent<T>(eventTarget, event).timeout(3 * 1000).first()
+      .subscribe(resolve, reject);
     if (func != null) {
       func();
     }
