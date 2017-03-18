@@ -1,4 +1,4 @@
-import { Observable, Subject} from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { Subscribable } from 'rxjs/Observable';
 
 export function provideConnection(
@@ -17,6 +17,7 @@ export declare class LocalPeer<T> {
 
   constructor(downstreamsLimit: number);
 
+  disconnect(): void;
   setOtherStreamEventsTo(otherStream: RemotePeer<T>): void;
   addNewOtherStream(otherStream: RemotePeer<T>): void;
   addNewDownstream(downstream: Downstream<T>): Promise<void>;

@@ -22,6 +22,14 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
   constructor(private readonly downstreamsLimit: number) {
   }
 
+  disconnect() {
+    const peers = (<(Upstream<T> | OtherStream<T>)[]>[...this.upstreams])
+      .concat([...this.otherStreams]);
+    for (const peer of peers) {
+      peer.disconnect();
+    }
+  }
+
   setOtherStreamEventsTo(otherStream: RemotePeer<T>) {
     otherStream.onClosed.subscribe(() => {
       this.otherStreams.delete(otherStream);
