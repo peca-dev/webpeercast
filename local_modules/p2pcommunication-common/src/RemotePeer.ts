@@ -74,6 +74,10 @@ export default class RemotePeer<T>
     this.connection.close();
   }
 
+  sendId() {
+    this.connection.send('id', this.id);
+  }
+
   offerTo(to: string, offer: RTCSessionDescriptionInit) {
     this.connection.send('offerToRelaying', { to, offer });
   }

@@ -55,29 +55,30 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       console.error(err);
     });
     debug('Connection count:', this.wsServer.connections.length);
-    const remoteClient = new RemotePeer<T>(uuid.v4(), new ServerWebSocketConnection(connection));
-    remoteClient.onBroadcasting.subscribe((payload) => {
+    const remotePeer = new RemotePeer<T>(uuid.v4(), new ServerWebSocketConnection(connection));
+    remotePeer.onBroadcasting.subscribe((payload) => {
       // NOP
     });
+    remotePeer.sendId();
     debug((new Date()) + ' Connection accepted.');
 
     const clientCount = this.localPeer.downstreams.size;
     if (clientCount >= this.maxClients) {
       debug('Add downstream');
       await provideConnection(
-        remoteClient,
+        remotePeer,
         'toDownstreamOf',
         this.selectOne([...this.localPeer.downstreams]),
       );
       connection.close();
       return;
     }
-    this.localPeer.addNewDownstream(remoteClient);
+    this.localPeer.addNewDownstream(remotePeer);
     if (clientCount < 1) {
       return;
     }
     debug('Add otherStream');
-    this.startToConnectOtherPeer(connection, remoteClient);
+    this.startToConnectOtherPeer(connection, remotePeer);
   }
 
   private startToConnectOtherPeer(connection: WebSocketConnection, client: Downstream<T>) {

@@ -43,6 +43,7 @@ export declare class RemotePeer<T> {
 
   disconnect(): void;
 
+  sendId(): void;
   offerTo(to: string, offer: RTCSessionDescriptionInit): void;
   answerTo(to: string, answer: RTCSessionDescriptionInit): void;
   emitIceCandidateTo(to: string, iceCandidate: RTCIceCandidate): void;
