@@ -66,7 +66,7 @@ export default class RemotePeer<T>
           throw new Error('Unsupported data type: ' + type);
       }
     });
-    this.connection.error.subscribe(console.error);
+    this.connection.error.subscribe(e => console.error(e.stack || e));
     this.onClosed = <Rx.Observable<ErrorEvent>>this.connection.closed;
   }
 

@@ -4,7 +4,7 @@ export function safe<T>(func: (e: T) => Promise<void>) {
 
 export function printError(e: any) {
   if (e.toString == null || e.stack == null) {
-    console.error('Unsupported error object:' + e);
+    console.error('Unsupported error object:' + e + ', ' + new Error().stack);
     return;
   }
   console.error(

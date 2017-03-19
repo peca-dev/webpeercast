@@ -14,7 +14,7 @@ const debug = debugStatic('p2pcommunication:RootServer');
 export default class RootServer<T> implements declaration.RootServer<T> {
   private readonly localPeer = new LocalPeer<T>(10);
   private wsServer: WebSocketServer;
-  private readonly maxClients = 10;
+  public readonly maxClients = 10;
   private selectTarget = -1;
   readonly id = '00000000-0000-0000-0000-000000000000';
 
@@ -51,8 +51,8 @@ export default class RootServer<T> implements declaration.RootServer<T> {
   broadcast = (payload: T) => this.localPeer.broadcast(payload);
 
   private async acceptNewConnection(connection: WebSocketConnection) {
-    connection.addListener('error', (err) => {
-      console.error(err);
+    connection.addListener('error', (e) => {
+      console.error(e.stack || e);
     });
     debug('Connection count:', this.wsServer.connections.length);
     const remotePeer = new RemotePeer<T>(uuid.v4(), new ServerWebSocketConnection(connection));
@@ -85,7 +85,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     [...this.localPeer.downstreams]
       .filter(x => x !== client)
       .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)
-        .catch(e => console.error(e)),
+        .catch(e => console.error(e.stack || e)),
     );
   }
 

@@ -3,7 +3,7 @@ import { Observable, Subject } from 'rxjs';
 
 export default class ClientWebSocketConnection implements Connection {
   readonly message = new Subject<{ type: string, payload: any }>();
-  readonly error = new Subject<Error>();
+  readonly error: Observable<Error>;
   readonly closed: Observable<{}>;
 
   constructor(private readonly socket: WebSocket) {
@@ -17,12 +17,11 @@ export default class ClientWebSocketConnection implements Connection {
             throw new Error('Unsupported message type: ' + e.type);
         }
       } catch (e) {
-        console.error(e);
+        console.error(e.stack || e);
       }
     });
-    this.socket.addEventListener('error', (e) => {
-      this.error.next(e.error);
-    });
+    this.error = Observable.fromEvent<ErrorEvent>(this.socket, 'error')
+      .map(e => e.error || new Error('Connection error'));
     this.closed = Observable.fromEvent<Event>(this.socket, 'close').first();
   }
 

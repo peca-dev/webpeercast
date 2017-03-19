@@ -10,23 +10,28 @@ export default class RTCDataChannelConnection implements Connection {
     private readonly peerConnection: RTCPeerConnection,
     private readonly dataChannel: RTCDataChannel,
   ) {
-    this.dataChannel.addEventListener('message', (e: MessageEvent) => {
-      try {
-        switch (e.type) {
-          case 'message':
-            this.message.next(JSON.parse(e.data));
-            break;
-          default:
-            throw new Error('Unsupported message type: ' + e.type);
-        }
-      } catch (e) {
-        console.error(e);
+    Observable.fromEventPattern<MessageEvent>(
+      (handler: any) => this.dataChannel.onmessage = handler,
+      () => this.dataChannel.onmessage = <any>null,
+    ).subscribe((e) => {
+      switch (e.type) {
+        case 'message':
+          this.message.next(JSON.parse(e.data));
+          break;
+        default:
+          throw new Error('Unsupported message type: ' + e.type);
       }
     });
-    this.dataChannel.addEventListener('error', (e: ErrorEvent) => {
+    Observable.fromEventPattern<ErrorEvent>(
+      (handler: any) => this.dataChannel.onerror = handler,
+      () => this.dataChannel.onerror = <any>null,
+    ).subscribe((e) => {
       this.error.next(e.error);
     });
-    this.closed = Observable.fromEvent<{}>(this.dataChannel, 'close').first();
+    this.closed = Observable.fromEventPattern<ErrorEvent>(
+      (handler: any) => this.dataChannel.onclose = handler,
+      () => this.dataChannel.onclose = <any>null,
+    ).first();
     this.closed.subscribe((e) => {
       this.peerConnection.close();
     });
