@@ -1,8 +1,15 @@
-// tslint:disable-next-line:no-reference
-import * as assert from 'power-assert';
+try { require('source-map-support').install(); } catch (e) { /* empty */ }
 
-describe('It', () => {
-  it('is so good!', () => {
-    assert(true);
-  });
-});
+polyfill();
+
+import './connection';
+
+function polyfill() {
+  const electronWebrtc = require('electron-webrtc-patched')();
+  (<any>global).RTCIceCandidate = electronWebrtc.RTCIceCandidate;
+  (<any>global).RTCPeerConnection = electronWebrtc.RTCPeerConnection;
+  (<any>global).RTCSessionDescription = electronWebrtc.RTCSessionDescription;
+  (<any>global).fetch = require('node-fetch');
+  (<any>global).WebSocket = require('websocket').w3cwebsocket;
+  (<any>global).window = global;
+}
