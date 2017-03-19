@@ -11,7 +11,7 @@
     "node-fetch": "^1.6.3",
     "rxjs": "^5.2.0",
     "uuid": "^3.0.1",
-    "websocket": "^1.0.24"
+    "ws": "^2.2.1"
   },
   "devDependencies": {
     "@types/debug": "^0.0.29",
@@ -24,8 +24,8 @@
     "@types/power-assert-formatter": "^1.4.28",
     "@types/uuid": "^2.0.29",
     "@types/webrtc": "^0.0.21",
-    "@types/websocket": "^0.0.33",
     "@types/whatwg-fetch": "^0.0.33",
+    "@types/ws": "^0.0.39",
     "babel-core": "^6.23.1",
     "babel-loader": "^6.3.2",
     "babel-plugin-espower": "^2.3.2",

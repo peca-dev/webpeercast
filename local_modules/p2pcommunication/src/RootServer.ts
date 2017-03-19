@@ -2,10 +2,7 @@ import * as debugStatic from 'debug';
 import * as http from 'http';
 import { Downstream, LocalPeer, provideConnection, RemotePeer } from 'p2pcommunication-common';
 import * as uuid from 'uuid';
-import {
-  connection as WebSocketConnection,
-  server as WebSocketServer,
-} from 'websocket';
+import * as WebSocket from 'ws';
 import * as declaration from '../index';
 import ServerWebSocketConnection from './ServerWebSocketConnection';
 
@@ -13,35 +10,24 @@ const debug = debugStatic('p2pcommunication:RootServer');
 
 export default class RootServer<T> implements declaration.RootServer<T> {
   private readonly localPeer = new LocalPeer<T>(10);
-  private wsServer: WebSocketServer;
+  private wsServer: WebSocket.Server;
   public readonly maxClients = 10;
   private selectTarget = -1;
   readonly id = '00000000-0000-0000-0000-000000000000';
 
   onConnected = this.localPeer.onConnected;
 
-  constructor(private httpServer: http.Server) {
-    this.wsServer = new WebSocketServer({
-      httpServer: this.httpServer,
-      // You should not use autoAcceptConnections for production
-      // applications, as it defeats all standard cross-origin protection
-      // facilities built into the protocol and the browser.  You should
-      // *always* verify the connection's origin and decide whether or not
-      // to accept it.
-      autoAcceptConnections: false,
-    });
-    this.wsServer.on('request', async (request) => {
+  constructor(httpServer: http.Server) {
+    this.wsServer = new WebSocket.Server({ server: httpServer });
+    this.wsServer.on('connection', async (ws) => {
       try {
-        if (!originIsAllowed(request.origin)) {
-          // Make sure we only accept requests from an allowed origin
-          request.reject();
-          debug((new Date()) + ' Connection from origin ' + request.origin + ' rejected.');
+        const origin = ws.upgradeReq.headers.origin;
+        if (!originIsAllowed(origin)) {
+          ws.close();
+          debug((new Date()) + ' Connection from origin ' + origin + ' rejected.');
           return;
         }
-
-        await this.acceptNewConnection(
-          request.accept(undefined, request.origin),
-        );
+        await this.acceptNewConnection(ws);
       } catch (e) {
         console.error(e.stack || e);
       }
@@ -50,12 +36,12 @@ export default class RootServer<T> implements declaration.RootServer<T> {
 
   broadcast = (payload: T) => this.localPeer.broadcast(payload);
 
-  private async acceptNewConnection(connection: WebSocketConnection) {
-    connection.addListener('error', (e) => {
+  private async acceptNewConnection(ws: WebSocket) {
+    ws.addListener('error', (e) => {
       console.error(e.stack || e);
     });
-    debug('Connection count:', this.wsServer.connections.length);
-    const remotePeer = new RemotePeer<T>(uuid.v4(), new ServerWebSocketConnection(connection));
+    debug('Connection count:', this.wsServer.clients.length);
+    const remotePeer = new RemotePeer<T>(uuid.v4(), new ServerWebSocketConnection(ws));
     remotePeer.onBroadcasting.subscribe((payload) => {
       // NOP
     });
@@ -70,7 +56,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
         'toDownstreamOf',
         this.selectOne([...this.localPeer.downstreams]),
       );
-      connection.close();
+      ws.close();
       return;
     }
     this.localPeer.addNewDownstream(remotePeer);
@@ -78,22 +64,16 @@ export default class RootServer<T> implements declaration.RootServer<T> {
       return;
     }
     debug('Add otherStream');
-    this.startToConnectOtherPeer(connection, remotePeer);
+    this.startToConnectOtherPeer(remotePeer);
   }
 
-  private startToConnectOtherPeer(connection: WebSocketConnection, client: Downstream<T>) {
+  private startToConnectOtherPeer(client: Downstream<T>) {
     [...this.localPeer.downstreams]
       .filter(x => x !== client)
       .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)
         .catch(e => console.error(e.stack || e)),
     );
   }
-
-  // private remoteClientsWithoutConnection(connection: WebSocketConnection) {
-  //   return (<RemoteClientPeer<{}>[]>[...this.localPeer.downstreams])
-  //     .filter(x => x.connection !== connection)
-  //     .filter(x => x != null);
-  // }
 
   private selectOne<T>(array: T[]): T {
     this.selectTarget += 1;
