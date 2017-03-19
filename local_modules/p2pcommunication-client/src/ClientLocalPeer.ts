@@ -13,6 +13,18 @@ import { printError, safe } from './printerror';
 import { answerDataChannel, offerDataChannel } from './rtcconnector';
 import RTCDataChannelConnection from './RTCDataChannelConnection';
 
+const CONFIGURATION = {
+  iceServers: [{
+    urls: [
+      'stun:stun.l.google.com:19302',
+      'stun:stun1.l.google.com:19302',
+      'stun:stun2.l.google.com:19302',
+      'stun:stun3.l.google.com:19302',
+      'stun:stun4.l.google.com:19302',
+    ],
+  }],
+};
+
 /**
  * It does nothing when it's disconnected with a downstream.
  * It connects to upstream when it's disconnected with a upstream.
@@ -25,12 +37,11 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
 
   debug = {
     hasPeer: (id: string | null) => {
-      for (const conn of this.localPeer.otherStreams) {
-        if (conn.id === id) {
-          return true;
-        }
-      }
-      return false;
+      return (<{ id: string }[]>[])
+        .concat([...this.localPeer.upstreams])
+        .concat([...this.localPeer.otherStreams])
+        .concat([...this.localPeer.downstreams])
+        .some(x => x.id === id);
     },
     getUpstreams: () => {
       return this.localPeer.upstreams;
@@ -40,6 +51,11 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     },
     getDownstreams: () => {
       return this.localPeer.downstreams;
+    },
+    countRemotePeers: () => {
+      return this.localPeer.upstreams.size
+        + this.localPeer.otherStreams.size
+        + this.localPeer.downstreams.size;
     },
   };
 
@@ -91,7 +107,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     if (peerType === 'downstream') {
       throw new Error('Assertion error.');
     }
-    const peerConnection = new RTCPeerConnection();
+    const peerConnection = new RTCPeerConnection(CONFIGURATION);
     const dataChannel = await offerDataChannel(
       peerConnection,
       to,
@@ -106,7 +122,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     offer: RTCSessionDescriptionInit,
     upstream: Upstream<T>,
   ) {
-    const peerConnection = new RTCPeerConnection();
+    const peerConnection = new RTCPeerConnection(CONFIGURATION);
     const dataChannel = await answerDataChannel(
       peerConnection,
       from,
