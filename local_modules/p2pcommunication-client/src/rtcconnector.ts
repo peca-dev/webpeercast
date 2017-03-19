@@ -3,14 +3,20 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import { Observable, Subscribable } from 'rxjs/Observable';
-import { ISubscription } from 'rxjs/Subscription';
-import { AnonymousSubscription } from 'rxjs/Subscription';
+import { AnonymousSubscription, ISubscription } from 'rxjs/Subscription';
 import { safe } from './printerror';
 
 export function offerDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream<{}>) {
   return exchangeIceCandidate(pc, to, upstream, async () => {
     let dataChannel: RTCDataChannel | null = null;
-    await waitEvent(pc, 'negotiationneeded', () => {
+    await new Promise((resolve, reject) => {
+      Observable.fromEventPattern(
+        (handler: any) => pc.onnegotiationneeded = handler,
+        () => pc.onnegotiationneeded = <any>null,
+      )
+        .first()
+        .timeout(3 * 1000)
+        .subscribe(resolve, reject);
       dataChannel = pc.createDataChannel('');
     });
     await exchangeOfferWithAnswer(pc, to, upstream);
@@ -39,7 +45,13 @@ export function answerDataChannel(
 ) {
   return exchangeIceCandidate(pc, from, upstream, async () => {
     await exchangeAnswerWithOffer(pc, from, offer, upstream);
-    const event: RTCDataChannelEvent = <any>await waitEvent(pc, 'datachannel');
+    const event = await Observable.fromEventPattern<RTCDataChannelEvent>(
+      (handler: any) => pc.ondatachannel = handler,
+      () => pc.ondatachannel = <any>null,
+    )
+      .first()
+      .timeout(3 * 1000)
+      .toPromise();
     await waitEvent(event.channel, 'open');
     return event.channel;
   });
@@ -75,7 +87,7 @@ async function exchangeIceCandidate<T>(
   subscriptions.push(upstream.onSignalingIceCandidate
     .filter(payload => payload.from === to)
     .subscribe(safe(async (payload: SignalingIceCandidateData) => {
-      await pc.addIceCandidate(payload.iceCandidate);
+      await pc.addIceCandidate(new RTCIceCandidate(payload.iceCandidate)); // TODO: unnecessary construction?
     })));
   try {
     return await func();
