@@ -10,6 +10,5 @@ function polyfill() {
   (<any>global).RTCPeerConnection = electronWebrtc.RTCPeerConnection;
   (<any>global).RTCSessionDescription = electronWebrtc.RTCSessionDescription;
   (<any>global).fetch = require('node-fetch');
-  (<any>global).WebSocket = require('websocket').w3cwebsocket;
-  (<any>global).window = global;
+  (<any>global).WebSocket = require('ws');
 }

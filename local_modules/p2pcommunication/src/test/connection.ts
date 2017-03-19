@@ -19,6 +19,7 @@ describe('Connection', () => {
         await waitRemotePeers(peer, 10);
       }
       peers.push(new LocalPeer(`ws://${SERVER}`));
+      await waitRemotePeers(peers[MAX_CLIENTS], 2);
       await waitRemotePeers(peers[MAX_CLIENTS], 1);
     });
 

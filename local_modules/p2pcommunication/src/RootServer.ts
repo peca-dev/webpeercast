@@ -7,6 +7,7 @@ import * as declaration from '../index';
 import ServerWebSocketConnection from './ServerWebSocketConnection';
 
 const debug = debugStatic('p2pcommunication:RootServer');
+const INVAILD_ID = 'fffffffff-ffff-ffff-ffff-fffffffffffff';
 
 export default class RootServer<T> implements declaration.RootServer<T> {
   private readonly localPeer = new LocalPeer<T>(10);
@@ -36,39 +37,48 @@ export default class RootServer<T> implements declaration.RootServer<T> {
 
   broadcast = (payload: T) => this.localPeer.broadcast(payload);
 
-  private async acceptNewConnection(ws: WebSocket) {
+  private acceptNewConnection(ws: WebSocket) {
     debug('Connection count:', this.wsServer.clients.length);
-    const remotePeer = new RemotePeer<T>(uuid.v4(), new ServerWebSocketConnection(ws));
+    const clientCount = this.localPeer.downstreams.size;
+    if (clientCount >= this.maxClients) {
+      return this.provideOneDownstreamsDownstreamConnects(this.createRemotePeer(INVAILD_ID, ws))
+        .then(() => {
+          ws.close();
+        });
+    }
+    const remotePeer = this.createRemotePeer(uuid.v4(), ws);
+    this.localPeer.addNewDownstream(remotePeer);
+    if (clientCount < 1) {
+      return Promise.resolve();
+    }
+    debug('Add otherStream');
+    return this.provideDownstreamsOtherStreamConnects(remotePeer);
+  }
+
+  private createRemotePeer(uuid: string, ws: WebSocket) {
+    const remotePeer = new RemotePeer<T>(uuid, new ServerWebSocketConnection(ws));
     remotePeer.onBroadcasting.subscribe((payload) => {
       // NOP
     });
     remotePeer.sendId();
     debug((new Date()) + ' Connection accepted.');
-
-    const clientCount = this.localPeer.downstreams.size;
-    if (clientCount >= this.maxClients) {
-      debug('Add downstream');
-      await provideConnection(
-        remotePeer,
-        'toDownstreamOf',
-        this.selectOne([...this.localPeer.downstreams]),
-      );
-      ws.close();
-      return;
-    }
-    this.localPeer.addNewDownstream(remotePeer);
-    if (clientCount < 1) {
-      return;
-    }
-    debug('Add otherStream');
-    this.startToConnectOtherPeer(remotePeer);
+    return remotePeer;
   }
 
-  private startToConnectOtherPeer(client: Downstream<T>) {
-    [...this.localPeer.downstreams]
-      .filter(x => x !== client)
-      .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)
-        .catch(e => console.error(e.stack || e)),
+  private provideDownstreamsOtherStreamConnects(client: Downstream<T>) {
+    return Promise.all(
+      [...this.localPeer.downstreams]
+        .filter(x => x !== client)
+        .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)),
+    );
+  }
+
+  private async provideOneDownstreamsDownstreamConnects(remotePeer: RemotePeer<{}>) {
+    debug('Add downstream');
+    await provideConnection(
+      remotePeer,
+      'toDownstreamOf',
+      this.selectOne([...this.localPeer.downstreams]),
     );
   }
 

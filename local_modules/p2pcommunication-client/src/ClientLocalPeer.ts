@@ -1,3 +1,4 @@
+import * as debugStatic from 'debug';
 import {
   Broadcastable,
   LocalPeer,
@@ -13,6 +14,7 @@ import { printError, safe } from './printerror';
 import { answerDataChannel, offerDataChannel } from './rtcconnector';
 import RTCDataChannelConnection from './RTCDataChannelConnection';
 
+const debug = debugStatic('p2pcommunication-client:ClientLocalPeer');
 const CONFIGURATION = {
   iceServers: [{
     urls: [
@@ -179,6 +181,9 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
   }
 
   private addUpstream(upstream: RemotePeer<T>) {
+    if (this.id === 'fffffffff-ffff-ffff-ffff-fffffffffffff') {
+      debug('Connect temporary stream');
+    }
     this.localPeer.upstreams.add(upstream);
     this.onConnected.next({ peerType: 'upstream', remotePeer: upstream });
   }
