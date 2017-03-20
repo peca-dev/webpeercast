@@ -9,8 +9,12 @@
     "log4js": "^1.1.0"
   },
   "devDependencies": {
+    "@types/empower": "^1.2.30",
     "@types/log4js": "^0.0.32",
+    "@types/mocha": "^2.2.40",
     "@types/node": "^7.0.5",
+    "@types/power-assert": "^1.4.29",
+    "@types/power-assert-formatter": "^1.4.28",
     "babel-core": "^6.23.1",
     "babel-loader": "^6.3.2",
     "babel-plugin-espower": "^2.3.2",

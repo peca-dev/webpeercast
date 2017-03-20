@@ -10,7 +10,11 @@
     "webrtc-adapter": "^3.1.6"
   },
   "devDependencies": {
+    "@types/empower": "^1.2.30",
     "@types/isomorphic-fetch": "^0.0.33",
+    "@types/mocha": "^2.2.40",
+    "@types/power-assert": "^1.4.29",
+    "@types/power-assert-formatter": "^1.4.28",
     "babel-core": "^6.23.1",
     "babel-loader": "^6.3.2",
     "babel-plugin-espower": "^2.3.2",
