@@ -50,19 +50,6 @@ module.exports = [
         common,
         {
             entry: {
-                "test/test": ["babel-polyfill", "webrtc-adapter", "./src/test/test.ts"]
-            },
-            module: tsModule({ browsers: ["last 2 versions"] }),
-            output: {
-                filename: "lib/[name].js"
-            },
-            target: "web"
-        }
-    ),
-    Object.assign({},
-        common,
-        {
-            entry: {
                 index: ["./src/index.ts"]
             },
             externals: /^(?!\.)/,
