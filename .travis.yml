@@ -53,9 +53,9 @@ deploy:
   api_key:
     secure: SASENarJ4DLgDaYkJldBuPu91uXKiwMH1FBdv5HRMK7SyhNV4aubQHwYSTFrqvu8gBC5Qb3qhONMfzlBMio1AMAzp1xox8iUskOZTUnkv2Vl95eAOkRe7ppKcDstGsELifgGbEdSyu4/eb4vXe4oWmcKclDkYJ/7XFD4yCBtos/8qSdknXdYSd6qk9MgkXyCwWjYl3JNWf3vuqi9I8VHBWx5DYRLJExp06rzkz9jG8Q8zjPlnlm+o1QhuonuZY5UlKn6oR3kI+qnci8KBMdjEA2dCM7WSeLNCKbR7OBlA0vMcAbnA16XK7+6tqZrTPw/LO4aJEobNXmEvhipspL+gntkjl9DVxNM8BvvfxityGOe8Qu5nbPJk1Yp0U2vbPS4JZomIoL64BX9rsg71meIfMF2rAjqiLvnL5I6UMpQcpjmAE3epfcPtphy58FlXq2I23L/LvFfxYeexUTMlurLO9JSpxwV7DS55srMDsCI1maQMvEtbXMVYez6thiqs1ypXWGGgkBslEALa+DqdoYTwwJM2Ao21Xlts7dPSBHVl5EsLuQ9CqGDVeIQ6K2OFqMol4/mmyk0L28smePfs5cd5EOFHatWbN6O32uvHeALA/N7P0ARso3fSXvw2xktCAkd3bZYuzXreF9gBUSRkIQrYhlDUOy+UlPbv49QMI1u2wc=
   file:
-    - sub_projects/pcypproxy/tmp/pcypproxy-linux.zip
-    - sub_projects/pcypproxy/tmp/pcypproxy-mac.zip
-    - sub_projects/pcypproxy/tmp/pcypproxy-win.zip
+    - sub_projects/pcypproxy/pcypproxy-linux.zip
+    - sub_projects/pcypproxy/pcypproxy-mac.zip
+    - sub_projects/pcypproxy/pcypproxy-win.zip
   on:
     tags: true
   prerelease: true
