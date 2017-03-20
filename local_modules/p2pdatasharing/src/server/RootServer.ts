@@ -8,8 +8,8 @@ export default class RootServer<T extends { id: string }> {
 
   constructor(httpServer: http.Server) {
     this.server = new p2pCommunication.RootServer(httpServer);
-    this.server.onConnected.subscribe((remoteClient) => {
-      remoteClient.broadcast(this.eventQueue);
+    this.server.onConnected.subscribe((e) => {
+      e.remotePeer.broadcast(this.eventQueue);
     });
   }
 
