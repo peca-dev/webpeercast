@@ -101,7 +101,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     }
   }
 
-  private async offerNewConnection(
+  private offerNewConnection(
     to: string,
     peerType: PeerType,
     upstream: Upstream<T>,
@@ -110,12 +110,23 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       throw new Error('Assertion error.');
     }
     const peerConnection = new RTCPeerConnection(CONFIGURATION);
-    const dataChannel = await offerDataChannel(
+    const dataChannel = peerConnection.createDataChannel('');
+    const peer = new RemotePeer<T>(
+      to,
+      new RTCDataChannelConnection(peerConnection, dataChannel),
+    );
+    this.setEventTo(peerType, peer);
+    return offerDataChannel(
       peerConnection,
+      dataChannel,
       to,
       upstream,
-    );
-    await this.addNewConnection(to, peerConnection, dataChannel, peerType);
+    ).toPromise()
+      .then(() => this.addNewConnection(peerType, peer))
+      .catch((e) => {
+        peer.disconnect();
+        throw e;
+      });
   }
 
   private async answerNewConnection(
@@ -131,26 +142,33 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       offer,
       upstream,
     );
-    await this.addNewConnection(from, peerConnection, dataChannel, peerType);
-  }
-
-  private async addNewConnection(
-    id: string,
-    peerConnection: RTCPeerConnection,
-    dataChannel: RTCDataChannel,
-    peerType: PeerType,
-  ) {
     const peer = new RemotePeer<T>(
-      id,
+      from,
       new RTCDataChannelConnection(peerConnection, dataChannel),
     );
+    this.setEventTo(peerType, peer);
+    await this.addNewConnection(peerType, peer);
+  }
+
+  private async setEventTo(peerType: PeerType, peer: RemotePeer<T>) {
     switch (peerType) {
       case 'upstream':
         this.setUpstreamEventsTo(peer);
-        this.addUpstream(peer);
         break;
       case 'otherStream':
         this.localPeer.setOtherStreamEventsTo(peer);
+        break;
+      default:
+        break;
+    }
+  }
+
+  private async addNewConnection(peerType: PeerType, peer: RemotePeer<T>) {
+    switch (peerType) {
+      case 'upstream':
+        this.addUpstream(peer);
+        break;
+      case 'otherStream':
         this.localPeer.addNewOtherStream(peer);
         break;
       case 'downstream':

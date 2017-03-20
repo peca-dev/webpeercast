@@ -6,20 +6,19 @@ import { Observable, Subscribable } from 'rxjs/Observable';
 import { ISubscription } from 'rxjs/Subscription';
 import { safe } from './printerror';
 
-export function offerDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream<{}>) {
-  return exchangeIceCandidate(pc, to, upstream, async () => {
-    let dataChannel: RTCDataChannel | null = null;
-    await new Promise((resolve, reject) => {
-      Observable.fromEvent(pc, 'negotiationneeded')
-        .first()
-        .timeout(3 * 1000)
-        .subscribe(resolve, reject);
-      dataChannel = pc.createDataChannel('');
-    });
+export function offerDataChannel(
+  pc: RTCPeerConnection,
+  dataChannel: RTCDataChannel,
+  to: string, upstream: Upstream<{}>,
+) {
+  return Observable.fromPromise(exchangeIceCandidate(pc, to, upstream, async () => {
+    await Observable.fromEvent(pc, 'negotiationneeded')
+      .first()
+      .timeout(3 * 1000)
+      .toPromise();
     await exchangeOfferWithAnswer(pc, to, upstream);
     await waitEvent(dataChannel!, 'open');
-    return dataChannel!;
-  });
+  }));
 }
 
 async function exchangeOfferWithAnswer(
@@ -92,7 +91,7 @@ async function exchangeIceCandidate<T>(
 function waitMessage<T extends { from: string }>(observable: Observable<T>, from: string) {
   return observable
     .filter(payload => payload.from === from)
-    .timeout(5 * 1000)
+    .timeout(10 * 1000)
     .first()
     .toPromise();
 }
@@ -100,7 +99,7 @@ function waitMessage<T extends { from: string }>(observable: Observable<T>, from
 function waitEvent<T extends Event>(eventTarget: EventTarget, event: string, func?: Function) {
   return new Promise<T>((resolve, reject) => {
     Observable.fromEvent<T>(eventTarget, event)
-      .timeout(5 * 1000)
+      .timeout(10 * 1000)
       .first()
       .subscribe(resolve, reject);
     if (func != null) {
