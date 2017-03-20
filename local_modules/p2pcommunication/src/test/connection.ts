@@ -8,7 +8,7 @@ const MAX_CLIENTS = 10;
 const SERVER = '127.0.0.1:8080';
 
 describe('Connection', () => {
-  describe(`limit ${MAX_CLIENTS}`, function () {
+  describe(`limit ${MAX_CLIENTS}`, function (this) {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(9 * 1000);
     const peers = <LocalPeer<{}>[]>[];
