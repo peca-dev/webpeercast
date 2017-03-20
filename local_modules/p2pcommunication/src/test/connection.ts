@@ -2,13 +2,8 @@ import { LocalPeer } from 'p2pcommunication-client';
 import { RemotePeer } from 'p2pcommunication-common';
 import * as assert from 'power-assert';
 import { Observable } from 'rxjs';
-import { createServer, ROOT_SERVER_ID, SERVER_MAX_CLIENTS } from './server';
+import { ROOT_SERVER_ID, SERVER_MAX_CLIENTS } from './server';
 import { closeAll, fetchServerStatus, initPeerTree } from './utils';
-
-let server: { close(): void };
-
-before(async () => { server = await createServer(); });
-after(() => { server.close(); });
 
 describe('Connection', function (this) {
   // tslint:disable-next-line:no-invalid-this

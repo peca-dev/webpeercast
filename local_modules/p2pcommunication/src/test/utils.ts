@@ -75,7 +75,7 @@ export async function closeAll(peers: LocalPeer<{}>[]) {
 
 export async function waitPeersCount(count: number) {
   for (; ;) {
-    const serverStatus = await fetchServerStatus(SERVER);
+    const serverStatus = await fetchServerStatus();
     if (serverStatus.clients.length === count) {
       break;
     }

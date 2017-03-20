@@ -3,7 +3,7 @@ import {
   Upstream,
 } from 'p2pcommunication-common';
 import { Observable, Subscribable } from 'rxjs/Observable';
-import { AnonymousSubscription, ISubscription } from 'rxjs/Subscription';
+import { ISubscription } from 'rxjs/Subscription';
 import { safe } from './printerror';
 
 export function offerDataChannel(pc: RTCPeerConnection, to: string, upstream: Upstream<{}>) {
@@ -30,7 +30,7 @@ async function exchangeOfferWithAnswer(
   const offer = await pc.createOffer();
   await pc.setLocalDescription(offer);
   upstream.offerTo(to, offer);
-  const payload = await waitMessage(upstream.onSignalingAnswer, to);
+  const payload = await waitMessage(cast(upstream.onSignalingAnswer), to);
   await pc.setRemoteDescription(payload.answer);
 }
 
@@ -78,7 +78,7 @@ async function exchangeIceCandidate<T>(
   subscriptions.push(upstream.onSignalingIceCandidate
     .filter(payload => payload.from === to)
     .subscribe(safe(async (payload: SignalingIceCandidateData) => {
-      await pc.addIceCandidate(new RTCIceCandidate(payload.iceCandidate)); // TODO: unnecessary construction?
+      await pc.addIceCandidate(payload.iceCandidate);
     })));
   try {
     return await func();
@@ -89,33 +89,26 @@ async function exchangeIceCandidate<T>(
   }
 }
 
-function waitMessage(observable: Subscribable<{ from: string }>, from: string) {
-  return new Promise<any>((resolve, reject) => {
-    let subscription: AnonymousSubscription;
-    const timer = setTimeout(
-      () => {
-        subscription.unsubscribe();
-        reject(new Error(`Timeout message from: ${from}.`));
-      },
-      3 * 1000,
-    );
-    subscription = observable.subscribe(safe(async (payload: { from: string }) => {
-      if (payload.from !== from) {
-        return;
-      }
-      clearTimeout(timer);
-      subscription.unsubscribe();
-      resolve(payload);
-    }));
-  });
+function waitMessage<T extends { from: string }>(observable: Observable<T>, from: string) {
+  return observable
+    .filter(payload => payload.from === from)
+    .timeout(5 * 1000)
+    .first()
+    .toPromise();
 }
 
 function waitEvent<T extends Event>(eventTarget: EventTarget, event: string, func?: Function) {
   return new Promise<T>((resolve, reject) => {
-    Observable.fromEvent<T>(eventTarget, event).timeout(3 * 1000).first()
+    Observable.fromEvent<T>(eventTarget, event)
+      .timeout(5 * 1000)
+      .first()
       .subscribe(resolve, reject);
     if (func != null) {
       func();
     }
   });
+}
+
+function cast<T>(obj: Subscribable<T>) {
+  return <Observable<T>>obj;
 }
