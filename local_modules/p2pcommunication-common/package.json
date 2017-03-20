@@ -11,6 +11,10 @@
   },
   "devDependencies": {
     "@types/debug": "^0.0.29",
+    "@types/empower": "^1.2.30",
+    "@types/mocha": "^2.2.40",
+    "@types/power-assert": "^1.4.29",
+    "@types/power-assert-formatter": "^1.4.28",
     "@types/webrtc": "0.0.21",
     "babel-core": "^6.23.1",
     "babel-loader": "^6.3.2",
