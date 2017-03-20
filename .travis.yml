@@ -44,9 +44,9 @@ script:
   - pushd sub_projects/pcypproxy-server
   - docker build -t progre/pcypproxy-server .
   - popd
-  - pushd sub_projects/pcypproxy
-  - yarn run package
-  - popd
+  # - pushd sub_projects/pcypproxy
+  # - yarn run package
+  # - popd
 deploy:
   provider: releases
   api_key:
