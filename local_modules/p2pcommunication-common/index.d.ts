@@ -1,4 +1,3 @@
-/// <reference path="node_modules/@types/webrtc/index.d.ts" />
 import { Observable, Subject } from 'rxjs';
 import { Subscribable } from 'rxjs/Observable';
 
