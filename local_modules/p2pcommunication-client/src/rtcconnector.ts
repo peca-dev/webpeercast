@@ -11,13 +11,22 @@ export function offerDataChannel(
   dataChannel: RTCDataChannel,
   to: string, upstream: Upstream<{}>,
 ) {
-  return Observable.fromPromise(exchangeIceCandidate(pc, to, upstream, async () => {
-    await Observable.fromEvent(pc, 'negotiationneeded')
+  return exchangeIceCandidate(pc, to, upstream, () => new Observable((subscribe) => {
+    Observable.fromEvent(dataChannel, 'open')
+      .timeout(10 * 1000)
       .first()
+      .subscribe(() => subscribe.complete(), e => subscribe.error(e));
+    Observable.fromEvent(pc, 'negotiationneeded')
       .timeout(3 * 1000)
-      .toPromise();
-    await exchangeOfferWithAnswer(pc, to, upstream);
-    await waitEvent(dataChannel!, 'open');
+      .first()
+      .subscribe(
+      () => {
+        exchangeOfferWithAnswer(pc, to, upstream)
+          .catch(e => subscribe.error(e));
+      },
+      (e) => {
+        subscribe.error(e);
+      });
   }));
 }
 
@@ -39,7 +48,7 @@ export function answerDataChannel(
   offer: RTCSessionDescriptionInit,
   upstream: Upstream<{}>,
 ) {
-  return exchangeIceCandidate(pc, from, upstream, async () => {
+  return exchangeIceCandidate(pc, from, upstream, () => Observable.fromPromise((async () => {
     await exchangeAnswerWithOffer(pc, from, offer, upstream);
     const event = await Observable.fromEvent<RTCDataChannelEvent>(pc, 'datachannel')
       .first()
@@ -47,7 +56,7 @@ export function answerDataChannel(
       .toPromise();
     await waitEvent(event.channel, 'open');
     return event.channel;
-  });
+  })()));
 }
 
 async function exchangeAnswerWithOffer(
@@ -62,11 +71,11 @@ async function exchangeAnswerWithOffer(
   upstream.answerTo(from, answer);
 }
 
-async function exchangeIceCandidate<T>(
+function exchangeIceCandidate<T>(
   pc: RTCPeerConnection,
   to: string,
   upstream: Upstream<{}>,
-  func: () => Promise<T>,
+  func: () => Observable<T>,
 ) {
   const subscriptions: ISubscription[] = [];
   subscriptions.push(Observable.fromEvent<RTCPeerConnectionIceEvent>(pc, 'icecandidate')
@@ -79,13 +88,11 @@ async function exchangeIceCandidate<T>(
     .subscribe(safe(async (payload: SignalingIceCandidateData) => {
       await pc.addIceCandidate(payload.iceCandidate);
     })));
-  try {
-    return await func();
-  } finally {
+  return func().finally(() => {
     for (const subscription of subscriptions) {
       subscription.unsubscribe();
     }
-  }
+  });
 }
 
 function waitMessage<T extends { from: string }>(observable: Observable<T>, from: string) {

@@ -141,7 +141,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       from,
       offer,
       upstream,
-    );
+    ).toPromise();
     const peer = new RemotePeer<T>(
       from,
       new RTCDataChannelConnection(peerConnection, dataChannel),
