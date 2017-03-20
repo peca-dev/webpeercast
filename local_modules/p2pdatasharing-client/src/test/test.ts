@@ -1,4 +1,3 @@
-// tslint:disable-next-line:no-reference
 import * as assert from 'power-assert';
 import Peer from '../Peer';
 
