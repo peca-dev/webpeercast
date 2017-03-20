@@ -10,10 +10,7 @@ export function offerDataChannel(pc: RTCPeerConnection, to: string, upstream: Up
   return exchangeIceCandidate(pc, to, upstream, async () => {
     let dataChannel: RTCDataChannel | null = null;
     await new Promise((resolve, reject) => {
-      Observable.fromEventPattern(
-        (handler: any) => pc.onnegotiationneeded = handler,
-        () => pc.onnegotiationneeded = <any>null,
-      )
+      Observable.fromEvent(pc, 'negotiationneeded')
         .first()
         .timeout(3 * 1000)
         .subscribe(resolve, reject);
@@ -45,10 +42,7 @@ export function answerDataChannel(
 ) {
   return exchangeIceCandidate(pc, from, upstream, async () => {
     await exchangeAnswerWithOffer(pc, from, offer, upstream);
-    const event = await Observable.fromEventPattern<RTCDataChannelEvent>(
-      (handler: any) => pc.ondatachannel = handler,
-      () => pc.ondatachannel = <any>null,
-    )
+    const event = await Observable.fromEvent<RTCDataChannelEvent>(pc, 'datachannel')
       .first()
       .timeout(3 * 1000)
       .toPromise();
@@ -76,10 +70,7 @@ async function exchangeIceCandidate<T>(
   func: () => Promise<T>,
 ) {
   const subscriptions: ISubscription[] = [];
-  subscriptions.push(Observable.fromEventPattern<RTCPeerConnectionIceEvent>(
-    (handler: any) => { pc.onicecandidate = handler; },
-    () => { pc.onicecandidate = <any>null; },
-  )
+  subscriptions.push(Observable.fromEvent<RTCPeerConnectionIceEvent>(pc, 'icecandidate')
     .filter(e => e.candidate != null)
     .subscribe((e) => {
       upstream.emitIceCandidateTo(to, e.candidate!);
