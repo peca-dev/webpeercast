@@ -23,15 +23,21 @@ describe('Connection', () => {
       await waitRemotePeers(peers[MAX_CLIENTS], 1);
     });
 
-    it('connect', async () => {
+    it(`connect ${MAX_CLIENTS} clients to server`, async () => {
       const serverStatus1 = await fetchServerStatus(SERVER);
       assert(serverStatus1.clients.length === MAX_CLIENTS);
+    });
+
+    it('connect upstream peers with others', async () => {
       Observable.range(0, MAX_CLIENTS)
         .map(x => peers[x])
         .flatMap(peer => [...(<any>peer).debug.getUpstreams()])
         .subscribe((remotePeer: RemotePeer<{}>) => {
           assert(remotePeer.id === ROOT_SERVER_ID);
         });
+    });
+
+    it('connect downstream peer with upstream', async () => {
       Observable.from([...(<any>peers[MAX_CLIENTS]).debug.getUpstreams()])
         .subscribe((remotePeer: RemotePeer<{}>) => {
           assert(remotePeer.id !== ROOT_SERVER_ID);
