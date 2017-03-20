@@ -34,7 +34,6 @@ script:
   - pushd local_modules/p2pcommunication
   - yarn test
   - popd
-  - killall node
   - pushd local_modules/p2pdatasharing
   - yarn run test-server&
   - popd
