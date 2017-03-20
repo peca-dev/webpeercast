@@ -3,7 +3,7 @@ dist: trusty
 language: node_js
 node_js: 6
 addons:
-  firefox: 52
+  firefox: latest
 env:
   - HEADLESS=true
 before_install:
@@ -32,7 +32,7 @@ before_script:
   - pushd sub_projects/pcypproxy && yarn run build && popd
 script:
   - pushd local_modules/p2pcommunication
-  - yarn run test-server&
+  - yarn test
   - popd
   - killall node
   - pushd local_modules/p2pdatasharing

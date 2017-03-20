@@ -2,12 +2,24 @@ import { LocalPeer } from 'p2pcommunication-client';
 import { RemotePeer } from 'p2pcommunication-common';
 import * as assert from 'power-assert';
 import { Observable } from 'rxjs';
+import { createServer } from './server';
 import { closeAll, fetchServerStatus, initPeers, waitRemotePeers } from './utils';
+
 const ROOT_SERVER_ID = '00000000-0000-0000-0000-000000000000';
 const MAX_CLIENTS = 10;
 const SERVER = '127.0.0.1:8080';
 
 describe('Connection', () => {
+  let server: { close(): void };
+
+  before(async () => {
+    server = await createServer();
+  });
+
+  after(() => {
+    server.close();
+  });
+
   describe(`limit ${MAX_CLIENTS}`, function (this) {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(9 * 1000);
