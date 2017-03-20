@@ -2,24 +2,13 @@ import { LocalPeer } from 'p2pcommunication-client';
 import { RemotePeer } from 'p2pcommunication-common';
 import * as assert from 'power-assert';
 import { Observable } from 'rxjs';
-import { createServer } from './server';
+import { createServer, ROOT_SERVER_ID, SERVER_MAX_CLIENTS } from './server';
 import { closeAll, fetchServerStatus, initPeerTree } from './utils';
-
-const ROOT_SERVER_ID = '00000000-0000-0000-0000-000000000000';
-const SERVER_MAX_CLIENTS = 10;
-const CLIENT_MAX_CLIENTS = 2;
-const PORT = 8080;
-const SERVER = `127.0.0.1:${PORT}`;
 
 let server: { close(): void };
 
-before(async () => {
-  server = await createServer(PORT);
-});
-
-after(() => {
-  server.close();
-});
+before(async () => { server = await createServer(); });
+after(() => { server.close(); });
 
 describe('Connection', function (this) {
   // tslint:disable-next-line:no-invalid-this
@@ -28,17 +17,11 @@ describe('Connection', function (this) {
   context('between two peers', () => {
     const peers = <LocalPeer<{}>[]>[];
 
-    before(() => initPeerTree(
-      peers,
-      SERVER,
-      2,
-      SERVER_MAX_CLIENTS,
-      CLIENT_MAX_CLIENTS,
-    ));
-    after(() => closeAll(SERVER, peers));
+    before(() => initPeerTree(peers, 2));
+    after(() => closeAll(peers));
 
     it('connects to server', async () => {
-      const serverStatus = await fetchServerStatus(SERVER);
+      const serverStatus = await fetchServerStatus();
       assert(serverStatus.clients.length === 2);
       assert((<any>peers[0]).debug.hasPeer((<any>peers[1]).id));
       assert((<any>peers[1]).debug.hasPeer((<any>peers[0]).id));
@@ -51,17 +34,11 @@ describe('Connection', function (this) {
   context('between many peers on one layer', () => {
     const peers = <LocalPeer<{}>[]>[];
 
-    before(() => initPeerTree(
-      peers,
-      SERVER,
-      SERVER_MAX_CLIENTS,
-      SERVER_MAX_CLIENTS,
-      CLIENT_MAX_CLIENTS,
-    ));
-    after(() => closeAll(SERVER, peers));
+    before(() => initPeerTree(peers, SERVER_MAX_CLIENTS));
+    after(() => closeAll(peers));
 
     it('connects to server', async () => {
-      const serverStatus = await fetchServerStatus(SERVER);
+      const serverStatus = await fetchServerStatus();
       assert(serverStatus.clients.length === peers.length);
       assert(peers.every(
         (x: any) => peers
@@ -77,17 +54,11 @@ describe('Connection', function (this) {
   describe(`limit ${SERVER_MAX_CLIENTS}`, () => {
     const peers = <LocalPeer<{}>[]>[];
 
-    before(() => initPeerTree(
-      peers,
-      SERVER,
-      SERVER_MAX_CLIENTS + 1,
-      SERVER_MAX_CLIENTS,
-      CLIENT_MAX_CLIENTS,
-    ));
-    after(() => closeAll(SERVER, peers));
+    before(() => initPeerTree(peers, SERVER_MAX_CLIENTS + 1));
+    after(() => closeAll(peers));
 
     it(`connect ${SERVER_MAX_CLIENTS} clients to server`, async () => {
-      const serverStatus1 = await fetchServerStatus(SERVER);
+      const serverStatus1 = await fetchServerStatus();
       assert(serverStatus1.clients.length === SERVER_MAX_CLIENTS);
     });
 
