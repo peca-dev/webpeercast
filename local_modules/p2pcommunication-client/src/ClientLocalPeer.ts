@@ -8,6 +8,7 @@ import {
   SignalingOfferData,
   Upstream,
 } from 'p2pcommunication-common';
+import { Observable } from 'rxjs';
 import * as declaration from '../index';
 import ClientWebSocketConnection from './ClientWebSocketConnection';
 import { printError, safe } from './printerror';
@@ -129,25 +130,35 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       });
   }
 
-  private async answerNewConnection(
+  private answerNewConnection(
     from: string,
     peerType: PeerType,
     offer: RTCSessionDescriptionInit,
     upstream: Upstream<T>,
   ) {
     const peerConnection = new RTCPeerConnection(CONFIGURATION);
-    const dataChannel = await answerDataChannel(
+    return answerDataChannel(
       peerConnection,
       from,
       offer,
       upstream,
-    ).toPromise();
-    const peer = new RemotePeer<T>(
-      from,
-      new RTCDataChannelConnection(peerConnection, dataChannel),
-    );
-    this.setEventTo(peerType, peer);
-    await this.addNewConnection(peerType, peer);
+    )
+      .map(e => ({
+        dataChannel: e.channel,
+        peer: new RemotePeer<T>(
+          from,
+          new RTCDataChannelConnection(peerConnection, e.channel),
+        ),
+      }))
+      .flatMap(({dataChannel, peer}) => {
+        this.setEventTo(peerType, peer);
+        return Observable.fromEvent(dataChannel, 'open')
+          .first()
+          .timeout(10 * 1000)
+          .map(() => peer);
+      })
+      .toPromise()
+      .then(peer => this.addNewConnection(peerType, peer));
   }
 
   private async setEventTo(peerType: PeerType, peer: RemotePeer<T>) {
