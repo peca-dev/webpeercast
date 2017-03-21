@@ -143,19 +143,17 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       offer,
       upstream,
     )
-      .map(e => ({
-        dataChannel: e.channel,
-        peer: new RemotePeer<T>(
+      .flatMap((e) => {
+        const dataChannel = e.channel;
+        const peer = new RemotePeer<T>(
           from,
           new RTCDataChannelConnection(peerConnection, e.channel),
-        ),
-      }))
-      .flatMap(({dataChannel, peer}) => {
+        );
         this.setEventTo(peerType, peer);
         return Observable.fromEvent(dataChannel, 'open')
           .first()
-          .timeout(10 * 1000)
-          .map(() => peer);
+          .map(() => peer)
+          .timeout(10 * 1000);
       })
       .toPromise()
       .then(peer => this.addNewConnection(peerType, peer));
