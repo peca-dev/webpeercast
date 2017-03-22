@@ -12,21 +12,17 @@ export function offerDataChannel(
   to: string, upstream: Upstream<{}>,
 ) {
   return exchangeIceCandidate(pc, to, upstream, () => new Observable((subscribe) => {
-    Observable.fromEvent(dataChannel, 'open')
-      .first()
-      .timeout(10 * 1000)
-      .subscribe(() => subscribe.complete(), e => subscribe.error(e));
     Observable.fromEvent(pc, 'negotiationneeded')
       .first()
       .timeout(3 * 1000)
-      .subscribe(
-      () => {
+      .flatMap(() => {
         exchangeOfferWithAnswer(pc, to, upstream)
           .catch(e => subscribe.error(e));
-      },
-      (e) => {
-        subscribe.error(e);
-      });
+        return Observable.fromEvent(dataChannel, 'open')
+          .first()
+          .timeout(10 * 1000);
+      })
+      .subscribe(subscribe);
   }));
 }
 
