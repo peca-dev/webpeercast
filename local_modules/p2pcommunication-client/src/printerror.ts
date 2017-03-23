@@ -1,3 +1,5 @@
+declare const process: any;
+
 export function safe<T>(func: (e: T) => Promise<void>) {
   return (event: T) => func(event).catch((e: any) => printError(e));
 }
@@ -9,7 +11,7 @@ export function printError(e: any) {
     return;
   }
   console.error(
-    e.toString() + '\n'
+    (process == null ? e.toString() + '\n' : '')
     + (<string>e.stack)
       .split('\n')
       .map(x => x.replace(/(.*?)@(.*)/, '    at $1 ($2)'))
