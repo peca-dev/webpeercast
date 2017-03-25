@@ -1,5 +1,7 @@
 try { require('source-map-support').install(); } catch (e) { /* empty */ }
 polyfill();
+import * as debugStatic from 'debug';
+debugStatic.enable('p2pcommunication:*');
 
 import { createServer } from './server';
 
