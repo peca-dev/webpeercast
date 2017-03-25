@@ -1,6 +1,6 @@
 import * as debugStatic from 'debug';
 import * as http from 'http';
-import { Downstream, LocalPeer, provideConnection, RemotePeer } from 'p2pcommunication-common';
+import { LocalPeer, provideConnection, RemotePeer } from 'p2pcommunication-common';
 import * as uuid from 'uuid';
 import * as WebSocket from 'ws';
 import * as declaration from '../index';
@@ -10,7 +10,7 @@ const debug = debugStatic('p2pcommunication:RootServer');
 const INVAILD_ID = 'fffffffff-ffff-ffff-ffff-fffffffffffff';
 
 export default class RootServer<T> implements declaration.RootServer<T> {
-  private readonly localPeer = new LocalPeer<T>(10);
+  private readonly localPeer = new LocalPeer<T>(10, true);
   private wsServer: WebSocket.Server;
   readonly maxClients = 10;
   private selectTarget = -1;
@@ -48,11 +48,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     }
     const remotePeer = this.createRemotePeer(uuid.v4(), ws);
     this.localPeer.addNewDownstream(remotePeer);
-    if (clientCount < 1) {
-      return Promise.resolve();
-    }
-    debug('Add otherStream');
-    return this.provideDownstreamsOtherStreamConnects(remotePeer);
+    return Promise.resolve();
   }
 
   private createRemotePeer(uuid: string, ws: WebSocket) {
@@ -63,14 +59,6 @@ export default class RootServer<T> implements declaration.RootServer<T> {
     remotePeer.sendId();
     debug((new Date()) + ' Connection accepted.');
     return remotePeer;
-  }
-
-  private provideDownstreamsOtherStreamConnects(client: Downstream<T>) {
-    return Promise.all(
-      [...this.localPeer.downstreams]
-        .filter(x => x !== client)
-        .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', client)),
-    );
   }
 
   private async provideOneDownstreamsDownstreamConnects(remotePeer: RemotePeer<{}>) {

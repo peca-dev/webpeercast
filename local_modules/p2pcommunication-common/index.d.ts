@@ -15,7 +15,7 @@ export declare class LocalPeer<T> {
   readonly onConnected: Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;
   readonly onBroadcastReceived: Subject<T>;
 
-  constructor(downstreamsLimit: number);
+  constructor(downstreamsLimit: number, isRoot: boolean);
 
   disconnect(): void;
   setOtherStreamEventsTo(otherStream: RemotePeer<T>): void;

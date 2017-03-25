@@ -33,7 +33,7 @@ const CONFIGURATION = {
  * It connects to upstream when it's disconnected with a upstream.
  */
 export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
-  readonly localPeer = new LocalPeer<T>(1);
+  readonly localPeer = new LocalPeer<T>(1, false);
   /** Decide by root server */
   id: string | null;
   private url: string | null;

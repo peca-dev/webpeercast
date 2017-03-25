@@ -19,7 +19,10 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
   readonly onConnected = new Rx.Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>();
   readonly onBroadcastReceived = new Rx.Subject<T>();
 
-  constructor(private readonly downstreamsLimit: number) {
+  constructor(
+    private readonly downstreamsLimit: number,
+    private readonly isRoot: boolean,
+  ) {
   }
 
   disconnect() {
@@ -60,7 +63,13 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
     });
     this.downstreams.add(downstream);
     this.onConnected.next({ peerType: 'downstream', remotePeer: downstream });
-    return Promise.resolve();
+    if (!this.isRoot || this.downstreams.size < 1) {
+      return Promise.resolve();
+    }
+    return <Promise<void>><any>provideConnectionAsOtherStreamBetween({
+      downstream,
+      andOneOf: this.downstreams,
+    });
   }
 
   broadcast(payload: T) {
@@ -81,6 +90,17 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
     }
     return array[this.downstreamSelectTarget];
   }
+}
+
+function provideConnectionAsOtherStreamBetween<T>(
+  { downstream, andOneOf: downstreams }
+    : { downstream: Downstream<T>, andOneOf: Set<Downstream<T>> },
+) {
+  return Promise.all(
+    [...downstreams]
+      .filter(x => x !== downstream)
+      .map(otherClient => provideConnection(otherClient, 'toOtherStreamOf', downstream)),
+  );
 }
 
 function broadcastToStreams(data: {}, streams: Set<Broadcastable<{}>>) {
