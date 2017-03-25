@@ -6,23 +6,28 @@ import { Observable, Subscribable } from 'rxjs/Observable';
 import { ISubscription } from 'rxjs/Subscription';
 import { safe } from './printerror';
 
+const longTimeout = 10 * 1000;
+
 export function offerDataChannel(
   pc: RTCPeerConnection,
   dataChannel: RTCDataChannel,
   to: string, upstream: Upstream<{}>,
 ) {
   return exchangeIceCandidate(pc, to, upstream, () => new Observable((subscribe) => {
+    Observable.fromEvent(dataChannel, 'open')
+      .first()
+      .timeout(longTimeout)
+      .subscribe(subscribe);
     Observable.fromEvent(pc, 'negotiationneeded')
       .first()
-      .timeout(3 * 1000)
-      .flatMap(() => {
+      .timeout(longTimeout)
+      .subscribe(
+      () => {
         exchangeOfferWithAnswer(pc, to, upstream)
           .catch(e => subscribe.error(e));
-        return Observable.fromEvent(dataChannel, 'open')
-          .first()
-          .timeout(10 * 1000);
-      })
-      .subscribe(subscribe);
+      },
+      e => subscribe.error(e),
+    );
   }));
 }
 
@@ -44,13 +49,19 @@ export function answerDataChannel(
   offer: RTCSessionDescriptionInit,
   upstream: Upstream<{}>,
 ) {
-  return exchangeIceCandidate(pc, from, upstream, () => {
-    exchangeAnswerWithOffer(pc, from, offer, upstream)
-      .catch(e => console.error(e.stack || e));
-    return Observable.fromEvent<RTCDataChannelEvent>(pc, 'datachannel')
-      .first()
-      .timeout(10 * 1000);
-  });
+  return exchangeIceCandidate(
+    pc,
+    from,
+    upstream,
+    () => new Observable<RTCDataChannelEvent>((subscribe) => {
+      Observable.fromEvent<RTCDataChannelEvent>(pc, 'datachannel')
+        .first()
+        .timeout(longTimeout)
+        .subscribe(subscribe);
+      exchangeAnswerWithOffer(pc, from, offer, upstream)
+        .catch(e => subscribe.error(e));
+    }),
+  );
 }
 
 async function exchangeAnswerWithOffer(
