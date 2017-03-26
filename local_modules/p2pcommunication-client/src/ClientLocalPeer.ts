@@ -1,13 +1,5 @@
 import * as debugStatic from 'debug';
-import {
-  Broadcastable,
-  LocalPeer,
-  OfferRequestData,
-  PeerType,
-  RemotePeer,
-  SignalingOfferData,
-  Upstream,
-} from 'p2pcommunication-common';
+import * as common from 'p2pcommunication-common';
 import { Observable, Subject } from 'rxjs';
 import * as declaration from '../index';
 import ClientWebSocketConnection from './ClientWebSocketConnection';
@@ -34,7 +26,7 @@ const CONFIGURATION = {
  */
 export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
   private remotePeerRepo = new ClientRemotePeerRepo();
-  readonly localPeer = new LocalPeer<T>(this.remotePeerRepo, 2, false);
+  readonly localPeer = new common.LocalPeer<T>(this.remotePeerRepo, 2, false);
   /** Decide by root server */
   id: string | null;
   private url: string | null;
@@ -85,7 +77,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     const url = this.url;
     try {
       this.id = null;
-      const upstream = new RemotePeer(
+      const upstream = new common.RemotePeer(
         '00000000-0000-0000-0000-000000000000',
         new ClientWebSocketConnection(new WebSocket(url)),
       );
@@ -105,15 +97,15 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
 
   private offerNewConnection(
     to: string,
-    peerType: PeerType,
-    upstream: Upstream<T>,
+    peerType: common.PeerType,
+    upstream: common.Upstream<T>,
   ) {
     if (peerType === 'downstream') {
       throw new Error('Assertion error.');
     }
     const peerConnection = new RTCPeerConnection(CONFIGURATION);
     const dataChannel = peerConnection.createDataChannel('');
-    const peer = new RemotePeer<T>(
+    const peer = new common.RemotePeer<T>(
       to,
       new RTCDataChannelConnection(peerConnection, dataChannel),
     );
@@ -133,9 +125,9 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
 
   private answerNewConnection(
     from: string,
-    peerType: PeerType,
+    peerType: common.PeerType,
     offer: RTCSessionDescriptionInit,
-    upstream: Upstream<T>,
+    upstream: common.Upstream<T>,
   ) {
     const peerConnection = new RTCPeerConnection(CONFIGURATION);
     return answerDataChannel(
@@ -146,7 +138,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     )
       .flatMap((e) => {
         const dataChannel = e.channel;
-        const peer = new RemotePeer<T>(
+        const peer = new common.RemotePeer<T>(
           from,
           new RTCDataChannelConnection(peerConnection, e.channel),
         );
@@ -160,7 +152,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
       .then(peer => this.addNewConnection(peerType, peer));
   }
 
-  private async setEventTo(peerType: PeerType, peer: RemotePeer<T>) {
+  private async setEventTo(peerType: common.PeerType, peer: common.RemotePeer<T>) {
     switch (peerType) {
       case 'upstream':
         this.setUpstreamEventsTo(peer);
@@ -173,7 +165,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     }
   }
 
-  private async addNewConnection(peerType: PeerType, peer: RemotePeer<T>) {
+  private async addNewConnection(peerType: common.PeerType, peer: common.RemotePeer<T>) {
     switch (peerType) {
       case 'upstream':
         this.addUpstream(peer);
@@ -189,11 +181,11 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     }
   }
 
-  private setUpstreamEventsTo(upstream: RemotePeer<T>) {
-    upstream.onOfferRequesting.subscribe(safe(async (data: OfferRequestData) => {
+  private setUpstreamEventsTo(upstream: common.RemotePeer<T>) {
+    upstream.onOfferRequesting.subscribe(safe(async (data: common.OfferRequestData) => {
       await this.offerNewConnection(data.to, data.peerType, upstream);
     }));
-    upstream.onSignalingOffer.subscribe(safe(async (data: SignalingOfferData) => {
+    upstream.onSignalingOffer.subscribe(safe(async (data: common.SignalingOfferData) => {
       await this.answerNewConnection(data.from, data.peerType, data.offer, upstream);
     }));
     upstream.onClosed.subscribe(safe(async () => {
@@ -208,7 +200,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     });
   }
 
-  private addUpstream(upstream: RemotePeer<T>) {
+  private addUpstream(upstream: common.RemotePeer<T>) {
     if (this.id === 'fffffffff-ffff-ffff-ffff-fffffffffffff') {
       debug('Connect temporary stream');
     }
@@ -217,12 +209,12 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
   }
 }
 
-function broadcastTo<T>(data: T, streams: Set<Broadcastable<T>>) {
+function broadcastTo<T>(data: T, streams: Set<common.Broadcastable<T>>) {
   for (const peer of streams) {
     peer.broadcast(data);
   }
 }
 
 class ClientRemotePeerRepo<T> {
-  downstreamAdded = new Subject<RemotePeer<T>>();
+  downstreamAdded = new Subject<common.RemotePeer<T>>();
 }
