@@ -1,6 +1,7 @@
 import * as debugStatic from 'debug';
 import * as http from 'http';
 import { LocalPeer, provideConnection, RemotePeer } from 'p2pcommunication-common';
+import { Subject } from 'rxjs';
 import * as uuid from 'uuid';
 import * as WebSocket from 'ws';
 import * as declaration from '../index';
@@ -10,7 +11,8 @@ const debug = debugStatic('p2pcommunication:RootServer');
 const INVAILD_ID = 'fffffffff-ffff-ffff-ffff-fffffffffffff';
 
 export default class RootServer<T> implements declaration.RootServer<T> {
-  private readonly localPeer = new LocalPeer<T>(10, true);
+  private remotePeerRepo = new ServerRemotePeerRepo();
+  private readonly localPeer = new LocalPeer<T>(this.remotePeerRepo, 10, true);
   private wsServer: WebSocket.Server;
   readonly maxClients = 10;
   private selectTarget = -1;
@@ -47,7 +49,7 @@ export default class RootServer<T> implements declaration.RootServer<T> {
         });
     }
     const remotePeer = this.createRemotePeer(uuid.v4(), ws);
-    this.localPeer.addNewDownstream(remotePeer);
+    this.remotePeerRepo.downstreamAdded.next(remotePeer);
     return Promise.resolve();
   }
 
@@ -82,4 +84,8 @@ export default class RootServer<T> implements declaration.RootServer<T> {
 function originIsAllowed(origin: string) {
   // put logic here to detect whether the specified origin is allowed.
   return true;
+}
+
+class ServerRemotePeerRepo<T> {
+  downstreamAdded = new Subject<RemotePeer<T>>();
 }

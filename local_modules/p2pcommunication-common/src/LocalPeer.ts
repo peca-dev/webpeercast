@@ -6,6 +6,7 @@ import {
   OtherStream,
   PeerType,
   RemotePeer,
+  RemotePeerRepo,
   Upstream,
 } from '../';
 import { provideConnection } from './rtcconnectionprovider';
@@ -20,9 +21,14 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
   readonly onBroadcastReceived = new Rx.Subject<T>();
 
   constructor(
+    remotePeerRepo: RemotePeerRepo<T>,
     private readonly downstreamsLimit: number,
     private readonly isRoot: boolean,
   ) {
+    remotePeerRepo.downstreamAdded.subscribe((remotePeer) => {
+      this.addNewDownstream(remotePeer)
+        .catch(e => console.error(e.stack || e));
+    });
   }
 
   disconnect() {
@@ -48,7 +54,7 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
     this.onConnected.next({ peerType: 'otherStream', remotePeer: otherStream });
   }
 
-  addNewDownstream(downstream: RemotePeer<T>) {
+  private addNewDownstream(downstream: RemotePeer<T>) {
     if (!this.canAppendDownstream()) {
       const item = this.selectOne([...this.downstreams]);
       return provideConnection(downstream, 'toDownstreamOf', item);

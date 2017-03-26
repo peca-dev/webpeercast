@@ -15,12 +15,11 @@ export declare class LocalPeer<T> {
   readonly onConnected: Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;
   readonly onBroadcastReceived: Subject<T>;
 
-  constructor(downstreamsLimit: number, isRoot: boolean);
+  constructor(remotePeerRepo: RemotePeerRepo<T>, downstreamsLimit: number, isRoot: boolean);
 
   disconnect(): void;
   setOtherStreamEventsTo(otherStream: RemotePeer<T>): void;
   addNewOtherStream(otherStream: RemotePeer<T>): void;
-  addNewDownstream(downstream: Downstream<T>): Promise<void>;
   broadcast(payload: T): void;
 }
 
@@ -95,6 +94,10 @@ export interface Connection {
 
   close(): void;
   send(type: string, payload: {}): void;
+}
+
+export interface RemotePeerRepo<T> {
+  downstreamAdded: Subscribable<RemotePeer<T>>;
 }
 
 export type PeerType = "upstream" | "otherStream" | "downstream";

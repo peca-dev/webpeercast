@@ -8,7 +8,7 @@ import {
   SignalingOfferData,
   Upstream,
 } from 'p2pcommunication-common';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import * as declaration from '../index';
 import ClientWebSocketConnection from './ClientWebSocketConnection';
 import { printError, safe } from './printerror';
@@ -33,7 +33,8 @@ const CONFIGURATION = {
  * It connects to upstream when it's disconnected with a upstream.
  */
 export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
-  readonly localPeer = new LocalPeer<T>(1, false);
+  private remotePeerRepo = new ClientRemotePeerRepo();
+  readonly localPeer = new LocalPeer<T>(this.remotePeerRepo, 2, false);
   /** Decide by root server */
   id: string | null;
   private url: string | null;
@@ -181,7 +182,7 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
         this.localPeer.addNewOtherStream(peer);
         break;
       case 'downstream':
-        await this.localPeer.addNewDownstream(peer);
+        this.remotePeerRepo.downstreamAdded.next(peer);
         break;
       default:
         throw new Error(`Unsupported peerType: ${peerType}`);
@@ -220,4 +221,8 @@ function broadcastTo<T>(data: T, streams: Set<Broadcastable<T>>) {
   for (const peer of streams) {
     peer.broadcast(data);
   }
+}
+
+class ClientRemotePeerRepo<T> {
+  downstreamAdded = new Subject<RemotePeer<T>>();
 }
