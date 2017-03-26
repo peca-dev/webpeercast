@@ -35,7 +35,7 @@ export async function initPeerTree(
   const leftPeers = numPeers - SERVER_MAX_CLIENTS;
   const numLayer1Peers = Math.min(leftPeers, SERVER_MAX_CLIENTS * CLIENT_MAX_CLIENTS);
   for (let i = 0; i < numLayer1Peers; i += 1) {
-    peers.push(new LocalPeer(`ws://${SERVER}`));
+    peers.push(new LocalPeer(`ws://${SERVER}`, CLIENT_MAX_CLIENTS));
   }
   for (const peer of peers.slice(SERVER_MAX_CLIENTS, SERVER_MAX_CLIENTS + numLayer1Peers)) {
     await waitDisconnect(peer, '00000000-0000-0000-0000-000000000000');
@@ -50,7 +50,7 @@ export async function initPeerTree(
 async function initPeers(server: string, peers: LocalPeer<{}>[], numPeers: number) {
   assert(peers.length === 0);
   for (let i = 0; i < numPeers; i += 1) {
-    peers.push(new LocalPeer(`ws://${server}`));
+    peers.push(new LocalPeer(`ws://${server}`, CLIENT_MAX_CLIENTS));
   }
   await new Promise((resolve, reject) => {
     let count = peers.length;

@@ -2,6 +2,7 @@ import { LocalPeer } from 'p2pcommunication-client';
 import * as assert from 'power-assert';
 import * as Rx from 'rxjs';
 import { AnonymousSubscription } from 'rxjs/Subscription';
+import { SERVER_MAX_CLIENTS } from './server';
 import { closeAll, initPeerTree } from './utils';
 
 describe('Sharing', () => {
@@ -34,17 +35,17 @@ describe('Sharing', () => {
     });
   });
 
-  [2, 3, 10, 15, 18, 20].forEach((peersCount) => {
+  [3, 6, 12].forEach((peersCount) => {
     context(`between ${peersCount} peers`, function () {
       // tslint:disable-next-line:no-invalid-this
-      this.timeout(8 * 1000);
+      this.timeout(60 * 1000);
 
       const peers = <LocalPeer<{}>[]>[];
 
       before(() => initPeerTree(peers, peersCount));
       after(() => closeAll(peers));
 
-      if (peersCount <= 10) {
+      if (peersCount <= SERVER_MAX_CLIENTS) {
         it('has one upstream', () => {
           for (const peer of peers) {
             assert((<any>peer).debug.getUpstreams().size === 1);

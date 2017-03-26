@@ -6,7 +6,7 @@ import RootServer from '../RootServer';
 const debug = debugStatic('p2pcommunication:server');
 
 export const ROOT_SERVER_ID = '00000000-0000-0000-0000-000000000000';
-export const SERVER_MAX_CLIENTS = 10;
+export const SERVER_MAX_CLIENTS = 3;
 export const CLIENT_MAX_CLIENTS = 2;
 export const PORT = 8080;
 
@@ -17,7 +17,7 @@ export async function createServer() {
     response.writeHead(200);
     response.end(createDebugJSON((<any>server).localPeer.downstreams));
   });
-  server = new RootServer(httpServer);
+  server = new RootServer(httpServer, SERVER_MAX_CLIENTS);
   return new Promise<{ close(): void }>((resolve, reject) => {
     httpServer.listen(PORT, () => {
       debug(`${new Date()} Server is listening on port ${PORT}`);

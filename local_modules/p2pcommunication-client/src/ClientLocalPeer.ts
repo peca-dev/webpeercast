@@ -1,4 +1,4 @@
-import * as debugStatic from 'debug';
+// import * as debugStatic from 'debug';
 import * as common from 'p2pcommunication-common';
 import { Observable, Subject } from 'rxjs';
 import * as declaration from '../index';
@@ -7,7 +7,7 @@ import { printError, safe } from './printerror';
 import { answerDataChannel, offerDataChannel } from './rtcconnector';
 import RTCDataChannelConnection from './RTCDataChannelConnection';
 
-const debug = debugStatic('p2pcommunication-client:ClientLocalPeer');
+// const debug = debugStatic('p2pcommunication-client:ClientLocalPeer');
 const CONFIGURATION = {
   iceServers: [{
     urls: [
@@ -25,13 +25,13 @@ const CONFIGURATION = {
  * It connects to upstream when it's disconnected with a upstream.
  */
 export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
-  private remotePeerRepo = new ClientRemotePeerRepo();
-  readonly localPeer = new common.LocalPeer<T>(this.remotePeerRepo, 2, false);
+  private readonly remotePeerRepo = new ClientRemotePeerRepo();
+  readonly localPeer: common.LocalPeer<T>;
   /** Decide by root server */
   id: string | null;
   private url: string | null;
 
-  debug = {
+  readonly debug = {
     hasPeer: (id: string | null) => {
       return (<{ id: string }[]>[])
         .concat([...this.localPeer.upstreams])
@@ -55,10 +55,13 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
     },
   };
 
-  onConnected = this.localPeer.onConnected;
-  onBroadcastReceived = this.localPeer.onBroadcastReceived;
+  readonly onConnected: typeof common.LocalPeer.prototype.onConnected;
+  readonly onBroadcastReceived: typeof common.LocalPeer.prototype.onBroadcastReceived;
 
-  constructor(url: string) {
+  constructor(url: string, downstreamsLimit: number) {
+    this.localPeer = new common.LocalPeer<T>(this.remotePeerRepo, downstreamsLimit, false);
+    this.onConnected = this.localPeer.onConnected;
+    this.onBroadcastReceived = this.localPeer.onBroadcastReceived;
     this.url = url;
     this.startConnectToServer();
   }
@@ -201,9 +204,6 @@ export default class ClientLocalPeer<T> implements declaration.LocalPeer<T> {
   }
 
   private addUpstream(upstream: common.RemotePeer<T>) {
-    if (this.id === 'fffffffff-ffff-ffff-ffff-fffffffffffff') {
-      debug('Connect temporary stream');
-    }
     this.localPeer.upstreams.add(upstream);
     this.onConnected.next({ peerType: 'upstream', remotePeer: upstream });
   }

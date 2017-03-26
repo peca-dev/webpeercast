@@ -6,9 +6,9 @@ export declare class RemotePeer<T> {
 }
 
 export declare class RootServer<T> {
-  onConnected: Subscribable<{ peerType: "upstream" | "otherStream" | "downstream"; remotePeer: RemotePeer<T>; }>;
+  readonly onConnected: Subscribable<{ peerType: "upstream" | "otherStream" | "downstream"; remotePeer: RemotePeer<T>; }>;
 
-  constructor(httpServer: http.Server);
+  constructor(httpServer: http.Server, downstreamsLimit: number);
 
   broadcast(payload: T): void;
 }

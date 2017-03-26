@@ -57,13 +57,17 @@ export default class LocalPeer<T> implements ILocalPeer<T> {
   private addNewDownstream(downstream: RemotePeer<T>) {
     if (!this.canAppendDownstream()) {
       const item = this.selectOne([...this.downstreams]);
-      return provideConnection(downstream, 'toDownstreamOf', item);
+      return provideConnection(downstream, 'toDownstreamOf', item)
+        .then(() => downstream.disconnect());
     }
     downstream.onClosed.subscribe(() => {
       this.downstreams.delete(downstream);
     });
     downstream.onBroadcasting.subscribe((data) => {
       this.onBroadcastReceived.next(data);
+      if (this.isRoot) {
+        return;
+      }
       broadcastToStreams(data, this.upstreams);
       broadcastToStreams(data, this.otherStreams);
     });

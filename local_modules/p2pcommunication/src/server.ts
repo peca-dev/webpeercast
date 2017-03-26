@@ -24,7 +24,7 @@ async function main() {
     response.writeHead(404);
     response.end();
   });
-  server = new RootServer(httpServer);
+  server = new RootServer(httpServer, 10);
   httpServer.listen(8080, () => {
     debug((new Date()) + ' Server is listening on port 8080');
   });
