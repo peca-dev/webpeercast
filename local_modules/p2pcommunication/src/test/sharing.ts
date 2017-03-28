@@ -69,14 +69,17 @@ describe('Sharing', () => {
         it(`receive message from peer[${index}]`, () => {
           assert(peers.length === peersCount);
           const testPeer = peers[index];
-          return testPing(testPeer, peers.filter(x => x !== testPeer));
+          return expect(peers.filter(x => x !== testPeer), { receivesBroadcastFrom: testPeer });
         });
       });
     });
   });
 });
 
-function testPing(source: LocalPeer<string>, targets: LocalPeer<string>[]) {
+function expect(
+  targets: LocalPeer<string>[],
+  { receivesBroadcastFrom: source }: { receivesBroadcastFrom: LocalPeer<string> },
+) {
   return new Promise((resolve, reject) => {
     const subscriptions: AnonymousSubscription[] = [];
     const unsubscribeAll = () => {
@@ -84,6 +87,7 @@ function testPing(source: LocalPeer<string>, targets: LocalPeer<string>[]) {
         subscription.unsubscribe();
       }
     };
+    let count = 0;
     const success = () => {
       unsubscribeAll();
       // tslint:disable-next-line:no-param-reassign
@@ -92,11 +96,11 @@ function testPing(source: LocalPeer<string>, targets: LocalPeer<string>[]) {
       // tslint:disable-next-line:no-param-reassign
       resolve = () => { /* NOP */ };
     };
-    const fail = () => {
+    const fail = (e: Error) => {
       unsubscribeAll();
       // tslint:disable-next-line:no-param-reassign
       resolve = () => { /* NOP */ };
-      reject();
+      reject(new Error(`expect ${targets.length} receives, actual ${count} receives`));
       // tslint:disable-next-line:no-param-reassign
       reject = () => { /* NOP */ };
     };
@@ -107,15 +111,17 @@ function testPing(source: LocalPeer<string>, targets: LocalPeer<string>[]) {
         subscriptions.push(target.onBroadcastReceived
           .subscribe((x) => {
             if (subject.next != null) {
+              count += 1;
               assert(x === data);
               subject.next(x);
               subject.next = <any>null;
               return;
             }
-            fail();
+            fail(new Error());
           }));
         return subject;
       }))
+      .timeout(10 * 1000)
       .subscribe({
         next: success,
         error: fail,
