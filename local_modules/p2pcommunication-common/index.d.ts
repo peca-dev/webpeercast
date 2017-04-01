@@ -8,10 +8,6 @@ export function provideConnection(
 ): Promise<void>;
 
 export declare class LocalPeer<T> {
-  readonly upstreams: Set<Upstream<T>>;
-  readonly otherStreams: Set<OtherStream<T>>;
-  readonly downstreams: Set<Downstream<T>>;
-
   readonly onConnected: Subject<{ peerType: PeerType; remotePeer: RemotePeer<T>; }>;
   readonly onBroadcastReceived: Subject<T>;
 
@@ -56,6 +52,7 @@ export declare class RemotePeer<T> {
 export interface Broadcastable<T> {
   readonly id: string;
 
+  readonly onClosed: Subscribable<void>;
   readonly onBroadcasting: Observable<T>;
 
   disconnect(): void;
