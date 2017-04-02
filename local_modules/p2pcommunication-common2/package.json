@@ -54,5 +54,6 @@
     "test": "mocha lib/test/",
     "test-server": "cross-env NODE_ENV=development node lib/server.js",
     "watch": "cross-env NODE_ENV=development webpack --progress --watch"
-  }
+  },
+  "typings": "lib/index.d.ts"
 }

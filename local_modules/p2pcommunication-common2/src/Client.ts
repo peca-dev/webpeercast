@@ -22,6 +22,14 @@ export default class Client<T> {
   }
 }
 
+export default class Server<T> {
+  private readonly remotePeers: Set<RemotePeer<T>>;
+  private readonly localPeer: LocalPeer<T>;
+
+  private addRemotePeer() {
+  }
+}
+
 class LocalPeer<T> {
   subscribe(offered: Observable<{}>) {
     offered.subscribe(
